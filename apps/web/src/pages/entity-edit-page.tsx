@@ -88,7 +88,7 @@ export default function EntityEditPage() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>嗜好 編集</CardTitle>
@@ -142,15 +142,15 @@ export default function EntityEditPage() {
             )
           )}
         </CardContent>
-        <CardFooter className="flex justify-between gap-2">
-          <Button variant="outline" onClick={() => navigate(`/entities/${entityId}`)}>
-            詳細へ戻る
-          </Button>
+        <CardFooter className="flex justify-end gap-2">
           <Button onClick={onSave} disabled={saving}>
             {saving ? "保存中..." : "保存"}
           </Button>
         </CardFooter>
       </Card>
+      <Button variant="outline" onClick={() => navigate(`/entities/${entityId}`)}>
+        詳細へ戻る
+      </Button>
     </main>
   );
 }

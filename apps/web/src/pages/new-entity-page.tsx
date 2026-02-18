@@ -5,7 +5,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
@@ -81,7 +80,7 @@ export default function NewEntityPage() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>嗜好 新規登録</CardTitle>
@@ -140,12 +139,10 @@ export default function NewEntityPage() {
             </pre>
           </div>
         </CardContent>
-        <CardFooter className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate("/")}>
-            一覧へ戻る
-          </Button>
-        </CardFooter>
       </Card>
+      <Button variant="outline" onClick={() => navigate("/")}>
+        一覧へ戻る
+      </Button>
     </main>
   );
 }

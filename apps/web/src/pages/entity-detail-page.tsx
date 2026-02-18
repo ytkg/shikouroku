@@ -52,7 +52,7 @@ export default function EntityDetailPage() {
   const kindLabel = entity ? kinds.find((kind) => kind.id === entity.kind_id)?.label ?? "不明" : "-";
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>{entity?.name ?? "嗜好 詳細"}</CardTitle>
@@ -84,13 +84,13 @@ export default function EntityDetailPage() {
             )
           )}
         </CardContent>
-        <CardFooter className="flex justify-between gap-2">
-          <Button variant="outline" onClick={() => navigate("/")}>
-            一覧へ戻る
-          </Button>
+        <CardFooter className="flex justify-end gap-2">
           <Button onClick={() => navigate(`/entities/${entityId}/edit`)}>編集</Button>
         </CardFooter>
       </Card>
+      <Button variant="outline" onClick={() => navigate("/")}>
+        一覧へ戻る
+      </Button>
     </main>
   );
 }
