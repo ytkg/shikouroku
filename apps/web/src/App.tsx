@@ -13,11 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type HelloResponse = {
-  ok: boolean;
-  message: string;
-};
-
 type Kind = {
   id: number;
   label: string;
@@ -35,9 +30,9 @@ type Entity = {
 
 function HomePage() {
   const navigate = useNavigate();
-  const [data, setData] = useState<HelloResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [kinds, setKinds] = useState<Kind[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
 
   const ensureAuthorized = (status: number) => {
@@ -46,25 +41,6 @@ function HomePage() {
       return false;
     }
     return true;
-  };
-
-  const loadHello = async () => {
-    setError(null);
-    try {
-      const res = await fetch("/api/hello");
-      if (!ensureAuthorized(res.status)) {
-        return;
-      }
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
-      const json = (await res.json()) as HelloResponse;
-      setData(json);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "unknown error");
-    } finally {
-      setCheckingAuth(false);
-    }
   };
 
   const loadEntities = async () => {
@@ -83,9 +59,29 @@ function HomePage() {
     }
   };
 
+  const loadKinds = async () => {
+    try {
+      const res = await fetch("/api/kinds");
+      if (!ensureAuthorized(res.status)) {
+        return;
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const json = (await res.json()) as { ok: boolean; kinds: Kind[] };
+      setKinds(json.kinds);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "unknown error");
+    }
+  };
+
   useEffect(() => {
-    void loadHello();
-    void loadEntities();
+    const init = async () => {
+      setError(null);
+      await Promise.all([loadKinds(), loadEntities()]);
+      setCheckingAuth(false);
+    };
+    void init();
   }, []);
 
   const logout = async () => {
@@ -99,36 +95,30 @@ function HomePage() {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>entities 一覧</CardTitle>
-          <CardDescription>トップページは一覧表示です。</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="space-y-2">
-            <Label>hello API</Label>
-            <pre className="overflow-auto rounded-md border bg-muted p-3 text-sm">
-              {data ? JSON.stringify(data, null, 2) : "loading..."}
-            </pre>
+      <section className="w-full space-y-3">
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        {entities.length === 0 ? (
+          <div className="rounded-md border bg-muted p-4 text-sm text-muted-foreground">
+            まだ登録がありません。
           </div>
-          <div className="space-y-2">
-            <Label>entities（最新50件）</Label>
-            <pre className="overflow-auto rounded-md border bg-muted p-3 text-sm">
-              {JSON.stringify(entities, null, 2)}
-            </pre>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-wrap gap-2">
-          <Button onClick={loadEntities}>entities 再取得</Button>
-          <Button variant="outline" onClick={() => navigate("/entities/new")}>
-            新規登録ページへ
-          </Button>
-          <Button variant="secondary" onClick={logout}>
-            ログアウト
-          </Button>
-        </CardFooter>
-      </Card>
+        ) : (
+          entities.map((entity) => {
+            const kindLabel = kinds.find((kind) => kind.id === entity.kind_id)?.label ?? "不明";
+            return (
+              <article key={entity.id} className="rounded-lg border bg-card p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-base font-semibold">{entity.name}</h3>
+                  {entity.is_wishlist === 1 && (
+                    <span className="rounded-full border px-2 py-0.5 text-xs">気になる</span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">種別: {kindLabel}</p>
+                {entity.description && <p className="mt-2 text-sm leading-relaxed">{entity.description}</p>}
+              </article>
+            );
+          })
+        )}
+      </section>
     </main>
   );
 }
