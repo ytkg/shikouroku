@@ -6,6 +6,7 @@ Cloudflare Workers 1つで `API + React SPA` を同一ドメイン配信する�
 - Backend: Cloudflare Workers + TypeScript + Hono (`apps/api`)
 - Static files: `apps/api/wrangler.toml` の `[assets] directory = "../web/dist"`
 - Auth: `https://auth.takagi.dev` を利用（JWTをHttpOnly Cookieで保持）
+- UI: Tailwind CSS + shadcn/ui（button/card/input/label/form）
 
 ## 前提
 
@@ -18,6 +19,21 @@ Cloudflare Workers 1つで `API + React SPA` を同一ドメイン配信する�
 ```bash
 npm install
 ```
+
+## Tailwind + shadcn/ui 導入コマンド（実施済み）
+
+```bash
+npm --workspace @shikouroku/web install -D tailwindcss postcss autoprefixer @types/node
+npm --workspace @shikouroku/web install class-variance-authority clsx tailwind-merge lucide-react @radix-ui/react-slot @radix-ui/react-label react-hook-form
+```
+
+追加した主なファイル:
+
+- `apps/web/tailwind.config.ts`
+- `apps/web/postcss.config.js`
+- `apps/web/components.json`
+- `apps/web/src/lib/utils.ts`
+- `apps/web/src/components/ui/*`
 
 ## ローカル開発
 
@@ -80,13 +96,8 @@ npm run deploy
 
 ## 動作確認
 
-1. ブラウザでトップページを開く
-2. 画面に `APIの応答` が表示される
-3. `GET /api/hello` が次を返す
-
-```json
-{
-  "ok": true,
-  "message": "hello shikouroku"
-}
-```
+1. `npm run dev` を実行
+2. `http://localhost:5173` を開く
+3. Card UI と Input/Button が表示される
+4. `APIの応答` に `/api/hello` の JSON が表示される
+5. `npm run build` が成功する
