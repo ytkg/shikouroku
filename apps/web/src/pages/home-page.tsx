@@ -98,7 +98,11 @@ export default function HomePage() {
           filteredEntities.map((entity) => {
             const kindLabel = kinds.find((kind) => kind.id === entity.kind_id)?.label ?? "不明";
             return (
-              <article key={entity.id} className="rounded-lg border bg-card p-4">
+              <article
+                key={entity.id}
+                className="cursor-pointer rounded-lg border bg-card p-4 transition-colors hover:bg-accent/40"
+                onClick={() => navigate(`/entities/${entity.id}`)}
+              >
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-base font-semibold">{entity.name}</h3>
                   {entity.is_wishlist === 1 && (

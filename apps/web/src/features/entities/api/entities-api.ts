@@ -27,6 +27,15 @@ export async function fetchEntities(): Promise<Entity[]> {
   return json.entities;
 }
 
+export async function fetchEntityById(entityId: string): Promise<Entity> {
+  const res = await fetch(`/api/entities/${entityId}`);
+  if (!res.ok) {
+    throw new ApiError(res.status, `HTTP ${res.status}`);
+  }
+  const json = (await res.json()) as { ok: boolean; entity: Entity };
+  return json.entity;
+}
+
 export async function createEntity(input: {
   kindId: number;
   name: string;

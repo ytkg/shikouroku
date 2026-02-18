@@ -87,6 +87,29 @@ app.get("/api/entities", async (c) => {
   return c.json({ ok: true, entities: result.results ?? [] });
 });
 
+app.get("/api/entities/:id", async (c) => {
+  const id = c.req.param("id");
+  const entity = await c.env.DB.prepare(
+    "SELECT id, kind_id, name, description, is_wishlist, created_at, updated_at FROM entities WHERE id = ? LIMIT 1"
+  )
+    .bind(id)
+    .first<{
+      id: string;
+      kind_id: number;
+      name: string;
+      description: string | null;
+      is_wishlist: number;
+      created_at: string;
+      updated_at: string;
+    }>();
+
+  if (!entity) {
+    return c.json({ ok: false, message: "entity not found" }, 404);
+  }
+
+  return c.json({ ok: true, entity });
+});
+
 app.post("/api/entities", async (c) => {
   const body = await c.req.json<{
     kindId?: number;
