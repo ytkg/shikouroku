@@ -84,8 +84,8 @@ export default function NewEntityPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>entities 新規登録</CardTitle>
-          <CardDescription>種別を選択して entity を登録します。</CardDescription>
+          <CardTitle>嗜好 新規登録</CardTitle>
+          <CardDescription>種別を選択して嗜好を登録します。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form className="space-y-4" onSubmit={onCreateEntity}>

@@ -18,7 +18,7 @@ export default function EntityDetailPage() {
   useEffect(() => {
     const load = async () => {
       if (!entityId) {
-        setError("entity id が不正です");
+        setError("嗜好 ID が不正です");
         setLoading(false);
         return;
       }
@@ -55,7 +55,7 @@ export default function EntityDetailPage() {
     <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>{entity?.name ?? "Entity Detail"}</CardTitle>
+          <CardTitle>{entity?.name ?? "嗜好 詳細"}</CardTitle>
           <CardDescription>{entity?.is_wishlist === 1 ? "気になるに登録済み" : ""}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
