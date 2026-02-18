@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Loader2, Plus } from "lucide-react";
+import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -94,11 +94,11 @@ function HomePage() {
   };
 
   if (checkingAuth) {
-    return <main className="min-h-screen bg-background" />;
+    return <main className="min-h-screen bg-background pt-20" />;
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 py-10">
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>entities 一覧</CardTitle>
@@ -215,11 +215,11 @@ function NewEntityPage() {
   };
 
   if (loading) {
-    return <main className="min-h-screen bg-background" />;
+    return <main className="min-h-screen bg-background pt-20" />;
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 py-10">
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>entities 新規登録</CardTitle>
@@ -315,7 +315,7 @@ function LoginPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4 py-10">
+    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>ログイン</CardTitle>
@@ -362,13 +362,33 @@ function LoginPage() {
   );
 }
 
+function Header() {
+  return (
+    <header className="fixed inset-x-0 top-0 z-50 border-b bg-background/95 backdrop-blur">
+      <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between px-4">
+        <Link to="/" className="text-lg font-semibold tracking-wide">
+          <img src="/logo.png" alt="嗜好録" className="h-8 w-auto" />
+        </Link>
+        <Button asChild size="icon" aria-label="新規登録">
+          <Link to="/entities/new">
+            <Plus className="h-4 w-4" />
+          </Link>
+        </Button>
+      </div>
+    </header>
+  );
+}
+
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/entities/new" element={<NewEntityPage />} />
-      <Route path="/" element={<HomePage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Header />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/entities/new" element={<NewEntityPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
