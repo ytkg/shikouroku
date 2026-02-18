@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,6 +34,7 @@ type Entity = {
 };
 
 function HomePage() {
+  const navigate = useNavigate();
   const [data, setData] = useState<HelloResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -40,7 +42,7 @@ function HomePage() {
 
   const ensureAuthorized = (status: number) => {
     if (status === 401) {
-      window.location.href = "/login";
+      navigate("/login", { replace: true });
       return false;
     }
     return true;
@@ -66,15 +68,19 @@ function HomePage() {
   };
 
   const loadEntities = async () => {
-    const res = await fetch("/api/entities");
-    if (!ensureAuthorized(res.status)) {
-      return;
+    try {
+      const res = await fetch("/api/entities");
+      if (!ensureAuthorized(res.status)) {
+        return;
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const json = (await res.json()) as { ok: boolean; entities: Entity[] };
+      setEntities(json.entities);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "unknown error");
     }
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-    const json = (await res.json()) as { ok: boolean; entities: Entity[] };
-    setEntities(json.entities);
   };
 
   useEffect(() => {
@@ -84,7 +90,7 @@ function HomePage() {
 
   const logout = async () => {
     await fetch("/api/logout", { method: "POST" });
-    window.location.href = "/login";
+    navigate("/login", { replace: true });
   };
 
   if (checkingAuth) {
@@ -115,7 +121,7 @@ function HomePage() {
         </CardContent>
         <CardFooter className="flex flex-wrap gap-2">
           <Button onClick={loadEntities}>entities 再取得</Button>
-          <Button variant="outline" onClick={() => (window.location.href = "/entities/new")}>
+          <Button variant="outline" onClick={() => navigate("/entities/new")}>
             新規登録ページへ
           </Button>
           <Button variant="secondary" onClick={logout}>
@@ -128,6 +134,7 @@ function HomePage() {
 }
 
 function NewEntityPage() {
+  const navigate = useNavigate();
   const [kinds, setKinds] = useState<Kind[]>([]);
   const [kindId, setKindId] = useState("");
   const [name, setName] = useState("");
@@ -140,7 +147,7 @@ function NewEntityPage() {
 
   const ensureAuthorized = (status: number) => {
     if (status === 401) {
-      window.location.href = "/login";
+      navigate("/login", { replace: true });
       return false;
     }
     return true;
@@ -270,7 +277,7 @@ function NewEntityPage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-wrap gap-2">
-          <Button variant="outline" onClick={() => (window.location.href = "/")}>
+          <Button variant="outline" onClick={() => navigate("/")}>
             一覧へ戻る
           </Button>
         </CardFooter>
@@ -280,6 +287,7 @@ function NewEntityPage() {
 }
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -298,7 +306,7 @@ function LoginPage() {
       if (!res.ok) {
         throw new Error("ログインに失敗しました");
       }
-      window.location.href = "/";
+      navigate("/", { replace: true });
     } catch (e) {
       setError(e instanceof Error ? e.message : "unknown error");
     } finally {
@@ -355,11 +363,12 @@ function LoginPage() {
 }
 
 export default function App() {
-  if (window.location.pathname === "/login") {
-    return <LoginPage />;
-  }
-  if (window.location.pathname === "/entities/new") {
-    return <NewEntityPage />;
-  }
-  return <HomePage />;
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/entities/new" element={<NewEntityPage />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
