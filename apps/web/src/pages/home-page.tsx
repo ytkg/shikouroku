@@ -106,7 +106,9 @@ export default function HomePage() {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">種別: {kindLabel}</p>
-                {entity.description && <p className="mt-2 text-sm leading-relaxed">{entity.description}</p>}
+                {entity.description && (
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{entity.description}</p>
+                )}
               </article>
             );
           })
