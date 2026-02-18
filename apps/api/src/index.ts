@@ -1,4 +1,5 @@
-import { Hono } from "hono";
+import { Context, Hono } from "hono";
+import { z } from "zod";
 
 type Bindings = {
   ASSETS: Fetcher;
@@ -8,6 +9,53 @@ type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>();
 const AUTH_BASE_URL = "https://auth.takagi.dev";
 const TOKEN_COOKIE = "shikouroku_token";
+type AppContext = Context<{ Bindings: Bindings }>;
+
+const loginBodySchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1)
+});
+
+const entityBodySchema = z.object({
+  kindId: z.number().int().positive(),
+  name: z.string().trim().min(1),
+  description: z.string().trim().optional().default(""),
+  isWishlist: z.boolean().optional().default(false)
+});
+
+function validationMessage(error: z.ZodError): string {
+  const field = error.issues[0]?.path[0];
+  if (field === "kindId") return "kindId is required";
+  if (field === "name") return "name is required";
+  if (field === "username") return "username is required";
+  if (field === "password") return "password is required";
+  return "invalid request body";
+}
+
+async function parseJsonBody<TSchema extends z.ZodTypeAny>(
+  c: AppContext,
+  schema: TSchema
+): Promise<{ ok: true; data: z.infer<TSchema> } | { ok: false; response: Response }> {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return {
+      ok: false,
+      response: c.json({ ok: false, message: "invalid json body" }, 400)
+    };
+  }
+
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      response: c.json({ ok: false, message: validationMessage(parsed.error) }, 400)
+    };
+  }
+
+  return { ok: true, data: parsed.data };
+}
 
 function getTokenFromCookie(request: Request): string | null {
   const cookie = request.headers.get("Cookie");
@@ -41,9 +89,11 @@ function isStaticAssetPath(pathname: string): boolean {
 }
 
 app.post("/api/login", async (c) => {
-  const body = await c.req.json<{ username?: string; password?: string }>();
-  const username = body.username ?? "";
-  const password = body.password ?? "";
+  const parsedBody = await parseJsonBody(c, loginBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+  const { username, password } = parsedBody.data;
 
   const authRes = await fetch(`${AUTH_BASE_URL}/login`, {
     method: "POST",
@@ -112,27 +162,17 @@ app.get("/api/entities/:id", async (c) => {
 
 app.patch("/api/entities/:id", async (c) => {
   const id = c.req.param("id");
-  const body = await c.req.json<{
-    kindId?: number;
-    name?: string;
-    description?: string;
-    isWishlist?: boolean;
-  }>();
-
-  const kindId = Number(body.kindId);
-  const name = (body.name ?? "").trim();
-  const description = (body.description ?? "").trim();
-  const isWishlist = body.isWishlist ? 1 : 0;
 
   if (!id) {
     return c.json({ ok: false, message: "id is required" }, 400);
   }
-  if (!Number.isInteger(kindId) || kindId <= 0) {
-    return c.json({ ok: false, message: "kindId is required" }, 400);
+
+  const parsedBody = await parseJsonBody(c, entityBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
-  if (!name) {
-    return c.json({ ok: false, message: "name is required" }, 400);
-  }
+  const { kindId, name, description, isWishlist } = parsedBody.data;
+  const isWishlistFlag = isWishlist ? 1 : 0;
 
   const kind = await c.env.DB.prepare("SELECT id FROM kinds WHERE id = ? LIMIT 1")
     .bind(kindId)
@@ -151,7 +191,7 @@ app.patch("/api/entities/:id", async (c) => {
   const updated = await c.env.DB.prepare(
     "UPDATE entities SET kind_id = ?, name = ?, description = ?, is_wishlist = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
   )
-    .bind(kindId, name, description || null, isWishlist, id)
+    .bind(kindId, name, description || null, isWishlistFlag, id)
     .run();
 
   if (!updated.success) {
@@ -176,24 +216,12 @@ app.patch("/api/entities/:id", async (c) => {
 });
 
 app.post("/api/entities", async (c) => {
-  const body = await c.req.json<{
-    kindId?: number;
-    name?: string;
-    description?: string;
-    isWishlist?: boolean;
-  }>();
-
-  const kindId = Number(body.kindId);
-  const name = (body.name ?? "").trim();
-  const description = (body.description ?? "").trim();
-  const isWishlist = body.isWishlist ? 1 : 0;
-
-  if (!Number.isInteger(kindId) || kindId <= 0) {
-    return c.json({ ok: false, message: "kindId is required" }, 400);
+  const parsedBody = await parseJsonBody(c, entityBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
   }
-  if (!name) {
-    return c.json({ ok: false, message: "name is required" }, 400);
-  }
+  const { kindId, name, description, isWishlist } = parsedBody.data;
+  const isWishlistFlag = isWishlist ? 1 : 0;
 
   const kind = await c.env.DB.prepare("SELECT id FROM kinds WHERE id = ? LIMIT 1")
     .bind(kindId)
@@ -206,7 +234,7 @@ app.post("/api/entities", async (c) => {
   const inserted = await c.env.DB.prepare(
     "INSERT INTO entities (id, kind_id, name, description, is_wishlist) VALUES (?, ?, ?, ?, ?)"
   )
-    .bind(id, kindId, name, description || null, isWishlist)
+    .bind(id, kindId, name, description || null, isWishlistFlag)
     .run();
 
   if (!inserted.success) {
@@ -221,7 +249,7 @@ app.post("/api/entities", async (c) => {
         kind_id: kindId,
         name,
         description: description || null,
-        is_wishlist: isWishlist
+        is_wishlist: isWishlistFlag
       }
     },
     201
