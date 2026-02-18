@@ -5,6 +5,7 @@ Cloudflare Workers 1つで `API + React SPA` を同一ドメイン配信する�
 - Frontend: React + TypeScript + Vite (`apps/web`)
 - Backend: Cloudflare Workers + TypeScript + Hono (`apps/api`)
 - Static files: `apps/api/wrangler.toml` の `[assets] directory = "../web/dist"`
+- Auth: `https://auth.takagi.dev` を利用（JWTをHttpOnly Cookieで保持）
 
 ## 前提
 
@@ -38,6 +39,16 @@ npm --workspace @shikouroku/api run dev
 ```
 
 - `http://127.0.0.1:8787` で SPA と API を同一オリジンで確認できます。
+
+## 認証フロー
+
+- 未ログインで `/` にアクセスすると Worker が `/login` へ `302` リダイレクト
+- ログイン成功で `/` へ遷移
+- ログイン済みで `/login` にアクセスすると `/` へ `302` リダイレクト
+- API は `/api/login` 以外を認証必須にし、未認証は `401`
+
+ログインは `auth.takagi.dev` の `POST /login` を使い、取得したJWTを `shikouroku_token` Cookie に保存します。  
+リクエスト時は `GET /verify` でトークン検証します。
 
 ## ビルド
 
