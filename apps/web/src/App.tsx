@@ -34,6 +34,7 @@ function HomePage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [kinds, setKinds] = useState<Kind[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
+  const [selectedKindId, setSelectedKindId] = useState<number | "all">("all");
 
   const ensureAuthorized = (status: number) => {
     if (status === 401) {
@@ -89,6 +90,11 @@ function HomePage() {
     navigate("/login", { replace: true });
   };
 
+  const filteredEntities =
+    selectedKindId === "all"
+      ? entities
+      : entities.filter((entity) => entity.kind_id === selectedKindId);
+
   if (checkingAuth) {
     return <main className="min-h-screen bg-background pt-20" />;
   }
@@ -97,12 +103,31 @@ function HomePage() {
     <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <section className="w-full space-y-3">
         {error && <p className="text-sm text-destructive">{error}</p>}
-        {entities.length === 0 ? (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant={selectedKindId === "all" ? "default" : "outline"}
+            onClick={() => setSelectedKindId("all")}
+          >
+            すべて
+          </Button>
+          {kinds.map((kind) => (
+            <Button
+              key={kind.id}
+              size="sm"
+              variant={selectedKindId === kind.id ? "default" : "outline"}
+              onClick={() => setSelectedKindId(kind.id)}
+            >
+              {kind.label}
+            </Button>
+          ))}
+        </div>
+        {filteredEntities.length === 0 ? (
           <div className="rounded-md border bg-muted p-4 text-sm text-muted-foreground">
-            まだ登録がありません。
+            表示できる登録がありません。
           </div>
         ) : (
-          entities.map((entity) => {
+          filteredEntities.map((entity) => {
             const kindLabel = kinds.find((kind) => kind.id === entity.kind_id)?.label ?? "不明";
             return (
               <article key={entity.id} className="rounded-lg border bg-card p-4">
