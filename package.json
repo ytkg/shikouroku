@@ -8,9 +8,13 @@
   "scripts": {
     "dev": "npm-run-all -p dev:web dev:api",
     "dev:web": "npm --workspace @shikouroku/web run dev",
-    "dev:api": "npm --workspace @shikouroku/api run dev",
+    "dev:api": "npm --workspace @shikouroku/api run dev:remote",
     "build": "npm --workspace @shikouroku/web run build && npm --workspace @shikouroku/api run check",
     "deploy": "npm run build && npm --workspace @shikouroku/api run deploy",
+    "d1:migrate:dev": "npm --workspace @shikouroku/api run d1:migrate:dev",
+    "d1:migrate:prod": "npm --workspace @shikouroku/api run d1:migrate:prod",
+    "d1:tables:dev": "npm --workspace @shikouroku/api run d1:tables:dev",
+    "d1:tables:prod": "npm --workspace @shikouroku/api run d1:tables:prod",
     "typecheck": "npm --workspaces run typecheck"
   },
   "devDependencies": {

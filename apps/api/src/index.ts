@@ -2,6 +2,7 @@ import { Hono } from "hono";
 
 type Bindings = {
   ASSETS: Fetcher;
+  DB: D1Database;
 };
 
 const app = new Hono<{ Bindings: Bindings }>();
@@ -63,6 +64,87 @@ app.get("/api/hello", (c) => {
   return c.json({ ok: true, message: "hello shikouroku" });
 });
 
+app.get("/api/kinds", async (c) => {
+  const result = await c.env.DB.prepare("SELECT id, label FROM kinds ORDER BY id ASC").all<{
+    id: number;
+    label: string;
+  }>();
+  return c.json({ ok: true, kinds: result.results ?? [] });
+});
+
+app.get("/api/entities", async (c) => {
+  const result = await c.env.DB.prepare(
+    "SELECT id, kind_id, name, description, is_wishlist, created_at, updated_at FROM entities ORDER BY created_at DESC LIMIT 50"
+  ).all<{
+    id: string;
+    kind_id: number;
+    name: string;
+    description: string | null;
+    is_wishlist: number;
+    created_at: string;
+    updated_at: string;
+  }>();
+  return c.json({ ok: true, entities: result.results ?? [] });
+});
+
+app.post("/api/entities", async (c) => {
+  const body = await c.req.json<{
+    kindId?: number;
+    name?: string;
+    description?: string;
+    isWishlist?: boolean;
+  }>();
+
+  const kindId = Number(body.kindId);
+  const name = (body.name ?? "").trim();
+  const description = (body.description ?? "").trim();
+  const isWishlist = body.isWishlist ? 1 : 0;
+
+  if (!Number.isInteger(kindId) || kindId <= 0) {
+    return c.json({ ok: false, message: "kindId is required" }, 400);
+  }
+  if (!name) {
+    return c.json({ ok: false, message: "name is required" }, 400);
+  }
+
+  const kind = await c.env.DB.prepare("SELECT id FROM kinds WHERE id = ? LIMIT 1")
+    .bind(kindId)
+    .first<{ id: number }>();
+  if (!kind) {
+    return c.json({ ok: false, message: "kind not found" }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  const inserted = await c.env.DB.prepare(
+    "INSERT INTO entities (id, kind_id, name, description, is_wishlist) VALUES (?, ?, ?, ?, ?)"
+  )
+    .bind(id, kindId, name, description || null, isWishlist)
+    .run();
+
+  if (!inserted.success) {
+    return c.json({ ok: false, message: "failed to insert entity" }, 500);
+  }
+
+  return c.json(
+    {
+      ok: true,
+      entity: {
+        id,
+        kind_id: kindId,
+        name,
+        description: description || null,
+        is_wishlist: isWishlist
+      }
+    },
+    201
+  );
+});
+
+app.get("/api/db/health", async (c) => {
+  const row = await c.env.DB.prepare("SELECT datetime('now') AS now").first<{ now: string }>();
+  return c.json({ ok: true, now: row?.now ?? null });
+});
+
 app.post("/api/logout", (c) => {
   c.header("Set-Cookie", clearTokenCookie());
   return c.json({ ok: true });
@@ -80,7 +162,7 @@ export default {
     const hasValidToken = token ? await verifyToken(token) : false;
 
     if (pathname.startsWith("/api/")) {
-      if (pathname === "/api/login") {
+      if (pathname === "/api/login" || pathname === "/api/db/health") {
         return app.fetch(request, env, ctx);
       }
       if (!hasValidToken) {

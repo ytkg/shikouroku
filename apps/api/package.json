@@ -5,9 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "npm --workspace @shikouroku/web run build && wrangler dev",
+    "dev:remote": "npm --workspace @shikouroku/web run build && wrangler dev --remote",
     "deploy": "wrangler deploy",
     "check": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "d1:migrate:dev": "wrangler d1 migrations apply shikouroku-prod --remote --preview",
+    "d1:migrate:prod": "wrangler d1 migrations apply shikouroku-prod --remote",
+    "d1:tables:dev": "wrangler d1 execute shikouroku-prod --remote --preview --command \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\"",
+    "d1:tables:prod": "wrangler d1 execute shikouroku-prod --remote --command \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\""
   },
   "dependencies": {
     "hono": "^4.6.10"

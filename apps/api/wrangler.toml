@@ -6,3 +6,10 @@ compatibility_date = "2025-11-01"
 directory = "../web/dist"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "shikouroku-prod"
+database_id = "5f56ed47-5bd4-4ee7-a273-72ffe4f4c558"
+preview_database_id = "8b83ba42-1327-4929-a399-dd9cdaa0d007"
+migrations_dir = "migrations"

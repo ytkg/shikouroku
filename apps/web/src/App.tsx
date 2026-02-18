@@ -17,18 +17,40 @@ type HelloResponse = {
   message: string;
 };
 
+type Kind = {
+  id: number;
+  label: string;
+};
+
+type Entity = {
+  id: string;
+  kind_id: number;
+  name: string;
+  description: string | null;
+  is_wishlist: number;
+  created_at?: string;
+  updated_at?: string;
+};
+
 function HomePage() {
   const [data, setData] = useState<HelloResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [note, setNote] = useState("hello from shadcn/ui");
+  const [entities, setEntities] = useState<Entity[]>([]);
+
+  const ensureAuthorized = (status: number) => {
+    if (status === 401) {
+      window.location.href = "/login";
+      return false;
+    }
+    return true;
+  };
 
   const loadHello = async () => {
     setError(null);
     try {
       const res = await fetch("/api/hello");
-      if (res.status === 401) {
-        window.location.href = "/login";
+      if (!ensureAuthorized(res.status)) {
         return;
       }
       if (!res.ok) {
@@ -43,8 +65,21 @@ function HomePage() {
     }
   };
 
+  const loadEntities = async () => {
+    const res = await fetch("/api/entities");
+    if (!ensureAuthorized(res.status)) {
+      return;
+    }
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    const json = (await res.json()) as { ok: boolean; entities: Entity[] };
+    setEntities(json.entities);
+  };
+
   useEffect(() => {
     void loadHello();
+    void loadEntities();
   }, []);
 
   const logout = async () => {
@@ -57,30 +92,186 @@ function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl items-center px-4 py-10">
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 py-10">
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>shikouroku</CardTitle>
-          <CardDescription>
-            Tailwind CSS + shadcn/ui 導入済み。Workers API と同一オリジンで連携しています。
-          </CardDescription>
+          <CardTitle>entities 一覧</CardTitle>
+          <CardDescription>トップページは一覧表示です。</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="space-y-2">
-            <Label htmlFor="note">メモ入力（Input確認）</Label>
-            <Input id="note" value={note} onChange={(e) => setNote(e.target.value)} />
+            <Label>hello API</Label>
+            <pre className="overflow-auto rounded-md border bg-muted p-3 text-sm">
+              {data ? JSON.stringify(data, null, 2) : "loading..."}
+            </pre>
           </div>
           <div className="space-y-2">
-            <Label>APIの応答</Label>
+            <Label>entities（最新50件）</Label>
             <pre className="overflow-auto rounded-md border bg-muted p-3 text-sm">
-              {error ? error : data ? JSON.stringify(data, null, 2) : "loading..."}
+              {JSON.stringify(entities, null, 2)}
             </pre>
           </div>
         </CardContent>
         <CardFooter className="flex flex-wrap gap-2">
-          <Button onClick={loadHello}>/api/hello を再取得</Button>
+          <Button onClick={loadEntities}>entities 再取得</Button>
+          <Button variant="outline" onClick={() => (window.location.href = "/entities/new")}>
+            新規登録ページへ
+          </Button>
           <Button variant="secondary" onClick={logout}>
             ログアウト
+          </Button>
+        </CardFooter>
+      </Card>
+    </main>
+  );
+}
+
+function NewEntityPage() {
+  const [kinds, setKinds] = useState<Kind[]>([]);
+  const [kindId, setKindId] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [isWishlist, setIsWishlist] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitResult, setSubmitResult] = useState<Entity | null>(null);
+
+  const ensureAuthorized = (status: number) => {
+    if (status === 401) {
+      window.location.href = "/login";
+      return false;
+    }
+    return true;
+  };
+
+  const loadKinds = async () => {
+    setError(null);
+    try {
+      const res = await fetch("/api/kinds");
+      if (!ensureAuthorized(res.status)) {
+        return;
+      }
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const json = (await res.json()) as { ok: boolean; kinds: Kind[] };
+      setKinds(json.kinds);
+      if (json.kinds.length > 0) {
+        setKindId(String(json.kinds[0].id));
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadKinds();
+  }, []);
+
+  const onCreateEntity = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    setSubmitLoading(true);
+    setSubmitResult(null);
+    try {
+      const res = await fetch("/api/entities", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          kindId: Number(kindId),
+          name,
+          description,
+          isWishlist
+        })
+      });
+      if (!ensureAuthorized(res.status)) {
+        return;
+      }
+      if (!res.ok) {
+        const json = (await res.json()) as { message?: string };
+        throw new Error(json.message ?? `HTTP ${res.status}`);
+      }
+      const json = (await res.json()) as { ok: boolean; entity: Entity };
+      setSubmitResult(json.entity);
+      setName("");
+      setDescription("");
+      setIsWishlist(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "unknown error");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <main className="min-h-screen bg-background" />;
+  }
+
+  return (
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 py-10">
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>entities 新規登録</CardTitle>
+          <CardDescription>種別を選択して entity を登録します。</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form className="space-y-4" onSubmit={onCreateEntity}>
+            <div className="space-y-2">
+              <Label htmlFor="kind">種別</Label>
+              <select
+                id="kind"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={kindId}
+                onChange={(e) => setKindId(e.target.value)}
+                required
+              >
+                {kinds.map((kind) => (
+                  <option key={kind.id} value={kind.id}>
+                    {kind.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">名前</Label>
+              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">メモ</Label>
+              <textarea
+                id="description"
+                className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={isWishlist}
+                onChange={(e) => setIsWishlist(e.target.checked)}
+              />
+              気になる
+            </label>
+            <Button type="submit" disabled={submitLoading}>
+              {submitLoading ? "登録中..." : "登録する"}
+            </Button>
+          </form>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <div className="space-y-2">
+            <Label>登録結果</Label>
+            <pre className="overflow-auto rounded-md border bg-muted p-3 text-sm">
+              {submitResult ? JSON.stringify(submitResult, null, 2) : "まだ登録していません"}
+            </pre>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => (window.location.href = "/")}>
+            一覧へ戻る
           </Button>
         </CardFooter>
       </Card>
@@ -166,6 +357,9 @@ function LoginPage() {
 export default function App() {
   if (window.location.pathname === "/login") {
     return <LoginPage />;
+  }
+  if (window.location.pathname === "/entities/new") {
+    return <NewEntityPage />;
   }
   return <HomePage />;
 }

@@ -7,6 +7,7 @@ Cloudflare Workers 1つで `API + React SPA` を同一ドメイン配信する�
 - Static files: `apps/api/wrangler.toml` の `[assets] directory = "../web/dist"`
 - Auth: `https://auth.takagi.dev` を利用（JWTをHttpOnly Cookieで保持）
 - UI: Tailwind CSS + shadcn/ui（button/card/input/label/form）
+- DB: Cloudflare D1（`apps/api/wrangler.toml` の `DB` バインディング）
 
 ## 前提
 
@@ -46,6 +47,8 @@ npm run dev
 - Web: `http://localhost:5173` (Vite)
 - API: `http://127.0.0.1:8787` (Wrangler)
 - Web側は `/api` を Wrangler に proxy するため、`fetch("/api/hello")` がそのまま動きます。
+- API は `wrangler dev --remote` で起動し、`preview_database_id`（開発DB）を参照します。
+- 事前に `npm run d1:migrate:dev` を実行してください（`--preview` で開発DBへ適用）。
 
 ### 本番相当（Workerで静的配信まで確認）
 
@@ -74,6 +77,55 @@ npm run build
 
 - `apps/web/dist` を生成
 - API の型チェック実行
+
+## D1 セットアップ
+
+1. D1 DB を作成（production / development）
+
+```bash
+npx wrangler d1 create shikouroku-prod
+npx wrangler d1 create shikouroku-dev
+```
+
+2. `apps/api/wrangler.toml` を次の方針で設定
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "shikouroku-prod"
+database_id = "PROD_DATABASE_ID"
+preview_database_id = "DEV_DATABASE_ID"
+```
+
+3. マイグレーション適用（開発DB = `preview_database_id`）
+
+```bash
+npm run d1:migrate:dev
+```
+
+4. マイグレーション適用（本番DB = `database_id`）
+
+```bash
+npm run d1:migrate:prod
+```
+
+5. 疎通確認（認証後）
+
+```bash
+curl http://127.0.0.1:8787/api/db/health
+```
+
+## kinds 初期データメモ
+
+```sql
+INSERT INTO kinds (id, label, created_at, updated_at) VALUES
+  (1, '場所', datetime('now'), datetime('now')),
+  (2, '商品', datetime('now'), datetime('now')),
+  (3, '体験', datetime('now'), datetime('now'))
+ON CONFLICT(id) DO UPDATE SET
+  label = excluded.label,
+  updated_at = datetime('now');
+```
 
 ## デプロイ（Workers一本）
 
