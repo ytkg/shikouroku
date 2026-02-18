@@ -84,10 +84,11 @@ export default function EntityDetailPage() {
             )
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex justify-between gap-2">
           <Button variant="outline" onClick={() => navigate("/")}>
             一覧へ戻る
           </Button>
+          <Button onClick={() => navigate(`/entities/${entityId}/edit`)}>編集</Button>
         </CardFooter>
       </Card>
     </main>

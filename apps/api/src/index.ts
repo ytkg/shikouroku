@@ -110,6 +110,71 @@ app.get("/api/entities/:id", async (c) => {
   return c.json({ ok: true, entity });
 });
 
+app.patch("/api/entities/:id", async (c) => {
+  const id = c.req.param("id");
+  const body = await c.req.json<{
+    kindId?: number;
+    name?: string;
+    description?: string;
+    isWishlist?: boolean;
+  }>();
+
+  const kindId = Number(body.kindId);
+  const name = (body.name ?? "").trim();
+  const description = (body.description ?? "").trim();
+  const isWishlist = body.isWishlist ? 1 : 0;
+
+  if (!id) {
+    return c.json({ ok: false, message: "id is required" }, 400);
+  }
+  if (!Number.isInteger(kindId) || kindId <= 0) {
+    return c.json({ ok: false, message: "kindId is required" }, 400);
+  }
+  if (!name) {
+    return c.json({ ok: false, message: "name is required" }, 400);
+  }
+
+  const kind = await c.env.DB.prepare("SELECT id FROM kinds WHERE id = ? LIMIT 1")
+    .bind(kindId)
+    .first<{ id: number }>();
+  if (!kind) {
+    return c.json({ ok: false, message: "kind not found" }, 400);
+  }
+
+  const existing = await c.env.DB.prepare("SELECT id FROM entities WHERE id = ? LIMIT 1")
+    .bind(id)
+    .first<{ id: string }>();
+  if (!existing) {
+    return c.json({ ok: false, message: "entity not found" }, 404);
+  }
+
+  const updated = await c.env.DB.prepare(
+    "UPDATE entities SET kind_id = ?, name = ?, description = ?, is_wishlist = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+  )
+    .bind(kindId, name, description || null, isWishlist, id)
+    .run();
+
+  if (!updated.success) {
+    return c.json({ ok: false, message: "failed to update entity" }, 500);
+  }
+
+  const entity = await c.env.DB.prepare(
+    "SELECT id, kind_id, name, description, is_wishlist, created_at, updated_at FROM entities WHERE id = ? LIMIT 1"
+  )
+    .bind(id)
+    .first<{
+      id: string;
+      kind_id: number;
+      name: string;
+      description: string | null;
+      is_wishlist: number;
+      created_at: string;
+      updated_at: string;
+    }>();
+
+  return c.json({ ok: true, entity });
+});
+
 app.post("/api/entities", async (c) => {
   const body = await c.req.json<{
     kindId?: number;

@@ -126,9 +126,11 @@ export default function NewEntityPage() {
               />
               気になる
             </label>
-            <Button type="submit" disabled={submitLoading}>
-              {submitLoading ? "登録中..." : "登録する"}
-            </Button>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={submitLoading}>
+                {submitLoading ? "登録中..." : "登録する"}
+              </Button>
+            </div>
           </form>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="space-y-2">
@@ -138,7 +140,7 @@ export default function NewEntityPage() {
             </pre>
           </div>
         </CardContent>
-        <CardFooter className="flex flex-wrap gap-2">
+        <CardFooter className="flex gap-2">
           <Button variant="outline" onClick={() => navigate("/")}>
             一覧へ戻る
           </Button>
