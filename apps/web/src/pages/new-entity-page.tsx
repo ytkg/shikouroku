@@ -77,11 +77,11 @@ export default function NewEntityPage() {
   };
 
   if (loading) {
-    return <main className="min-h-screen bg-background pt-20" />;
+    return <main className="w-full bg-background pt-20" />;
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>嗜好 新規登録</CardTitle>

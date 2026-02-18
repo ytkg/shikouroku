@@ -35,7 +35,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md items-center px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-md items-center px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>ログイン</CardTitle>

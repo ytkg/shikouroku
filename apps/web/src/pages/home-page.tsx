@@ -53,22 +53,17 @@ export default function HomePage() {
     void init();
   }, []);
 
-  const logout = async () => {
-    await fetch("/api/logout", { method: "POST" });
-    navigate("/login", { replace: true });
-  };
-
   const filteredEntities =
     selectedKindId === "all"
       ? entities
       : entities.filter((entity) => entity.kind_id === selectedKindId);
 
   if (checkingAuth) {
-    return <main className="min-h-screen bg-background pt-20" />;
+    return <main className="w-full bg-background pt-20" />;
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <section className="w-full space-y-3">
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex flex-wrap gap-2">
@@ -117,11 +112,6 @@ export default function HomePage() {
             );
           })
         )}
-        <div className="pt-2">
-          <Button variant="secondary" onClick={logout}>
-            ログアウト
-          </Button>
-        </div>
       </section>
     </main>
   );

@@ -46,13 +46,13 @@ export default function EntityDetailPage() {
   }, [entityId]);
 
   if (loading) {
-    return <main className="min-h-screen bg-background pt-20" />;
+    return <main className="w-full bg-background pt-20" />;
   }
 
   const kindLabel = entity ? kinds.find((kind) => kind.id === entity.kind_id)?.label ?? "不明" : "-";
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl items-start px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>{entity?.name ?? "嗜好 詳細"}</CardTitle>
