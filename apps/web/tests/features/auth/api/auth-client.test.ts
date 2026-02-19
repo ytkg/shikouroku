@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { login, logout } from "@/entities/auth";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
-import { login, logout } from "@/features/auth/api/auth.client";
 
 afterEach(() => {
   vi.restoreAllMocks();

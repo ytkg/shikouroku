@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
-import { parseAuthResponse } from "@/features/auth/api/auth.response";
+import { parseAuthResponse } from "@/entities/auth/api/auth.response";
 
 describe("auth.response", () => {
   it("ok=trueを許可する", () => {

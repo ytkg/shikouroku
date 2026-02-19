@@ -31,34 +31,11 @@
   - `src/entities/entity` を新設し、`features/entities` の model/api を移管（types/query/mutation/client/response）
   - ESLintに `entities` 層ルールを追加し、`app/pages/widgets/features` からの依存境界を強化
   - `api/*.client.ts` と `api/*.response.ts` のペア存在を検証するアーキテクチャテストを追加
+  - `src/entities/auth` を新設し、`features/auth/api` を移管
 
 ## 1. Findings（重大度順）
 
-### Medium-1: Domain分離は `entities` で完了したが、`auth` はまだ feature 内にドメイン責務が残っている
-
-- 根拠:
-  - `apps/web/src/features/auth/api/auth.client.ts`
-  - `apps/web/src/features/auth/api/auth.response.ts`
-  - `apps/web/src/features/auth/login/model/use-login-form.ts`
-- 問題:
-  - `entities` は分離済みだが、`auth` はAPI/検証/ユースケースが `features` 内に同居。
-  - 認証仕様変更時に `features/auth` の複数レイヤへ変更が波及しやすい。
-- 推奨:
-  - `src/entities/auth`（または `src/domains/auth`）を導入し、`features/auth` は画面ユースケースに集中させる。
-
-### Medium-2: 実行時レスポンス検証は導入済みだが、今後の新規APIでの適用漏れを自動検知する仕組みが弱い
-
-- 根拠:
-  - `apps/web/src/features/auth/api/auth.client.ts`
-  - `apps/web/src/features/auth/api/auth.response.ts`
-  - `apps/web/src/features/entities/api/entities.client.ts`
-  - `apps/web/src/features/entities/api/entities.response.ts`
-- 問題:
-  - 現在のAPIは検証済みだが、新規 `*.client.ts` 追加時に `*.response.ts` を作らない運用漏れが起こり得る。
-- 推奨:
-  - `*.client.ts` / `*.response.ts` のペア運用をルール化し、lintまたはテンプレートで強制する。
-
-### Medium-3: テストは単体中心で、UI統合（フォーム+ルーティング+API失敗系）の担保が不足
+### Medium-1: テストは単体中心で、UI統合（フォーム+ルーティング+API失敗系）の担保が不足
 
 - 根拠:
   - `apps/web/tests/features/**/*.test.ts`（純粋関数/クライアント中心）
@@ -67,6 +44,17 @@
   - Hooks/UI連携で起きる回帰（例: 401時の遷移、フォーム送信失敗時表示）の検知はまだ弱い。
 - 推奨:
   - Testing Library + MSW で `create/edit/login` の統合テストを追加する。
+
+### Medium-2: `client/response` ペア存在は検証済みだが、client側で実際に parser を使っているかは未検証
+
+- 根拠:
+  - `apps/web/tests/architecture/api-response-pairing.test.ts`
+  - `apps/web/src/entities/auth/api/auth.client.ts`
+  - `apps/web/src/entities/entity/api/entities.client.ts`
+- 問題:
+  - `.response.ts` ファイルが存在しても、clientで未使用のまま通ってしまう余地がある。
+- 推奨:
+  - `*.client.ts` が `*.response.ts` から parser をimportしていることを検証する静的テストを追加する。
 
 ## 2. 推奨ターゲット構成（大幅変更案）
 
@@ -172,10 +160,9 @@ apps/web/src
 
 ## 5. 優先移行ステップ
 
-1. Auth分離: `features/auth` の API/検証ロジックを `src/entities/auth` へ段階移管。  
-2. UI統合テスト: `login/create/edit` の主要フロー（成功/失敗/401）を Testing Library + MSW で追加。  
-3. API検証運用: 新規API追加時に `*.response.ts` を必須化し、適用漏れをlintまたはテンプレートで防止。  
-4. ルール維持: 既存の import 境界・命名規約をCIで継続監視し、例外運用を増やさない。  
+1. UI統合テスト: `login/create/edit` の主要フロー（成功/失敗/401）を Testing Library + MSW で追加。  
+2. API検証運用: `*.client.ts` が対応 parser を使用しているかを静的テストで強制。  
+3. ルール維持: 既存の import 境界・命名規約をCIで継続監視し、例外運用を増やさない。  
 
 ## 6. 期待効果
 
@@ -185,4 +172,4 @@ apps/web/src
 
 ## 7. 残タスク（優先順）
 
-- `entities` 分離は完了。次は `auth` 分離と UI統合テスト拡充が重点。  
+- ドメイン分離は完了。次は UI統合テスト拡充と parser適用漏れ防止が重点。  
