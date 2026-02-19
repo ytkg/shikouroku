@@ -19,6 +19,7 @@
   - `app` / `pages` の `default export` を廃止し、命名付きexportへ移行
   - `use-entities-api.ts` を query/mutation単位へ分割
   - `TagEditDialog` を `manage-tags` featureへ移設
+  - `pages/*/page.tsx` 形式へリネーム
 
 ## 1. Findings（重大度順）
 
@@ -226,4 +227,4 @@ apps/web/src
 
 ## 7. 残タスク（優先順）
 
-1. `pages/*/page.tsx` 形式への最終リネーム（必要ならルーティング層と同時に実施）。  
+- 主要な再設計タスクは完了。次は機能追加時に同ルールを維持する運用フェーズ。  
