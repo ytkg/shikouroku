@@ -67,6 +67,8 @@
   - `quality:web` スクリプトを導入し、CI/ローカルで同一の品質ゲート手順（lint/unit/architecture/typecheck）を実行可能にした
   - `features/entities` にサブ機能単位の `index.ts` を追加し、ルート公開APIの deep export を排除
   - `features/entities/index.ts` がサブ機能公開indexのみを再エクスポートすることを検証するテストを追加
+  - `features/auth` も `login` / `model` の公開index経由へ統一し、ルート公開APIの deep export を排除
+  - `features/auth/index.ts` の公開モジュール境界を検証するテストを追加
 
 ## 1. Findings（重大度順）
 
