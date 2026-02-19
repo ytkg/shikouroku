@@ -5,10 +5,10 @@ export type Kind = {
 
 export type Entity = {
   id: string;
-  kind_id: number;
+  kindId: number;
   name: string;
   description: string | null;
-  is_wishlist: number;
-  created_at?: string;
-  updated_at?: string;
+  isWishlist: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };

@@ -1,9 +1,29 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
 import { ApiError, fetchEntities, fetchKinds } from "@/features/entities/api/entities-api";
 import type { Entity, Kind } from "@/features/entities/model/entity-types";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
+
+type EntityTab = "all" | "wishlist" | `kind:${number}`;
+
+function toKindTab(kindId: number): `kind:${number}` {
+  return `kind:${kindId}`;
+}
+
+function getVisibleEntities(entities: Entity[], selectedTab: EntityTab): Entity[] {
+  if (selectedTab === "wishlist") {
+    return entities.filter((entity) => entity.isWishlist);
+  }
+
+  const nonWishlistEntities = entities.filter((entity) => !entity.isWishlist);
+  if (selectedTab === "all") {
+    return nonWishlistEntities;
+  }
+
+  const kindId = Number(selectedTab.slice("kind:".length));
+  return nonWishlistEntities.filter((entity) => entity.kindId === kindId);
+}
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -12,7 +32,7 @@ export default function HomePage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [kinds, setKinds] = useState<Kind[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
-  const [selectedKindId, setSelectedKindId] = useState<number | "all">("all");
+  const [selectedTab, setSelectedTab] = useState<EntityTab>("all");
 
   const loadKinds = async () => {
     try {
@@ -53,10 +73,10 @@ export default function HomePage() {
     void init();
   }, []);
 
-  const filteredEntities =
-    selectedKindId === "all"
-      ? entities
-      : entities.filter((entity) => entity.kind_id === selectedKindId);
+  const filteredEntities = useMemo(
+    () => getVisibleEntities(entities, selectedTab),
+    [entities, selectedTab]
+  );
 
   if (checkingAuth) {
     return <main className="w-full bg-background pt-20" />;
@@ -69,21 +89,31 @@ export default function HomePage() {
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
-            variant={selectedKindId === "all" ? "default" : "outline"}
-            onClick={() => setSelectedKindId("all")}
+            variant={selectedTab === "all" ? "default" : "outline"}
+            onClick={() => setSelectedTab("all")}
           >
             すべて
           </Button>
-          {kinds.map((kind) => (
-            <Button
-              key={kind.id}
-              size="sm"
-              variant={selectedKindId === kind.id ? "default" : "outline"}
-              onClick={() => setSelectedKindId(kind.id)}
-            >
-              {kind.label}
-            </Button>
-          ))}
+          {kinds.map((kind) => {
+            const kindTab = toKindTab(kind.id);
+            return (
+              <Button
+                key={kind.id}
+                size="sm"
+                variant={selectedTab === kindTab ? "default" : "outline"}
+                onClick={() => setSelectedTab(kindTab)}
+              >
+                {kind.label}
+              </Button>
+            );
+          })}
+          <Button
+            size="sm"
+            variant={selectedTab === "wishlist" ? "default" : "outline"}
+            onClick={() => setSelectedTab("wishlist")}
+          >
+            気になる
+          </Button>
         </div>
         {filteredEntities.length === 0 ? (
           <div className="rounded-md border bg-muted p-4 text-sm text-muted-foreground">
@@ -91,7 +121,7 @@ export default function HomePage() {
           </div>
         ) : (
           filteredEntities.map((entity) => {
-            const kindLabel = kinds.find((kind) => kind.id === entity.kind_id)?.label ?? "不明";
+            const kindLabel = kinds.find((kind) => kind.id === entity.kindId)?.label ?? "不明";
             return (
               <article
                 key={entity.id}
@@ -100,7 +130,7 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-base font-semibold">{entity.name}</h3>
-                  {entity.is_wishlist === 1 && (
+                  {entity.isWishlist && (
                     <span className="rounded-full border px-2 py-0.5 text-xs">気になる</span>
                   )}
                 </div>

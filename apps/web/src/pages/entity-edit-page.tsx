@@ -35,10 +35,10 @@ export default function EntityEditPage() {
         const [entityData, kindsData] = await Promise.all([fetchEntityById(entityId), fetchKinds()]);
         setEntity(entityData);
         setKinds(kindsData);
-        setKindId(String(entityData.kind_id));
+        setKindId(String(entityData.kindId));
         setName(entityData.name);
         setDescription(entityData.description ?? "");
-        setIsWishlist(entityData.is_wishlist === 1);
+        setIsWishlist(entityData.isWishlist);
       } catch (e) {
         if (e instanceof ApiError && !ensureAuthorized(e.status)) {
           return;
@@ -72,10 +72,10 @@ export default function EntityEditPage() {
         isWishlist
       });
       setEntity(updated);
-      setKindId(String(updated.kind_id));
+      setKindId(String(updated.kindId));
       setName(updated.name);
       setDescription(updated.description ?? "");
-      setIsWishlist(updated.is_wishlist === 1);
+      setIsWishlist(updated.isWishlist);
       navigate(`/entities/${entityId}`);
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {

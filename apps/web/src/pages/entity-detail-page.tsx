@@ -49,14 +49,14 @@ export default function EntityDetailPage() {
     return <main className="w-full bg-background pt-20" />;
   }
 
-  const kindLabel = entity ? kinds.find((kind) => kind.id === entity.kind_id)?.label ?? "不明" : "-";
+  const kindLabel = entity ? kinds.find((kind) => kind.id === entity.kindId)?.label ?? "不明" : "-";
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-10 pt-24">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>{entity?.name ?? "嗜好 詳細"}</CardTitle>
-          <CardDescription>{entity?.is_wishlist === 1 ? "気になるに登録済み" : ""}</CardDescription>
+          <CardDescription>{entity?.isWishlist ? "気になるに登録済み" : ""}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error ? (
