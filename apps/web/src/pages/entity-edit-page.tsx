@@ -1,4 +1,4 @@
-import { EditEntityPageContent } from "@/features/entities/edit/ui/edit-entity-page-content";
+import { EditEntityPageContent } from "@/features/entities";
 
 export default function EntityEditPage() {
   return <EditEntityPageContent />;

@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuthGuard } from "@/features/auth";
+import { useEntityQuery } from "@/features/entities";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { useEntityQuery } from "@/features/entities/model/use-entities-api";
-import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 import { ApiError } from "@/shared/api/api-error";
 
 export default function EntityDetailPage() {

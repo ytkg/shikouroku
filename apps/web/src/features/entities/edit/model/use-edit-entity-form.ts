@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
+import { useAuthGuard } from "@/features/auth";
 import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
 import {
   useEntityMutations,

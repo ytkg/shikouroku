@@ -1,4 +1,4 @@
-import { CreateEntityPageContent } from "@/features/entities/create/ui/create-entity-page-content";
+import { CreateEntityPageContent } from "@/features/entities";
 
 export default function NewEntityPage() {
   return <CreateEntityPageContent />;

@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { login } from "@/features/auth/api/auth.client";
+import { login } from "@/features/auth";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { ApiError } from "@/shared/api/api-error";

@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { logout as logoutRequest } from "@/features/auth/api/auth.client";
+import { logout as logoutRequest } from "@/features/auth";
 import { Button } from "@/shared/ui/button";
 
 export function AppFooter() {
