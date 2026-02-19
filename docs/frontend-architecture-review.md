@@ -34,6 +34,7 @@
   - `src/entities/auth` を新設し、`features/auth/api` を移管
   - `api/*.client.ts` が `*.response.ts` の parser を利用しているかをASTベースで検証
   - レイヤ境界（shared/entities/features/app/pages/widgets）の import ルールを静的テストで検証
+  - 相対importでトップレイヤをまたぐ参照を禁止する静的テストを追加（aliasルール迂回を防止）
   - `test:architecture` を追加し、アーキテクチャ検証テストを独立実行可能にした
 
 ## 1. Findings（重大度順）
