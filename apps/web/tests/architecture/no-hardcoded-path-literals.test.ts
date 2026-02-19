@@ -12,7 +12,19 @@ function isForbiddenPathLiteral(value: string): boolean {
     return true;
   }
 
-  return value === "/login" || value === "/entities/new";
+  if (value.startsWith("/entities/")) {
+    return true;
+  }
+
+  return value === "/login";
+}
+
+function isForbiddenTemplateSegment(value: string): boolean {
+  if (value.startsWith("/api/")) {
+    return true;
+  }
+
+  return value.startsWith("/entities/");
 }
 
 function collectForbiddenLiterals(sourceFile: ts.SourceFile): string[] {
@@ -21,6 +33,14 @@ function collectForbiddenLiterals(sourceFile: ts.SourceFile): string[] {
   function visit(node: ts.Node) {
     if (ts.isStringLiteral(node) && isForbiddenPathLiteral(node.text)) {
       values.push(node.text);
+    }
+
+    if (ts.isNoSubstitutionTemplateLiteral(node) && isForbiddenPathLiteral(node.text)) {
+      values.push(node.text);
+    }
+
+    if (ts.isTemplateExpression(node) && isForbiddenTemplateSegment(node.head.text)) {
+      values.push(`template:${node.head.text}`);
     }
 
     ts.forEachChild(node, visit);

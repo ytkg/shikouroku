@@ -39,6 +39,7 @@
   - `shared/api/http.client.ts` 以外での `fetch()` 直接呼び出しを禁止するASTテストを追加
   - `requestJson` 呼び出しを `entities/*/api/*.client.ts` に限定するASTテストを追加
   - API/主要ルート文字列のハードコードを検知するASTテストを追加（lint設定のバックアップガード）
+  - 上記AST検知をテンプレート文字列まで拡張し、`/entities/${...}` / `/api/${...}` の直書きも検出対象化
   - `features/*` / `entities/*` 各スライスの `index.ts` 存在を検証し、公開境界の抜け漏れを防止
   - `test:architecture` を追加し、アーキテクチャ検証テストを独立実行可能にした
   - CIのテスト実行を `test:unit` と `test:architecture` に分離し、重複実行を解消
