@@ -52,6 +52,7 @@
   - `shared/lib/url` にパスセグメントエンコード関数を追加し、既エンコードIDの二重エンコードを防止
   - import境界系のアーキテクチャテストをASTベース解析へ更新し、正規表現依存の取りこぼし/誤検知を低減
   - `isEntityDetailKey` を厳密化し、空IDや多段パスをdetail keyとして誤判定しないよう修正
+  - `default export` 禁止をASTテストでも検証し、lint設定逸脱時の回帰検知を追加
 
 ## 1. Findings（重大度順）
 
