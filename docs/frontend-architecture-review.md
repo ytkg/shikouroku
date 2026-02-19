@@ -23,6 +23,7 @@
   - `pages/*/page.tsx` 形式へリネーム
   - 一覧フィルタロジックを純粋関数化し、設定値/ルート/APIキーのユニットテストを追加
   - create/edit 間で重複していたタグ選択ロジックを `shared/model` に共通化
+  - CI品質ゲートを `npm run lint/test/typecheck` に統一し、ワークスペース全体で検証
 
 ## 1. Findings（重大度順）
 

@@ -27,11 +27,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint web
-        run: npm --workspace @shikouroku/web run lint
+      - name: Lint
+        run: npm run lint
 
-      - name: Test web
-        run: npm --workspace @shikouroku/web run test
+      - name: Test
+        run: npm run test
 
-      - name: Typecheck web
-        run: npm --workspace @shikouroku/web run typecheck
+      - name: Typecheck
+        run: npm run typecheck
