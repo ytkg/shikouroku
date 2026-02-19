@@ -76,6 +76,51 @@ export function parseSourceFile(filePath: string): ts.SourceFile {
   return sourceFile;
 }
 
+export function collectModuleSpecifiers(sourceFile: ts.SourceFile): string[] {
+  const specifiers: string[] = [];
+
+  function addSpecifier(node: ts.Expression | ts.LiteralTypeNode | undefined) {
+    if (!node) {
+      return;
+    }
+
+    if (ts.isLiteralTypeNode(node) && ts.isStringLiteral(node.literal)) {
+      specifiers.push(node.literal.text);
+      return;
+    }
+
+    if (ts.isStringLiteralLike(node)) {
+      specifiers.push(node.text);
+    }
+  }
+
+  function visit(node: ts.Node) {
+    if (ts.isImportDeclaration(node)) {
+      addSpecifier(node.moduleSpecifier);
+    }
+
+    if (ts.isExportDeclaration(node)) {
+      addSpecifier(node.moduleSpecifier);
+    }
+
+    if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+      const [argument] = node.arguments;
+      if (argument) {
+        addSpecifier(argument);
+      }
+    }
+
+    if (ts.isImportTypeNode(node)) {
+      addSpecifier(node.argument);
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return specifiers;
+}
+
 export function toSrcRelative(absolutePath: string): string {
   return path.relative(srcRoot, absolutePath);
 }

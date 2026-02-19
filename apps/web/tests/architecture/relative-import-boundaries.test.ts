@@ -2,16 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  collectModuleSpecifiers,
   getSourceFiles,
-  readSourceText,
+  parseSourceFile,
   toSrcRelative,
   topLayerFromAbsolute
 } from "./test-utils";
-
-function extractImportPaths(source: string): string[] {
-  const fromImportMatches = source.matchAll(/from\s+["']([^"']+)["']/g);
-  return Array.from(fromImportMatches, (match) => match[1]);
-}
 
 function resolveRelativeImport(sourceFilePath: string, importPath: string): string | null {
   const basePath = path.resolve(path.dirname(sourceFilePath), importPath);
@@ -45,8 +41,8 @@ describe("architecture: relative import boundaries", () => {
         continue;
       }
 
-      const sourceText = readSourceText(sourceFilePath);
-      const importPaths = extractImportPaths(sourceText);
+      const sourceFile = parseSourceFile(sourceFilePath);
+      const importPaths = collectModuleSpecifiers(sourceFile);
 
       for (const importPath of importPaths) {
         if (!importPath.startsWith(".")) {

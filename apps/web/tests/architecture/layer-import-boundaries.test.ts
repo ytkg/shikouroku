@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getSourceFiles, readSourceText, toSrcRelative } from "./test-utils";
-
-function extractAliasImports(source: string): string[] {
-  const importMatches = source.matchAll(/from\s+["'](@\/[^"']+)["']/g);
-  return Array.from(importMatches, (match) => match[1]);
-}
+import {
+  collectModuleSpecifiers,
+  getSourceFiles,
+  parseSourceFile,
+  toSrcRelative
+} from "./test-utils";
 
 function startsWithAny(value: string, prefixes: string[]): boolean {
   return prefixes.some((prefix) => value.startsWith(prefix));
@@ -21,8 +21,8 @@ describe("architecture: layer import boundaries", () => {
 
     for (const filePath of files) {
       const relativePath = toSrcRelative(filePath);
-      const source = readSourceText(filePath);
-      const imports = extractAliasImports(source);
+      const sourceFile = parseSourceFile(filePath);
+      const imports = collectModuleSpecifiers(sourceFile).filter((value) => value.startsWith("@/"));
 
       for (const importPath of imports) {
         if (relativePath.startsWith("shared/")) {
