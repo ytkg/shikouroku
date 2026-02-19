@@ -44,7 +44,7 @@ export default function EntityEditPage() {
         setEntity(entityData);
         setKinds(kindsData);
         setTags(tagsData);
-        setKindId(String(entityData.kindId));
+        setKindId(String(entityData.kind.id));
         setName(entityData.name);
         setDescription(entityData.description ?? "");
         setIsWishlist(entityData.isWishlist);
@@ -114,8 +114,7 @@ export default function EntityEditPage() {
         isWishlist,
         tagIds: selectedTagIds
       });
-      setEntity(updated);
-      setKindId(String(updated.kindId));
+      setKindId(String(updated.kind.id));
       setName(updated.name);
       setDescription(updated.description ?? "");
       setIsWishlist(updated.isWishlist);

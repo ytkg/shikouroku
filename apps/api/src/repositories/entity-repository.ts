@@ -1,4 +1,4 @@
-import type { EntityRow, EntityTagRow, EntityWithTagsRow, TagRow } from "../domain/models";
+import type { EntityRow, EntityTagRow, EntityWithKindRow, EntityWithTagsRow, TagRow } from "../domain/models";
 
 type InsertEntityInput = {
   id: string;
@@ -16,12 +16,16 @@ type UpdateEntityInput = {
   isWishlistFlag: number;
 };
 
-export async function listEntities(db: D1Database): Promise<EntityRow[]> {
+export async function listEntitiesWithKinds(db: D1Database): Promise<EntityWithKindRow[]> {
   const result = await db
     .prepare(
-      "SELECT id, kind_id, name, description, is_wishlist, created_at, updated_at FROM entities ORDER BY created_at DESC LIMIT 50"
+      `SELECT e.id, e.kind_id, k.label AS kind_label, e.name, e.description, e.is_wishlist, e.created_at, e.updated_at
+       FROM entities e
+       INNER JOIN kinds k ON k.id = e.kind_id
+       ORDER BY e.created_at DESC
+       LIMIT 50`
     )
-    .all<EntityRow>();
+    .all<EntityWithKindRow>();
 
   return result.results ?? [];
 }
@@ -37,6 +41,21 @@ export async function findEntityById(db: D1Database, id: string): Promise<Entity
   return entity ?? null;
 }
 
+export async function findEntityWithKindById(db: D1Database, id: string): Promise<EntityWithKindRow | null> {
+  const entity = await db
+    .prepare(
+      `SELECT e.id, e.kind_id, k.label AS kind_label, e.name, e.description, e.is_wishlist, e.created_at, e.updated_at
+       FROM entities e
+       INNER JOIN kinds k ON k.id = e.kind_id
+       WHERE e.id = ?
+       LIMIT 1`
+    )
+    .bind(id)
+    .first<EntityWithKindRow>();
+
+  return entity ?? null;
+}
+
 export async function insertEntity(db: D1Database, input: InsertEntityInput): Promise<boolean> {
   const inserted = await db
     .prepare("INSERT INTO entities (id, kind_id, name, description, is_wishlist) VALUES (?, ?, ?, ?, ?)")
@@ -46,7 +65,10 @@ export async function insertEntity(db: D1Database, input: InsertEntityInput): Pr
   return inserted.success;
 }
 
-export async function updateEntity(db: D1Database, input: UpdateEntityInput): Promise<boolean> {
+export async function updateEntity(
+  db: D1Database,
+  input: UpdateEntityInput
+): Promise<"updated" | "not_found" | "error"> {
   const updated = await db
     .prepare(
       "UPDATE entities SET kind_id = ?, name = ?, description = ?, is_wishlist = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
@@ -54,7 +76,11 @@ export async function updateEntity(db: D1Database, input: UpdateEntityInput): Pr
     .bind(input.kindId, input.name, input.description, input.isWishlistFlag, input.id)
     .run();
 
-  return updated.success;
+  if (!updated.success) {
+    return "error";
+  }
+
+  return Number(updated.meta.changes ?? 0) > 0 ? "updated" : "not_found";
 }
 
 export async function deleteEntity(db: D1Database, id: string): Promise<void> {

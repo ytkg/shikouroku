@@ -15,20 +15,38 @@ export async function findTagById(db: D1Database, id: number): Promise<{ id: num
   return tag ?? null;
 }
 
-export async function insertTag(db: D1Database, name: string): Promise<boolean> {
+export async function insertTag(db: D1Database, name: string): Promise<TagRow | null> {
   const inserted = await db.prepare("INSERT INTO tags (name) VALUES (?)").bind(name).run();
-  return inserted.success;
+  if (!inserted.success) {
+    return null;
+  }
+
+  const id = Number(inserted.meta.last_row_id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return null;
+  }
+
+  return { id, name };
 }
 
-export async function deleteTagAndRelations(db: D1Database, id: number): Promise<boolean> {
+export async function deleteTagAndRelations(
+  db: D1Database,
+  id: number
+): Promise<"deleted" | "not_found" | "error"> {
   try {
-    await db.batch([
-      db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id),
-      db.prepare("DELETE FROM tags WHERE id = ?").bind(id)
-    ]);
-    return true;
+    const relationsDeleted = await db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id).run();
+    if (!relationsDeleted.success) {
+      return "error";
+    }
+
+    const tagDeleted = await db.prepare("DELETE FROM tags WHERE id = ?").bind(id).run();
+    if (!tagDeleted.success) {
+      return "error";
+    }
+
+    return Number(tagDeleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
   } catch {
-    return false;
+    return "error";
   }
 }
 

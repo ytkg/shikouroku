@@ -1,21 +1,28 @@
 import type { EntityBody } from "../domain/schemas";
-import type { EntityWithTagsRow, KindRow } from "../domain/models";
-import { existsKind, findKindById } from "../repositories/kind-repository";
+import type { EntityWithKindRow, EntityWithTagsRow, KindRow, TagRow } from "../domain/models";
+import { findKindById } from "../repositories/kind-repository";
 import {
   deleteEntity,
+  findEntityWithKindById,
   fetchEntityWithTags,
   fetchTagsByEntityIds,
-  findEntityById,
   insertEntity,
-  listEntities,
+  listEntitiesWithKinds,
   replaceEntityTags,
   updateEntity
 } from "../repositories/entity-repository";
 import { countExistingTagsByIds } from "../repositories/tag-repository";
 import { fail, success, type UseCaseResult } from "./result";
 
-type EntityDetailRow = EntityWithTagsRow & {
+type EntityResponseRow = {
+  id: string;
   kind: KindRow;
+  name: string;
+  description: string | null;
+  is_wishlist: number;
+  tags: TagRow[];
+  created_at: string;
+  updated_at: string;
 };
 
 function uniqTagIds(tagIds: number[]): number[] {
@@ -39,53 +46,83 @@ function toWishlistFlag(value: boolean): number {
   return value ? 1 : 0;
 }
 
+function toEntityResponse(entity: EntityWithTagsRow, kind: KindRow): EntityResponseRow {
+  return {
+    id: entity.id,
+    kind,
+    name: entity.name,
+    description: entity.description,
+    is_wishlist: entity.is_wishlist,
+    tags: entity.tags,
+    created_at: entity.created_at,
+    updated_at: entity.updated_at
+  };
+}
+
+function toEntityWithTagsRow(entity: EntityWithKindRow, tags: TagRow[]): EntityWithTagsRow {
+  return {
+    id: entity.id,
+    kind_id: entity.kind_id,
+    name: entity.name,
+    description: entity.description,
+    is_wishlist: entity.is_wishlist,
+    tags,
+    created_at: entity.created_at,
+    updated_at: entity.updated_at
+  };
+}
+
 export async function listEntitiesUseCase(
   db: D1Database
-): Promise<UseCaseResult<{ entities: EntityWithTagsRow[] }>> {
-  const entities = await listEntities(db);
+): Promise<UseCaseResult<{ entities: EntityResponseRow[] }>> {
+  const entities = await listEntitiesWithKinds(db);
   const tagsByEntity = await fetchTagsByEntityIds(
     db,
     entities.map((entity) => entity.id)
   );
+  const entitiesWithKinds: EntityResponseRow[] = [];
+
+  for (const entity of entities) {
+    entitiesWithKinds.push(
+      toEntityResponse(
+        toEntityWithTagsRow(entity, tagsByEntity.get(entity.id) ?? []),
+        { id: entity.kind_id, label: entity.kind_label }
+      )
+    );
+  }
 
   return success({
-    entities: entities.map((entity) => ({
-      ...entity,
-      tags: tagsByEntity.get(entity.id) ?? []
-    }))
+    entities: entitiesWithKinds
   });
 }
 
 export async function getEntityUseCase(
   db: D1Database,
   id: string
-): Promise<UseCaseResult<{ entity: EntityDetailRow }>> {
-  const entity = await fetchEntityWithTags(db, id);
+): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
+  const entity = await findEntityWithKindById(db, id);
   if (!entity) {
     return fail(404, "entity not found");
   }
 
-  const kind = await findKindById(db, entity.kind_id);
-  if (!kind) {
-    return fail(500, "kind not found");
-  }
+  const tagsByEntity = await fetchTagsByEntityIds(db, [id]);
 
   return success({
-    entity: {
-      ...entity,
-      kind
-    }
+    entity: toEntityResponse(
+      toEntityWithTagsRow(entity, tagsByEntity.get(id) ?? []),
+      { id: entity.kind_id, label: entity.kind_label }
+    )
   });
 }
 
 export async function createEntityUseCase(
   db: D1Database,
   body: EntityBody
-): Promise<UseCaseResult<{ entity: EntityWithTagsRow }>> {
+): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
   const normalizedTagIds = uniqTagIds(body.tagIds);
 
-  const kindExists = await existsKind(db, body.kindId);
-  if (!kindExists) {
+  const kind = await findKindById(db, body.kindId);
+  if (!kind) {
     return fail(400, "kind not found");
   }
 
@@ -118,21 +155,18 @@ export async function createEntityUseCase(
     return fail(404, "entity not found");
   }
 
-  return success({ entity });
+  return success({
+    entity: toEntityResponse(entity, kind)
+  });
 }
 
 export async function updateEntityUseCase(
   db: D1Database,
   id: string,
   body: EntityBody
-): Promise<UseCaseResult<{ entity: EntityWithTagsRow }>> {
-  const existing = await findEntityById(db, id);
-  if (!existing) {
-    return fail(404, "entity not found");
-  }
-
-  const kindExists = await existsKind(db, body.kindId);
-  if (!kindExists) {
+): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
+  const kind = await findKindById(db, body.kindId);
+  if (!kind) {
     return fail(400, "kind not found");
   }
 
@@ -142,7 +176,7 @@ export async function updateEntityUseCase(
     return fail(400, "tag not found");
   }
 
-  const updated = await updateEntity(db, {
+  const updateResult = await updateEntity(db, {
     id,
     kindId: body.kindId,
     name: body.name,
@@ -150,7 +184,10 @@ export async function updateEntityUseCase(
     isWishlistFlag: toWishlistFlag(body.isWishlist)
   });
 
-  if (!updated) {
+  if (updateResult === "not_found") {
+    return fail(404, "entity not found");
+  }
+  if (updateResult === "error") {
     return fail(500, "failed to update entity");
   }
 
@@ -164,5 +201,7 @@ export async function updateEntityUseCase(
     return fail(404, "entity not found");
   }
 
-  return success({ entity });
+  return success({
+    entity: toEntityResponse(entity, kind)
+  });
 }

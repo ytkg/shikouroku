@@ -1,6 +1,5 @@
 import {
   deleteTagAndRelations,
-  findTagById,
   findTagByName,
   insertTag,
   listTags
@@ -21,27 +20,20 @@ export async function createTagUseCase(
     return fail(409, "tag already exists");
   }
 
-  const inserted = await insertTag(db, name);
-  if (!inserted) {
+  const insertedTag = await insertTag(db, name);
+  if (!insertedTag) {
     return fail(500, "failed to insert tag");
   }
 
-  const tag = await findTagByName(db, name);
-  if (!tag) {
-    return fail(500, "failed to load tag");
-  }
-
-  return success({ tag });
+  return success({ tag: insertedTag });
 }
 
 export async function deleteTagUseCase(db: D1Database, id: number): Promise<UseCaseResult<Record<string, never>>> {
-  const existing = await findTagById(db, id);
-  if (!existing) {
+  const deleted = await deleteTagAndRelations(db, id);
+  if (deleted === "not_found") {
     return fail(404, "tag not found");
   }
-
-  const deleted = await deleteTagAndRelations(db, id);
-  if (!deleted) {
+  if (deleted === "error") {
     return fail(500, "failed to delete tag");
   }
 

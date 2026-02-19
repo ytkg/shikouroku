@@ -18,6 +18,10 @@ export type EntityRow = {
   updated_at: string;
 };
 
+export type EntityWithKindRow = EntityRow & {
+  kind_label: string;
+};
+
 export type EntityTagRow = {
   entity_id: string;
   id: number;

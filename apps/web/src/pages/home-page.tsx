@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
-import { ApiError, fetchEntities, fetchKinds } from "@/features/entities/api/entities-api";
-import type { Entity, Kind } from "@/features/entities/model/entity-types";
+import { ApiError, fetchEntities } from "@/features/entities/api/entities-api";
+import type { Entity } from "@/features/entities/model/entity-types";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 type EntityTab = "all" | "wishlist" | `kind:${number}`;
@@ -22,7 +22,7 @@ function getVisibleEntities(entities: Entity[], selectedTab: EntityTab): Entity[
   }
 
   const kindId = Number(selectedTab.slice("kind:".length));
-  return nonWishlistEntities.filter((entity) => entity.kindId === kindId);
+  return nonWishlistEntities.filter((entity) => entity.kind.id === kindId);
 }
 
 export default function HomePage() {
@@ -30,21 +30,8 @@ export default function HomePage() {
   const ensureAuthorized = useAuthGuard();
   const [error, setError] = useState<string | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
-  const [kinds, setKinds] = useState<Kind[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedTab, setSelectedTab] = useState<EntityTab>("all");
-
-  const loadKinds = async () => {
-    try {
-      const kindsData = await fetchKinds();
-      setKinds(kindsData);
-    } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-        return;
-      }
-      throw e;
-    }
-  };
 
   const loadEntities = async () => {
     try {
@@ -62,7 +49,7 @@ export default function HomePage() {
     const init = async () => {
       setError(null);
       try {
-        await Promise.all([loadKinds(), loadEntities()]);
+        await loadEntities();
       } catch (e) {
         setError(e instanceof Error ? e.message : "unknown error");
       } finally {
@@ -72,6 +59,20 @@ export default function HomePage() {
 
     void init();
   }, []);
+
+  const kindTabs = useMemo(() => {
+    const kindMap = new Map<number, string>();
+    for (const entity of entities) {
+      if (entity.isWishlist) {
+        continue;
+      }
+      if (!kindMap.has(entity.kind.id)) {
+        kindMap.set(entity.kind.id, entity.kind.label);
+      }
+    }
+
+    return Array.from(kindMap, ([id, label]) => ({ id, label })).sort((a, b) => a.id - b.id);
+  }, [entities]);
 
   const filteredEntities = useMemo(
     () => getVisibleEntities(entities, selectedTab),
@@ -94,7 +95,7 @@ export default function HomePage() {
           >
             すべて
           </Button>
-          {kinds.map((kind) => {
+          {kindTabs.map((kind) => {
             const kindTab = toKindTab(kind.id);
             return (
               <Button
@@ -121,7 +122,7 @@ export default function HomePage() {
           </div>
         ) : (
           filteredEntities.map((entity) => {
-            const kindLabel = kinds.find((kind) => kind.id === entity.kindId)?.label ?? "不明";
+            const kindLabel = entity.kind.label;
             return (
               <article
                 key={entity.id}

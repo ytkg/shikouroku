@@ -47,7 +47,7 @@ export default function EntityDetailPage() {
     return <main className="w-full bg-background pt-20" />;
   }
 
-  const kindLabel = entity?.kind?.label ?? "不明";
+  const kindLabel = entity?.kind.label ?? "不明";
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-10 pt-24">
