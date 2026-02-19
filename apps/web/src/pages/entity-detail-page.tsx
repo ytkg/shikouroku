@@ -1,5 +1,5 @@
 import { EntityDetailPageContent } from "@/features/entities";
 
-export default function EntityDetailPage() {
+export function EntityDetailPage() {
   return <EntityDetailPageContent />;
 }

@@ -1,5 +1,5 @@
 import { EditEntityPageContent } from "@/features/entities";
 
-export default function EntityEditPage() {
+export function EntityEditPage() {
   return <EditEntityPageContent />;
 }

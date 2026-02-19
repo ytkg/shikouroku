@@ -9,7 +9,7 @@ import {
 import { routePaths } from "@/shared/config/route-paths";
 import { AppFooter, AppHeader } from "@/widgets";
 
-export default function App() {
+export function AppRouter() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />

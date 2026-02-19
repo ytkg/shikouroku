@@ -1,5 +1,5 @@
 import { EntityListPageContent } from "@/features/entities";
 
-export default function HomePage() {
+export function HomePage() {
   return <EntityListPageContent />;
 }

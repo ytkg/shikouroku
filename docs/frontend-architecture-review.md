@@ -3,6 +3,21 @@
 対象: `apps/web/src`  
 目的: メンテナンス性とバグ混入率の観点で、ディレクトリ戦略・命名規約を再評価し、再設計方針を定義する。
 
+## 0. 進捗サマリー（2026-02-19時点）
+
+- 実施済み:
+  - Step 1: API呼び出しを `*.client.ts` + `shared/api` へ集約
+  - Step 2: `new/edit` ページのロジックを `features` へ分離
+  - Step 3: `features/*/index.ts` を公開境界として導入
+  - Step 4: `select/textarea/checkbox` を `shared/ui/form-controls` に統一
+  - Step 5: ESLint + CI品質ゲート（lint/test/typecheck）を導入
+  - Step 6: `README.md` と `components.json` を現行構成へ同期
+- 追加実施:
+  - `home/detail/login` も `features` 側へ分離し、`pages` は薄いラッパー化
+  - ルート/APIパスを `shared/config` へ定数化
+  - `pages` / `widgets` のバレルエクスポートを導入し、`app` からのdeep importを抑制
+  - `app` / `pages` の `default export` を廃止し、命名付きexportへ移行
+
 ## 1. Findings（重大度順）
 
 ### Critical-1: ページが複数責務を抱えすぎており、変更時の回帰リスクが高い
@@ -206,3 +221,9 @@ apps/web/src
 - 変更影響範囲の局所化により、回帰バグ調査時間を短縮。
 - 命名から責務が推測できるため、オンボーディングコストを削減。
 - 依存ルール違反を静的検査で防ぎ、設計崩壊を早期に検知。
+
+## 7. 残タスク（優先順）
+
+1. `features/entities/model/use-entities-api.ts` を query/mutation単位に分割。  
+2. `TagEditDialog` を feature別 (`manage-tags`) に分離し責務を明確化。  
+3. `pages/*/page.tsx` 形式への最終リネーム（必要ならルーティング層と同時に実施）。  

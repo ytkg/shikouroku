@@ -1,5 +1,5 @@
-export { default as EntityDetailPage } from "./entity-detail-page";
-export { default as EntityEditPage } from "./entity-edit-page";
-export { default as HomePage } from "./home-page";
-export { default as LoginPage } from "./login-page";
-export { default as NewEntityPage } from "./new-entity-page";
+export { EntityDetailPage } from "./entity-detail-page";
+export { EntityEditPage } from "./entity-edit-page";
+export { HomePage } from "./home-page";
+export { LoginPage } from "./login-page";
+export { NewEntityPage } from "./new-entity-page";

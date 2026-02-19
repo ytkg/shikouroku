@@ -1,5 +1,5 @@
 import { CreateEntityPageContent } from "@/features/entities";
 
-export default function NewEntityPage() {
+export function NewEntityPage() {
   return <CreateEntityPageContent />;
 }
