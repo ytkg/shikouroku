@@ -1,6 +1,6 @@
 import { type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { TagEditDialog } from "@/features/entities/ui/tag-edit-dialog";
+import { TagEditDialog } from "@/features/entities/manage-tags/ui/tag-edit-dialog";
 import { EntityFormFields } from "@/features/entities/shared/ui/entity-form-fields";
 import { useCreateEntityForm } from "@/features/entities/create/model/use-create-entity-form";
 import { routePaths } from "@/shared/config/route-paths";
