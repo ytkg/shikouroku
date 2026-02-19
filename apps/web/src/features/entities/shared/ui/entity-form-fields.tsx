@@ -1,5 +1,6 @@
 import type { Kind, Tag } from "@/features/entities/model/entity-types";
 import { Button } from "@/shared/ui/button";
+import { Checkbox, Select, Textarea } from "@/shared/ui/form-controls";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
@@ -40,9 +41,8 @@ export function EntityFormFields({
     <>
       <div className="space-y-2">
         <Label htmlFor="kind">種別</Label>
-        <select
+        <Select
           id="kind"
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm"
           value={kindId}
           onChange={(event) => onKindIdChange(event.target.value)}
           required={kindRequired}
@@ -52,7 +52,7 @@ export function EntityFormFields({
               {kind.label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
       <div className="space-y-2">
         <Label htmlFor="name">名前</Label>
@@ -60,9 +60,8 @@ export function EntityFormFields({
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">メモ</Label>
-        <textarea
+        <Textarea
           id="description"
-          className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm"
           value={description}
           onChange={(event) => onDescriptionChange(event.target.value)}
         />
@@ -80,8 +79,7 @@ export function EntityFormFields({
           <div className="flex flex-wrap gap-2">
             {tags.map((tag) => (
               <label key={tag.id} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={selectedTagIds.includes(tag.id)}
                   onChange={(event) => onToggleTag(tag.id, event.target.checked)}
                 />
@@ -92,8 +90,7 @@ export function EntityFormFields({
         )}
       </div>
       <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={isWishlist}
           onChange={(event) => onWishlistChange(event.target.checked)}
         />
