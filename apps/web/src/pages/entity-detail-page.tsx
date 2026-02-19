@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { ApiError, fetchEntityById, fetchKinds } from "@/features/entities/api/entities-api";
-import type { Entity, Kind } from "@/features/entities/model/entity-types";
+import { ApiError, fetchEntityById } from "@/features/entities/api/entities-api";
+import type { Entity } from "@/features/entities/model/entity-types";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 export default function EntityDetailPage() {
@@ -13,7 +13,6 @@ export default function EntityDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [entity, setEntity] = useState<Entity | null>(null);
-  const [kinds, setKinds] = useState<Kind[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -25,9 +24,8 @@ export default function EntityDetailPage() {
 
       setError(null);
       try {
-        const [entityData, kindsData] = await Promise.all([fetchEntityById(entityId), fetchKinds()]);
+        const entityData = await fetchEntityById(entityId);
         setEntity(entityData);
-        setKinds(kindsData);
       } catch (e) {
         if (e instanceof ApiError && !ensureAuthorized(e.status)) {
           return;
@@ -49,7 +47,7 @@ export default function EntityDetailPage() {
     return <main className="w-full bg-background pt-20" />;
   }
 
-  const kindLabel = entity ? kinds.find((kind) => kind.id === entity.kindId)?.label ?? "不明" : "-";
+  const kindLabel = entity?.kind?.label ?? "不明";
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-10 pt-24">

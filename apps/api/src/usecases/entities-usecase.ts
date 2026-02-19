@@ -1,6 +1,6 @@
 import type { EntityBody } from "../domain/schemas";
-import type { EntityWithTagsRow } from "../domain/models";
-import { existsKind } from "../repositories/kind-repository";
+import type { EntityWithTagsRow, KindRow } from "../domain/models";
+import { existsKind, findKindById } from "../repositories/kind-repository";
 import {
   deleteEntity,
   fetchEntityWithTags,
@@ -13,6 +13,10 @@ import {
 } from "../repositories/entity-repository";
 import { countExistingTagsByIds } from "../repositories/tag-repository";
 import { fail, success, type UseCaseResult } from "./result";
+
+type EntityDetailRow = EntityWithTagsRow & {
+  kind: KindRow;
+};
 
 function uniqTagIds(tagIds: number[]): number[] {
   return [...new Set(tagIds)];
@@ -55,13 +59,23 @@ export async function listEntitiesUseCase(
 export async function getEntityUseCase(
   db: D1Database,
   id: string
-): Promise<UseCaseResult<{ entity: EntityWithTagsRow }>> {
+): Promise<UseCaseResult<{ entity: EntityDetailRow }>> {
   const entity = await fetchEntityWithTags(db, id);
   if (!entity) {
     return fail(404, "entity not found");
   }
 
-  return success({ entity });
+  const kind = await findKindById(db, entity.kind_id);
+  if (!kind) {
+    return fail(500, "kind not found");
+  }
+
+  return success({
+    entity: {
+      ...entity,
+      kind
+    }
+  });
 }
 
 export async function createEntityUseCase(

@@ -11,6 +11,7 @@ export type Tag = {
 export type Entity = {
   id: string;
   kindId: number;
+  kind?: Kind;
   name: string;
   description: string | null;
   isWishlist: boolean;

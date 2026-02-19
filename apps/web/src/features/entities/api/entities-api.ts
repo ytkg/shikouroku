@@ -3,6 +3,7 @@ import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
 type ApiEntity = {
   id: string;
   kind_id: number;
+  kind?: Kind;
   name: string;
   description: string | null;
   is_wishlist: number;
@@ -24,6 +25,7 @@ function toEntity(apiEntity: ApiEntity): Entity {
   return {
     id: apiEntity.id,
     kindId: apiEntity.kind_id,
+    kind: apiEntity.kind,
     name: apiEntity.name,
     description: apiEntity.description,
     isWishlist: apiEntity.is_wishlist === 1,
