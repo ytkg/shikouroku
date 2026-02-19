@@ -109,6 +109,48 @@ npm run d1:migrate:dev
 npm run d1:migrate:prod
 ```
 
+## ER図
+
+```mermaid
+erDiagram
+  kinds ||--o{ entities : kind_id
+  entities ||--o{ entity_tags : entity_id
+  tags ||--o{ entity_tags : tag_id
+
+  kinds {
+    INTEGER id PK
+    TEXT label
+    TEXT created_at
+    TEXT updated_at
+  }
+
+  entities {
+    TEXT id PK
+    INTEGER kind_id FK
+    TEXT name
+    TEXT description
+    INTEGER is_wishlist
+    TEXT created_at
+    TEXT updated_at
+  }
+
+  tags {
+    INTEGER id PK
+    TEXT name "UNIQUE"
+    TEXT created_at
+    TEXT updated_at
+  }
+
+  entity_tags {
+    TEXT entity_id FK
+    INTEGER tag_id FK
+    TEXT created_at
+    TEXT updated_at
+  }
+```
+
+`entity_tags` は `(entity_id, tag_id)` の複合主キーです。
+
 ## kinds 初期データメモ
 
 ```sql
