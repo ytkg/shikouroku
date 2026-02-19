@@ -1,4 +1,5 @@
 import { ApiError } from "@/shared/api/api-error";
+import { httpStatus } from "@/shared/config/http-status";
 import { toErrorMessage } from "@/shared/lib/error-message";
 
 export const KEEP_CURRENT_ERROR = Symbol("KEEP_CURRENT_ERROR");
@@ -22,7 +23,7 @@ export function resolveQueryError({
     return KEEP_CURRENT_ERROR;
   }
 
-  if (notFoundMessage && queryError instanceof ApiError && queryError.status === 404) {
+  if (notFoundMessage && queryError instanceof ApiError && queryError.status === httpStatus.notFound) {
     return notFoundMessage;
   }
 
