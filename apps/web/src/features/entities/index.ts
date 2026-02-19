@@ -7,8 +7,8 @@ export {
   useEntitiesQuery,
   useEntityQuery,
   useKindsQuery,
-  useTagsQuery,
-  useEntityMutations,
-  useTagMutations
-} from "./model/use-entities-api";
+  useTagsQuery
+} from "./model/entity.query";
+export { useEntityMutations } from "./model/entity.mutation";
+export { useTagMutations } from "./model/tag.mutation";
 export { TagEditDialog } from "./ui/tag-edit-dialog";

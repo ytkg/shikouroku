@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
 import type { Entity } from "@/features/entities/model/entity-types";
-import { useEntitiesQuery } from "@/features/entities/model/use-entities-api";
+import { useEntitiesQuery } from "@/features/entities/model/entity.query";
 import { ApiError } from "@/shared/api/api-error";
 
 export type EntityTab = "all" | "wishlist" | `kind:${number}`;

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
 import type { Entity, Tag } from "@/features/entities/model/entity-types";
+import { useEntityMutations } from "@/features/entities/model/entity.mutation";
 import {
-  useEntityMutations,
   useKindsQuery,
   useTagsQuery
-} from "@/features/entities/model/use-entities-api";
+} from "@/features/entities/model/entity.query";
 import { ApiError } from "@/shared/api/api-error";
 
 type CreateEntityResult = {

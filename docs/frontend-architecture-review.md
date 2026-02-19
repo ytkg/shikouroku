@@ -17,6 +17,7 @@
   - ルート/APIパスを `shared/config` へ定数化
   - `pages` / `widgets` のバレルエクスポートを導入し、`app` からのdeep importを抑制
   - `app` / `pages` の `default export` を廃止し、命名付きexportへ移行
+  - `use-entities-api.ts` を query/mutation単位へ分割
 
 ## 1. Findings（重大度順）
 
@@ -224,6 +225,5 @@ apps/web/src
 
 ## 7. 残タスク（優先順）
 
-1. `features/entities/model/use-entities-api.ts` を query/mutation単位に分割。  
-2. `TagEditDialog` を feature別 (`manage-tags`) に分離し責務を明確化。  
-3. `pages/*/page.tsx` 形式への最終リネーム（必要ならルーティング層と同時に実施）。  
+1. `TagEditDialog` を feature別 (`manage-tags`) に分離し責務を明確化。  
+2. `pages/*/page.tsx` 形式への最終リネーム（必要ならルーティング層と同時に実施）。  
