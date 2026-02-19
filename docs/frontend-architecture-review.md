@@ -21,6 +21,7 @@
   - `use-entities-api.ts` を query/mutation単位へ分割
   - `TagEditDialog` を `manage-tags` featureへ移設
   - `pages/*/page.tsx` 形式へリネーム
+  - 一覧フィルタロジックを純粋関数化し、設定値/ルート/APIキーのユニットテストを追加
 
 ## 1. Findings（重大度順）
 

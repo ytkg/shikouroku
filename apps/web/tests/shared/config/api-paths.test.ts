@@ -1,0 +1,29 @@
+import { describe, expect, it } from "vitest";
+import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
+import { entityKey, isEntityDetailKey } from "@/features/entities/model/entity.swr-keys";
+
+describe("api-paths", () => {
+  it("固定APIパス定数が期待値を持つ", () => {
+    expect(apiPaths.login).toBe("/api/login");
+    expect(apiPaths.logout).toBe("/api/logout");
+    expect(apiPaths.kinds).toBe("/api/kinds");
+    expect(apiPaths.tags).toBe("/api/tags");
+    expect(apiPaths.entities).toBe("/api/entities");
+  });
+
+  it("動的APIパスを生成できる", () => {
+    expect(getTagPath(10)).toBe("/api/tags/10");
+    expect(getEntityPath("entity-1")).toBe("/api/entities/entity-1");
+  });
+
+  it("entityKey は entity path と一致する", () => {
+    expect(entityKey("id-1")).toBe("/api/entities/id-1");
+  });
+
+  it("isEntityDetailKey は entity detail key だけを許可する", () => {
+    expect(isEntityDetailKey("/api/entities/id-1")).toBe(true);
+    expect(isEntityDetailKey("/api/entities")).toBe(false);
+    expect(isEntityDetailKey("/api/tags/1")).toBe(false);
+    expect(isEntityDetailKey(undefined)).toBe(false);
+  });
+});
