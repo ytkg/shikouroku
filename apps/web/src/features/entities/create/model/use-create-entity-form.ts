@@ -9,6 +9,7 @@ import {
 } from "../../shared/model/tag-selection";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
+import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
 
 type CreateEntityResult = {
   ensureAuthorized: (status: number) => boolean;
@@ -66,16 +67,13 @@ export function useCreateEntityForm(): CreateEntityResult {
   }, [kinds, kindId]);
 
   useEffect(() => {
-    const queryError = kindsError ?? tagsError;
-    if (!queryError) {
-      setError(null);
-      return;
+    const nextError = resolveQueryError({
+      queryError: kindsError ?? tagsError,
+      ensureAuthorized
+    });
+    if (nextError !== KEEP_CURRENT_ERROR) {
+      setError(nextError);
     }
-
-    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
-      return;
-    }
-    setError(toErrorMessage(queryError));
   }, [kindsError, tagsError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {

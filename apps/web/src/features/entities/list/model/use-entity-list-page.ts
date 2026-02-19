@@ -3,8 +3,7 @@ import type { Entity } from "@/entities/entity";
 import { useEntitiesQuery } from "@/entities/entity";
 import { useAuthGuard } from "@/features/auth";
 import { type EntityTab, getKindTabs, getVisibleEntities } from "./entity-list";
-import { ApiError } from "@/shared/api/api-error";
-import { toErrorMessage } from "@/shared/lib/error-message";
+import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
 
 type KindTab = {
   id: number;
@@ -27,16 +26,13 @@ export function useEntityListPage(): EntityListPageResult {
   const { data: entities = [], error: queryError, isLoading } = useEntitiesQuery();
 
   useEffect(() => {
-    if (!queryError) {
-      setError(null);
-      return;
+    const nextError = resolveQueryError({
+      queryError,
+      ensureAuthorized
+    });
+    if (nextError !== KEEP_CURRENT_ERROR) {
+      setError(nextError);
     }
-
-    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
-      return;
-    }
-
-    setError(toErrorMessage(queryError));
   }, [queryError, ensureAuthorized]);
 
   const kindTabs = useMemo(() => getKindTabs(entities), [entities]);

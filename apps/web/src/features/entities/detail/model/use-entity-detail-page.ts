@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useEntityQuery } from "@/entities/entity";
 import { useAuthGuard } from "@/features/auth";
-import { ApiError } from "@/shared/api/api-error";
-import { toErrorMessage } from "@/shared/lib/error-message";
+import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
 
 type EntityDetailPageResult = {
   entity: ReturnType<typeof useEntityQuery>["data"];
@@ -21,21 +20,14 @@ export function useEntityDetailPage(entityId: string | undefined): EntityDetailP
       return;
     }
 
-    if (!queryError) {
-      setError(null);
-      return;
+    const nextError = resolveQueryError({
+      queryError,
+      ensureAuthorized,
+      notFoundMessage: "データが見つかりませんでした"
+    });
+    if (nextError !== KEEP_CURRENT_ERROR) {
+      setError(nextError);
     }
-
-    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
-      return;
-    }
-
-    if (queryError instanceof ApiError && queryError.status === 404) {
-      setError("データが見つかりませんでした");
-      return;
-    }
-
-    setError(toErrorMessage(queryError));
   }, [entityId, queryError, ensureAuthorized]);
 
   return {

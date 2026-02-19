@@ -9,6 +9,7 @@ import {
 } from "../../shared/model/tag-selection";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
+import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
 
 type EditEntityResult = {
   ensureAuthorized: (status: number) => boolean;
@@ -86,22 +87,14 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       return;
     }
 
-    const queryError = entityError ?? kindsError ?? tagsError;
-    if (!queryError) {
-      setError(null);
-      return;
+    const nextError = resolveQueryError({
+      queryError: entityError ?? kindsError ?? tagsError,
+      ensureAuthorized,
+      notFoundMessage: "データが見つかりませんでした"
+    });
+    if (nextError !== KEEP_CURRENT_ERROR) {
+      setError(nextError);
     }
-
-    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
-      return;
-    }
-
-    if (queryError instanceof ApiError && queryError.status === 404) {
-      setError("データが見つかりませんでした");
-      return;
-    }
-
-    setError(toErrorMessage(queryError));
   }, [entityId, entityError, kindsError, tagsError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
