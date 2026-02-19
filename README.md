@@ -46,7 +46,7 @@ npm run dev
 
 - Web: `http://localhost:5173` (Vite)
 - API: `http://127.0.0.1:8787` (Wrangler)
-- Web側は `/api` を Wrangler に proxy するため、`fetch("/api/hello")` がそのまま動きます。
+- Web側は `/api` を Wrangler に proxy するため、フロントから同一オリジン感覚で API を呼び出せます。
 - API は `wrangler dev --remote` で起動し、`preview_database_id`（開発DB）を参照します。
 - 事前に `npm run d1:migrate:dev` を実行してください（`--preview` で開発DBへ適用）。
 
@@ -109,12 +109,6 @@ npm run d1:migrate:dev
 npm run d1:migrate:prod
 ```
 
-5. 疎通確認（認証後）
-
-```bash
-curl http://127.0.0.1:8787/api/db/health
-```
-
 ## kinds 初期データメモ
 
 ```sql
@@ -150,6 +144,6 @@ npm run deploy
 
 1. `npm run dev` を実行
 2. `http://localhost:5173` を開く
-3. Card UI と Input/Button が表示される
-4. `APIの応答` に `/api/hello` の JSON が表示される
+3. ログイン画面が表示される
+4. ログイン後に一覧画面が表示され、データ取得できる
 5. `npm run build` が成功する

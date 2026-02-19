@@ -110,10 +110,6 @@ app.post("/api/login", async (c) => {
   return c.json({ ok: true });
 });
 
-app.get("/api/hello", (c) => {
-  return c.json({ ok: true, message: "hello shikouroku" });
-});
-
 app.get("/api/kinds", async (c) => {
   const result = await c.env.DB.prepare("SELECT id, label FROM kinds ORDER BY id ASC").all<{
     id: number;
@@ -256,11 +252,6 @@ app.post("/api/entities", async (c) => {
   );
 });
 
-app.get("/api/db/health", async (c) => {
-  const row = await c.env.DB.prepare("SELECT datetime('now') AS now").first<{ now: string }>();
-  return c.json({ ok: true, now: row?.now ?? null });
-});
-
 app.post("/api/logout", (c) => {
   c.header("Set-Cookie", clearTokenCookie());
   return c.json({ ok: true });
@@ -278,7 +269,7 @@ export default {
     const hasValidToken = token ? await verifyToken(token) : false;
 
     if (pathname.startsWith("/api/")) {
-      if (pathname === "/api/login" || pathname === "/api/db/health") {
+      if (pathname === "/api/login") {
         return app.fetch(request, env, ctx);
       }
       if (!hasValidToken) {
