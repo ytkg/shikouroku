@@ -88,12 +88,33 @@ export default [
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
       "import/no-default-export": "error",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "Literal[value=/^\\/api\\//]",
+          message: "APIパスは `@/shared/config/api-paths` の定数/関数を利用してください。"
+        },
+        {
+          selector: "Literal[value='/login']",
+          message: "ルートパスは `@/shared/config/route-paths` を利用してください。"
+        },
+        {
+          selector: "Literal[value='/entities/new']",
+          message: "ルートパスは `@/shared/config/route-paths` を利用してください。"
+        }
+      ],
       "unicorn/filename-case": [
         "error",
         {
           case: "kebabCase"
         }
       ]
+    }
+  },
+  {
+    files: ["src/shared/config/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": "off"
     }
   },
   {
