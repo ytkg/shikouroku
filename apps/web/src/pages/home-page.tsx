@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
-import { ApiError } from "@/features/entities/api/entities-api";
 import type { Entity } from "@/features/entities/model/entity-types";
 import { useEntitiesQuery } from "@/features/entities/model/use-entities-api";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
+import { ApiError } from "@/shared/api/api-error";
 
 type EntityTab = "all" | "wishlist" | `kind:${number}`;
 

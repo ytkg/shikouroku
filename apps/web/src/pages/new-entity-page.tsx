@@ -10,7 +10,6 @@ import {
 } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { ApiError } from "@/features/entities/api/entities-api";
 import type { Entity, Tag } from "@/features/entities/model/entity-types";
 import {
   useEntityMutations,
@@ -19,6 +18,7 @@ import {
 } from "@/features/entities/model/use-entities-api";
 import { TagEditDialog } from "@/features/entities/ui/tag-edit-dialog";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
+import { ApiError } from "@/shared/api/api-error";
 
 export default function NewEntityPage() {
   const navigate = useNavigate();

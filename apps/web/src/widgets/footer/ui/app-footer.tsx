@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { logout as logoutRequest } from "@/features/auth/api/auth.client";
 import { Button } from "@/shared/ui/button";
 
 export function AppFooter() {
@@ -7,7 +8,7 @@ export function AppFooter() {
   const showLogout = location.pathname !== "/login";
 
   const logout = async () => {
-    await fetch("/api/logout", { method: "POST" });
+    await logoutRequest().catch(() => undefined);
     navigate("/login", { replace: true });
   };
 

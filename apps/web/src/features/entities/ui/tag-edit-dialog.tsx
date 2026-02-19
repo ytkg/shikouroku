@@ -1,10 +1,10 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { ApiError } from "@/features/entities/api/entities-api";
 import type { Tag } from "@/features/entities/model/entity-types";
 import { useTagMutations } from "@/features/entities/model/use-entities-api";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+import { ApiError } from "@/shared/api/api-error";
 
 type TagEditDialogProps = {
   open: boolean;

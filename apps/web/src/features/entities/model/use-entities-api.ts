@@ -12,7 +12,7 @@ import {
   type CreateEntityInput,
   type CreateTagInput,
   type UpdateEntityInput
-} from "@/features/entities/api/entities-api";
+} from "@/features/entities/api/entities.client";
 import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
 
 const ENTITIES_KEY = "/api/entities";

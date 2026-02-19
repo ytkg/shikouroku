@@ -1,8 +1,10 @@
 import { type FormEvent, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { login } from "@/features/auth/api/auth.client";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { ApiError } from "@/shared/api/api-error";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
@@ -18,16 +20,13 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ username, password })
-      });
-      if (!res.ok) {
-        throw new Error("ログインに失敗しました");
-      }
+      await login({ username, password });
       navigate("/", { replace: true });
     } catch (e) {
+      if (e instanceof ApiError) {
+        setError(e.message);
+        return;
+      }
       setError(e instanceof Error ? e.message : "unknown error");
     } finally {
       setLoading(false);
