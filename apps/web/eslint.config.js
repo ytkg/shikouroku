@@ -107,6 +107,14 @@ export default [
             {
               group: ["@/features/entities/*"],
               message: "features/entities は公開API `@/features/entities` 経由で参照してください。"
+            },
+            {
+              group: ["@/pages/*"],
+              message: "app 層から pages の内部実装へ直接依存せず、`@/pages` を利用してください。"
+            },
+            {
+              group: ["@/widgets/*"],
+              message: "app 層から widgets の内部実装へ直接依存せず、`@/widgets` を利用してください。"
             }
           ]
         }
