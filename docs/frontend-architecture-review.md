@@ -30,6 +30,7 @@
   - `auth/entities` APIクライアント統合テストを追加し、`fetch -> client` 経路の検証を固定化
   - `src/entities/entity` を新設し、`features/entities` の model/api を移管（types/query/mutation/client/response）
   - ESLintに `entities` 層ルールを追加し、`app/pages/widgets/features` からの依存境界を強化
+  - `api/*.client.ts` と `api/*.response.ts` のペア存在を検証するアーキテクチャテストを追加
 
 ## 1. Findings（重大度順）
 
