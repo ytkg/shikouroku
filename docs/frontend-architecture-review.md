@@ -57,6 +57,7 @@
   - `pages/index.ts` が `pages/*/page.tsx` を漏れなく再エクスポートしているかを検証するテストを追加
   - `widgets/index.ts` が `widgets/*/ui/app-*.tsx` を再エクスポートしているかを検証するテストを追加
   - バレル検証テストの共通ロジックを `tests/architecture/test-utils` に集約し、重複実装を削減
+  - `encodeURIComponent/decodeURIComponent` の直接利用を禁止し、`shared/lib/url` 経由を強制するASTテストを追加
 
 ## 1. Findings（重大度順）
 
