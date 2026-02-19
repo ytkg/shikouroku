@@ -33,6 +33,7 @@
   - `api/*.client.ts` と `api/*.response.ts` のペア存在を検証するアーキテクチャテストを追加
   - `src/entities/auth` を新設し、`features/auth/api` を移管
   - `api/*.client.ts` が `*.response.ts` の parser を利用しているかを静的テストで検証
+  - レイヤ境界（shared/entities/features/app/pages/widgets）の import ルールを静的テストで検証
 
 ## 1. Findings（重大度順）
 
