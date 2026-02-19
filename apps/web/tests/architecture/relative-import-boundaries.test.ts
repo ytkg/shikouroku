@@ -1,31 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const srcRoot = path.resolve(currentDir, "../../src");
+import {
+  srcRoot,
+  toSrcRelative,
+  topLayerFromAbsolute,
+  walkFiles
+} from "./test-utils";
 const sourceFilePattern = /\.(ts|tsx)$/;
-const allowedLayers = new Set(["app", "pages", "widgets", "features", "entities", "shared"]);
-
-function walkFiles(dir: string): string[] {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const files: string[] = [];
-
-  for (const entry of entries) {
-    const targetPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walkFiles(targetPath));
-      continue;
-    }
-
-    if (entry.isFile() && sourceFilePattern.test(entry.name)) {
-      files.push(targetPath);
-    }
-  }
-
-  return files;
-}
 
 function extractImportPaths(source: string): string[] {
   const fromImportMatches = source.matchAll(/from\s+["']([^"']+)["']/g);
@@ -53,25 +35,13 @@ function resolveRelativeImport(sourceFilePath: string, importPath: string): stri
   return null;
 }
 
-function topLayer(absoluteFilePath: string): string | null {
-  const relativePath = path.relative(srcRoot, absoluteFilePath);
-  const [layer] = relativePath.split(path.sep);
-  if (!layer || layer.startsWith("..")) {
-    return null;
-  }
-  if (!allowedLayers.has(layer)) {
-    return null;
-  }
-  return layer;
-}
-
 describe("architecture: relative import boundaries", () => {
   it("相対importでトップレイヤをまたがない", () => {
-    const sourceFiles = walkFiles(srcRoot);
+    const sourceFiles = walkFiles(srcRoot, (filePath) => sourceFilePattern.test(filePath));
     const violations: string[] = [];
 
     for (const sourceFilePath of sourceFiles) {
-      const sourceLayer = topLayer(sourceFilePath);
+      const sourceLayer = topLayerFromAbsolute(sourceFilePath);
       if (!sourceLayer) {
         continue;
       }
@@ -89,14 +59,14 @@ describe("architecture: relative import boundaries", () => {
           continue;
         }
 
-        const targetLayer = topLayer(resolvedPath);
+        const targetLayer = topLayerFromAbsolute(resolvedPath);
         if (!targetLayer) {
           continue;
         }
 
         if (sourceLayer !== targetLayer) {
           violations.push(
-            `${path.relative(srcRoot, sourceFilePath)} -> ${importPath}: cross-layer relative import to ${targetLayer}`
+            `${toSrcRelative(sourceFilePath)} -> ${importPath}: cross-layer relative import to ${targetLayer}`
           );
         }
       }

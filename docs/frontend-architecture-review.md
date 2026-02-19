@@ -36,6 +36,7 @@
   - レイヤ境界（shared/entities/features/app/pages/widgets）の import ルールを静的テストで検証
   - 相対importでトップレイヤをまたぐ参照を禁止する静的テストを追加（aliasルール迂回を防止）
   - `test:architecture` を追加し、アーキテクチャ検証テストを独立実行可能にした
+  - アーキテクチャテストの共通ユーティリティを導入し、重複実装を削減
 
 ## 1. Findings（重大度順）
 

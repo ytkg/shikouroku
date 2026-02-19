@@ -1,30 +1,7 @@
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const srcRoot = path.resolve(currentDir, "../../src");
+import { srcRoot, toSrcRelative, walkFiles } from "./test-utils";
 const sourceFilePattern = /\.(ts|tsx)$/;
-
-function walkFiles(dir: string): string[] {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const files: string[] = [];
-
-  for (const entry of entries) {
-    const targetPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walkFiles(targetPath));
-      continue;
-    }
-
-    if (entry.isFile() && sourceFilePattern.test(entry.name)) {
-      files.push(targetPath);
-    }
-  }
-
-  return files;
-}
 
 function extractAliasImports(source: string): string[] {
   const importMatches = source.matchAll(/from\s+["'](@\/[^"']+)["']/g);
@@ -41,11 +18,11 @@ function isDeepSliceImport(value: string, slice: "features" | "entities"): boole
 
 describe("architecture: layer import boundaries", () => {
   it("各レイヤが禁止レイヤへ依存していない", () => {
-    const files = walkFiles(srcRoot);
+    const files = walkFiles(srcRoot, (filePath) => sourceFilePattern.test(filePath));
     const violations: string[] = [];
 
     for (const filePath of files) {
-      const relativePath = path.relative(srcRoot, filePath);
+      const relativePath = toSrcRelative(filePath);
       const source = fs.readFileSync(filePath, "utf-8");
       const imports = extractAliasImports(source);
 

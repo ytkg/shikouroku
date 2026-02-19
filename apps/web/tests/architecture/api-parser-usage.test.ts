@@ -1,43 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const srcRoot = path.resolve(currentDir, "../../src");
-
-function walkFiles(dir: string): string[] {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const files: string[] = [];
-
-  for (const entry of entries) {
-    const targetPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...walkFiles(targetPath));
-      continue;
-    }
-
-    if (entry.isFile()) {
-      files.push(targetPath);
-    }
-  }
-
-  return files;
-}
-
-function isDomainApiClient(filePath: string): boolean {
-  const relativePath = path.relative(srcRoot, filePath);
-  if (!relativePath.endsWith(".client.ts")) {
-    return false;
-  }
-
-  if (!relativePath.includes(`${path.sep}api${path.sep}`)) {
-    return false;
-  }
-
-  return relativePath.startsWith(`entities${path.sep}`) || relativePath.startsWith(`features${path.sep}`);
-}
+import {
+  isDomainApiClientRelative,
+  srcRoot,
+  toSrcRelative,
+  walkFiles
+} from "./test-utils";
 
 function getImportedParserIdentifiers(sourceFile: ts.SourceFile, expectedImportPath: string): Set<string> {
   const parserIdentifiers = new Set<string>();
@@ -101,7 +71,9 @@ function hasParserCall(sourceFile: ts.SourceFile, parserIdentifiers: Set<string>
 
 describe("architecture: api parser usage", () => {
   it("api配下の*.client.tsは対応*.response.tsからimportしたparse関数を呼び出す", () => {
-    const clientFiles = walkFiles(srcRoot).filter(isDomainApiClient);
+    const clientFiles = walkFiles(srcRoot).filter((filePath) =>
+      isDomainApiClientRelative(toSrcRelative(filePath))
+    );
     expect(clientFiles.length).toBeGreaterThan(0);
 
     const violations: string[] = [];
@@ -111,7 +83,7 @@ describe("architecture: api parser usage", () => {
       const sourceFile = ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true);
       const baseName = path.basename(filePath, ".client.ts");
       const expectedImportPath = `./${baseName}.response`;
-      const relativePath = path.relative(srcRoot, filePath);
+      const relativePath = toSrcRelative(filePath);
 
       const parserIdentifiers = getImportedParserIdentifiers(sourceFile, expectedImportPath);
       if (parserIdentifiers.size === 0) {
