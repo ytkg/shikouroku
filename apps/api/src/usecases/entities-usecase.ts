@@ -3,6 +3,7 @@ import type { EntityWithKindRow, EntityWithTagsRow, KindRow, TagRow } from "../d
 import { findKindById } from "../repositories/kind-repository";
 import {
   deleteEntity,
+  findEntityIdByKindAndName,
   findEntityWithKindById,
   fetchEntityWithTags,
   fetchTagsByEntityIds,
@@ -126,6 +127,11 @@ export async function createEntityUseCase(
     return fail(400, "kind not found");
   }
 
+  const duplicated = await findEntityIdByKindAndName(db, body.kindId, body.name);
+  if (duplicated) {
+    return fail(409, "entity already exists");
+  }
+
   const hasValidTags = await validateTagIds(db, normalizedTagIds);
   if (!hasValidTags) {
     return fail(400, "tag not found");
@@ -168,6 +174,11 @@ export async function updateEntityUseCase(
   const kind = await findKindById(db, body.kindId);
   if (!kind) {
     return fail(400, "kind not found");
+  }
+
+  const duplicated = await findEntityIdByKindAndName(db, body.kindId, body.name);
+  if (duplicated && duplicated.id !== id) {
+    return fail(409, "entity already exists");
   }
 
   const normalizedTagIds = uniqTagIds(body.tagIds);

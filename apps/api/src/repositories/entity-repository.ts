@@ -41,6 +41,19 @@ export async function findEntityById(db: D1Database, id: string): Promise<Entity
   return entity ?? null;
 }
 
+export async function findEntityIdByKindAndName(
+  db: D1Database,
+  kindId: number,
+  name: string
+): Promise<{ id: string } | null> {
+  const entity = await db
+    .prepare("SELECT id FROM entities WHERE kind_id = ? AND name = ? LIMIT 1")
+    .bind(kindId, name)
+    .first<{ id: string }>();
+
+  return entity ?? null;
+}
+
 export async function findEntityWithKindById(db: D1Database, id: string): Promise<EntityWithKindRow | null> {
   const entity = await db
     .prepare(
