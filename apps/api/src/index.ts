@@ -2,10 +2,18 @@ import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { AppEnv } from "./app-env";
 import { entityBodySchema, loginBodySchema, tagBodySchema } from "./domain/schemas";
-import { clearTokenCookie, getTokenFromCookie, makeTokenCookie } from "./lib/cookies";
+import {
+  clearAccessTokenCookie,
+  clearRefreshTokenCookie,
+  getAccessTokenFromCookie,
+  getRefreshTokenFromCookie,
+  makeAccessTokenCookie,
+  makeRefreshTokenCookie
+} from "./lib/cookies";
 import { parseJsonBody } from "./lib/http";
 import { isStaticAssetPath } from "./lib/path";
-import { loginUseCase, verifyTokenUseCase } from "./usecases/auth-usecase";
+import type { AuthTokenPair } from "./lib/auth-client";
+import { loginUseCase, refreshUseCase, verifyTokenUseCase } from "./usecases/auth-usecase";
 import {
   createEntityUseCase,
   getEntityUseCase,
@@ -21,6 +29,16 @@ function toContentfulStatusCode(status: number): ContentfulStatusCode {
   return status as ContentfulStatusCode;
 }
 
+function setAuthCookies(response: Response, accessToken: string, refreshToken: string): void {
+  response.headers.append("Set-Cookie", makeAccessTokenCookie(accessToken));
+  response.headers.append("Set-Cookie", makeRefreshTokenCookie(refreshToken));
+}
+
+function clearAuthCookies(response: Response): void {
+  response.headers.append("Set-Cookie", clearAccessTokenCookie());
+  response.headers.append("Set-Cookie", clearRefreshTokenCookie());
+}
+
 async function resolveSpaAsset(request: Request, assets: Fetcher): Promise<Response> {
   const assetResponse = await assets.fetch(request);
   if (assetResponse.status !== 404) {
@@ -33,8 +51,18 @@ async function resolveSpaAsset(request: Request, assets: Fetcher): Promise<Respo
 
 app.use("*", async (c, next) => {
   const pathname = c.req.path;
-  const token = getTokenFromCookie(c.req.raw);
-  const hasValidToken = token ? await verifyTokenUseCase(token) : false;
+  const accessToken = getAccessTokenFromCookie(c.req.raw);
+  const refreshToken = getRefreshTokenFromCookie(c.req.raw);
+  let hasValidToken = accessToken ? await verifyTokenUseCase(accessToken) : false;
+  let refreshedTokens: AuthTokenPair | null = null;
+
+  if (!hasValidToken && refreshToken) {
+    const refreshed = await refreshUseCase(refreshToken);
+    if (refreshed.ok) {
+      hasValidToken = true;
+      refreshedTokens = refreshed.data;
+    }
+  }
 
   if (pathname.startsWith("/api/")) {
     if (pathname === "/api/login") {
@@ -43,22 +71,36 @@ app.use("*", async (c, next) => {
     }
 
     if (!hasValidToken) {
-      return c.json({ ok: false, message: "unauthorized" }, 401);
+      const response = c.json({ ok: false, message: "unauthorized" }, 401);
+      clearAuthCookies(response);
+      return response;
     }
 
     await next();
+    if (refreshedTokens) {
+      setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+    }
     return;
   }
 
   if (pathname === "/login" && hasValidToken) {
-    return c.redirect("/", 302);
+    const response = c.redirect("/", 302);
+    if (refreshedTokens) {
+      setAuthCookies(response, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+    }
+    return response;
   }
 
   if (!hasValidToken && pathname !== "/login" && !isStaticAssetPath(pathname)) {
-    return c.redirect("/login", 302);
+    const response = c.redirect("/login", 302);
+    clearAuthCookies(response);
+    return response;
   }
 
   await next();
+  if (refreshedTokens) {
+    setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+  }
 });
 
 app.post("/api/login", async (c) => {
@@ -72,13 +114,15 @@ app.post("/api/login", async (c) => {
     return c.json({ ok: false, error: result.message }, toContentfulStatusCode(result.status));
   }
 
-  c.header("Set-Cookie", makeTokenCookie(result.data.token));
-  return c.json({ ok: true });
+  const response = c.json({ ok: true });
+  setAuthCookies(response, result.data.accessToken, result.data.refreshToken);
+  return response;
 });
 
 app.post("/api/logout", (c) => {
-  c.header("Set-Cookie", clearTokenCookie());
-  return c.json({ ok: true });
+  const response = c.json({ ok: true });
+  clearAuthCookies(response);
+  return response;
 });
 
 app.get("/api/kinds", async (c) => {
