@@ -69,6 +69,7 @@
   - `features/entities/index.ts` がサブ機能公開indexのみを再エクスポートすることを検証するテストを追加
   - `features/auth` も `login` / `model` の公開index経由へ統一し、ルート公開APIの deep export を排除
   - `features/auth/index.ts` の公開モジュール境界を検証するテストを追加
+  - `public-api-indexes` テストを拡張し、`entities/pages/widgets` のルート `index.ts` 存在を検証
 
 ## 1. Findings（重大度順）
 

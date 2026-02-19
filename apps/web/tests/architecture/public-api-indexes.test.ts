@@ -24,4 +24,14 @@ describe("architecture: public api indexes", () => {
 
     expect(missingIndexes).toEqual([]);
   });
+
+  it("主要レイヤのルート public api index.ts が存在する", () => {
+    const requiredIndexes = ["entities/index.ts", "pages/index.ts", "widgets/index.ts"];
+
+    const missingIndexes = requiredIndexes.filter(
+      (relativePath) => !fs.existsSync(path.join(srcRoot, relativePath))
+    );
+
+    expect(missingIndexes).toEqual([]);
+  });
 });
