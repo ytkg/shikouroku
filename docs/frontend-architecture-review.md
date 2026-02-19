@@ -17,6 +17,7 @@
   - ルート/APIパスを `shared/config` へ定数化
   - `pages` / `widgets` のバレルエクスポートを導入し、`app` からのdeep importを抑制
   - `app` / `pages` の `default export` を廃止し、命名付きexportへ移行
+  - ESLintで `import/no-default-export` を有効化し、再発を防止
   - `use-entities-api.ts` を query/mutation単位へ分割
   - `TagEditDialog` を `manage-tags` featureへ移設
   - `pages/*/page.tsx` 形式へリネーム
