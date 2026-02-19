@@ -33,5 +33,8 @@ jobs:
       - name: Test
         run: npm run test
 
+      - name: Architecture Test
+        run: npm run test:architecture
+
       - name: Typecheck
         run: npm run typecheck

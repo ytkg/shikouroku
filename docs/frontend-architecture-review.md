@@ -32,8 +32,9 @@
   - ESLintに `entities` 層ルールを追加し、`app/pages/widgets/features` からの依存境界を強化
   - `api/*.client.ts` と `api/*.response.ts` のペア存在を検証するアーキテクチャテストを追加
   - `src/entities/auth` を新設し、`features/auth/api` を移管
-  - `api/*.client.ts` が `*.response.ts` の parser を利用しているかを静的テストで検証
+  - `api/*.client.ts` が `*.response.ts` の parser を利用しているかをASTベースで検証
   - レイヤ境界（shared/entities/features/app/pages/widgets）の import ルールを静的テストで検証
+  - `test:architecture` を追加し、アーキテクチャ検証テストを独立実行可能にした
 
 ## 1. Findings（重大度順）
 
@@ -47,15 +48,15 @@
 - 推奨:
   - Testing Library + MSW で `create/edit/login` の統合テストを追加する。
 
-### Medium-2: parser利用検証は導入済みだが、現在は文字列ベース判定で厳密性に限界がある
+### Medium-2: UI統合テスト導入のための依存が未導入（ネットワーク制約）
 
 - 根拠:
-  - `apps/web/tests/architecture/api-response-pairing.test.ts`
-  - `apps/web/tests/architecture/api-parser-usage.test.ts`
+  - `apps/web/package.json`（`jsdom` / Testing Library 未導入）
+  - 依存導入時の `ENOTFOUND registry.npmjs.org`
 - 問題:
-  - 現状は import 文と `parseXxx(` の文字列検知であり、ASTレベルの厳密検査ではない。
+  - UI統合テストを追加したくても依存導入ができず、現時点では実装を進められない。
 - 推奨:
-  - ESLintカスタムルールまたはASTベーステストへ移行し、検査の抜け道を減らす。
+  - ネットワーク到達性を確保後、`jsdom` / `@testing-library/react` / `@testing-library/user-event` を追加する。
 
 ## 2. 推奨ターゲット構成（大幅変更案）
 
@@ -162,7 +163,7 @@ apps/web/src
 ## 5. 優先移行ステップ
 
 1. UI統合テスト: `login/create/edit` の主要フロー（成功/失敗/401）を Testing Library + MSW で追加。  
-2. API検証運用: parser適用チェックをASTベースへ強化。  
+2. テスト基盤整備: UI統合テスト向け依存を導入可能な環境を確保。  
 3. ルール維持: 既存の import 境界・命名規約をCIで継続監視し、例外運用を増やさない。  
 
 ## 6. 期待効果
@@ -173,4 +174,4 @@ apps/web/src
 
 ## 7. 残タスク（優先順）
 
-- ドメイン分離は完了。次は UI統合テスト拡充と parser適用チェックの厳密化が重点。  
+- ドメイン分離とAST検証は完了。次は UI統合テスト拡充（依存導入環境の解消）が重点。  

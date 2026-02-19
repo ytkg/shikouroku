@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
@@ -38,25 +39,88 @@ function isDomainApiClient(filePath: string): boolean {
   return relativePath.startsWith(`entities${path.sep}`) || relativePath.startsWith(`features${path.sep}`);
 }
 
+function getImportedParserIdentifiers(sourceFile: ts.SourceFile, expectedImportPath: string): Set<string> {
+  const parserIdentifiers = new Set<string>();
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isImportDeclaration(statement)) {
+      continue;
+    }
+
+    if (!ts.isStringLiteral(statement.moduleSpecifier)) {
+      continue;
+    }
+
+    if (statement.moduleSpecifier.text !== expectedImportPath) {
+      continue;
+    }
+
+    const importClause = statement.importClause;
+    const namedBindings = importClause?.namedBindings;
+
+    if (!namedBindings || !ts.isNamedImports(namedBindings)) {
+      continue;
+    }
+
+    for (const element of namedBindings.elements) {
+      const identifier = (element.propertyName ?? element.name).text;
+      if (identifier.startsWith("parse")) {
+        parserIdentifiers.add(element.name.text);
+      }
+    }
+  }
+
+  return parserIdentifiers;
+}
+
+function hasParserCall(sourceFile: ts.SourceFile, parserIdentifiers: Set<string>): boolean {
+  if (parserIdentifiers.size === 0) {
+    return false;
+  }
+
+  let found = false;
+
+  function visit(node: ts.Node) {
+    if (found) {
+      return;
+    }
+
+    if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+      if (parserIdentifiers.has(node.expression.text)) {
+        found = true;
+        return;
+      }
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return found;
+}
+
 describe("architecture: api parser usage", () => {
-  it("api配下の*.client.tsは対応*.response.tsをimportし、parse関数を利用する", () => {
+  it("api配下の*.client.tsは対応*.response.tsからimportしたparse関数を呼び出す", () => {
     const clientFiles = walkFiles(srcRoot).filter(isDomainApiClient);
     expect(clientFiles.length).toBeGreaterThan(0);
 
     const violations: string[] = [];
 
     for (const filePath of clientFiles) {
-      const source = fs.readFileSync(filePath, "utf-8");
+      const sourceText = fs.readFileSync(filePath, "utf-8");
+      const sourceFile = ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true);
       const baseName = path.basename(filePath, ".client.ts");
       const expectedImportPath = `./${baseName}.response`;
+      const relativePath = path.relative(srcRoot, filePath);
 
-      if (!source.includes(expectedImportPath)) {
-        violations.push(`${path.relative(srcRoot, filePath)}: missing import "${expectedImportPath}"`);
+      const parserIdentifiers = getImportedParserIdentifiers(sourceFile, expectedImportPath);
+      if (parserIdentifiers.size === 0) {
+        violations.push(`${relativePath}: missing parser import from "${expectedImportPath}"`);
         continue;
       }
 
-      if (!/parse[A-Z]\w*\(/.test(source)) {
-        violations.push(`${path.relative(srcRoot, filePath)}: missing parser call`);
+      if (!hasParserCall(sourceFile, parserIdentifiers)) {
+        violations.push(`${relativePath}: parser function call not found`);
       }
     }
 
