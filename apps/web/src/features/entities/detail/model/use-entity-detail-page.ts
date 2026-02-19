@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useEntityQuery } from "@/entities/entity";
 import { useAuthGuard } from "@/features/auth";
 import { ApiError } from "@/shared/api/api-error";
+import { toErrorMessage } from "@/shared/lib/error-message";
 
 type EntityDetailPageResult = {
   entity: ReturnType<typeof useEntityQuery>["data"];
@@ -34,7 +35,7 @@ export function useEntityDetailPage(entityId: string | undefined): EntityDetailP
       return;
     }
 
-    setError(queryError instanceof Error ? queryError.message : "unknown error");
+    setError(toErrorMessage(queryError));
   }, [entityId, queryError, ensureAuthorized]);
 
   return {

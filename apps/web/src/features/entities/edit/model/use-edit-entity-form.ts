@@ -8,6 +8,7 @@ import {
   toggleTagId
 } from "../../shared/model/tag-selection";
 import { ApiError } from "@/shared/api/api-error";
+import { toErrorMessage } from "@/shared/lib/error-message";
 
 type EditEntityResult = {
   ensureAuthorized: (status: number) => boolean;
@@ -33,10 +34,6 @@ type EditEntityResult = {
   onTagDeleted: (tagId: number) => void;
   save: () => Promise<boolean>;
 };
-
-function toUnknownError(error: unknown): string {
-  return error instanceof Error ? error.message : "unknown error";
-}
 
 function toKindId(value: string): number | null {
   const kindId = Number(value);
@@ -104,7 +101,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       return;
     }
 
-    setError(toUnknownError(queryError));
+    setError(toErrorMessage(queryError));
   }, [entityId, entityError, kindsError, tagsError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
@@ -150,7 +147,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return false;
       }
-      setError(toUnknownError(e));
+      setError(toErrorMessage(e));
       return false;
     } finally {
       setSaving(false);

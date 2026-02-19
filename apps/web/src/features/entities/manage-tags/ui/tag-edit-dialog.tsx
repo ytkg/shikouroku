@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import type { Tag } from "@/entities/entity";
 import { useTagMutations } from "@/entities/entity";
 import { ApiError } from "@/shared/api/api-error";
+import { toErrorMessage } from "@/shared/lib/error-message";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -81,7 +82,7 @@ export function TagEditDialog({
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return;
       }
-      setError(e instanceof Error ? e.message : "unknown error");
+      setError(toErrorMessage(e));
     } finally {
       setCreating(false);
     }
@@ -101,7 +102,7 @@ export function TagEditDialog({
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return;
       }
-      setError(e instanceof Error ? e.message : "unknown error");
+      setError(toErrorMessage(e));
     } finally {
       setDeletingTagId(null);
     }

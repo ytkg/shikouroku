@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { login } from "@/entities/auth";
 import { ApiError } from "@/shared/api/api-error";
 import { routePaths } from "@/shared/config/route-paths";
+import { toErrorMessage } from "@/shared/lib/error-message";
 
 type LoginFormResult = {
   username: string;
@@ -32,7 +33,7 @@ export function useLoginForm(): LoginFormResult {
         setError(e.message);
         return;
       }
-      setError(e instanceof Error ? e.message : "unknown error");
+      setError(toErrorMessage(e));
     } finally {
       setLoading(false);
     }
