@@ -20,7 +20,8 @@
     "d1:tables:dev": "npm --workspace @shikouroku/api run d1:tables:dev",
     "d1:tables:prod": "npm --workspace @shikouroku/api run d1:tables:prod",
     "typecheck": "npm --workspaces run typecheck",
-    "test:architecture": "npm --workspace @shikouroku/web run test:architecture"
+    "test:architecture": "npm --workspace @shikouroku/web run test:architecture",
+    "test:unit": "npm --workspace @shikouroku/web run test:unit"
   },
   "devDependencies": {
     "npm-run-all": "^1.1.3",
