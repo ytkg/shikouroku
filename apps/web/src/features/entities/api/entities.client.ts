@@ -1,17 +1,14 @@
+import {
+  parseEntitiesResponse,
+  parseEntityResponse,
+  parseKindsResponse,
+  parseOkResponse,
+  parseTagResponse,
+  parseTagsResponse
+} from "@/features/entities/api/entities.response";
 import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
-import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
 import { requestJson } from "@/shared/api/http.client";
-
-type ApiEntity = {
-  id: string;
-  kind: Kind;
-  name: string;
-  description: string | null;
-  is_wishlist: number;
-  tags?: Tag[];
-  created_at?: string;
-  updated_at?: string;
-};
+import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
 
 export type CreateTagInput = {
   name: string;
@@ -33,97 +30,56 @@ export type UpdateEntityInput = {
   tagIds: number[];
 };
 
-type KindsResponse = {
-  ok: boolean;
-  kinds: Kind[];
-};
-
-type TagsResponse = {
-  ok: boolean;
-  tags: Tag[];
-};
-
-type TagResponse = {
-  ok: boolean;
-  tag: Tag;
-};
-
-type EntitiesResponse = {
-  ok: boolean;
-  entities: ApiEntity[];
-};
-
-type EntityResponse = {
-  ok: boolean;
-  entity: ApiEntity;
-};
-
-type OkResponse = {
-  ok: boolean;
-};
-
-function toEntity(apiEntity: ApiEntity): Entity {
-  return {
-    id: apiEntity.id,
-    kind: apiEntity.kind,
-    name: apiEntity.name,
-    description: apiEntity.description,
-    isWishlist: apiEntity.is_wishlist === 1,
-    tags: apiEntity.tags ?? [],
-    createdAt: apiEntity.created_at,
-    updatedAt: apiEntity.updated_at
-  };
-}
-
 export async function fetchKinds(): Promise<Kind[]> {
-  const json = await requestJson<KindsResponse>(apiPaths.kinds);
-  return json.kinds;
+  const json = await requestJson<unknown>(apiPaths.kinds);
+  return parseKindsResponse(json);
 }
 
 export async function fetchTags(): Promise<Tag[]> {
-  const json = await requestJson<TagsResponse>(apiPaths.tags);
-  return json.tags;
+  const json = await requestJson<unknown>(apiPaths.tags);
+  return parseTagsResponse(json);
 }
 
 export async function createTag(input: CreateTagInput): Promise<Tag> {
-  const json = await requestJson<TagResponse>(apiPaths.tags, {
+  const json = await requestJson<unknown>(apiPaths.tags, {
     method: "POST",
     body: input
   });
-  return json.tag;
+  return parseTagResponse(json);
 }
 
 export async function deleteTag(tagId: number): Promise<void> {
-  await requestJson<OkResponse>(getTagPath(tagId), {
+  const json = await requestJson<unknown>(getTagPath(tagId), {
     method: "DELETE"
   });
+  parseOkResponse(json);
 }
 
 export async function fetchEntities(): Promise<Entity[]> {
-  const json = await requestJson<EntitiesResponse>(apiPaths.entities);
-  return json.entities.map(toEntity);
+  const json = await requestJson<unknown>(apiPaths.entities);
+  return parseEntitiesResponse(json);
 }
 
 export async function fetchEntityById(entityId: string): Promise<Entity> {
-  const json = await requestJson<EntityResponse>(getEntityPath(entityId));
-  return toEntity(json.entity);
+  const json = await requestJson<unknown>(getEntityPath(entityId));
+  return parseEntityResponse(json);
 }
 
 export async function createEntity(input: CreateEntityInput): Promise<Entity> {
-  const json = await requestJson<EntityResponse>(apiPaths.entities, {
+  const json = await requestJson<unknown>(apiPaths.entities, {
     method: "POST",
     body: input
   });
-  return toEntity(json.entity);
+  return parseEntityResponse(json);
 }
 
 export async function updateEntity(
   entityId: string,
   input: UpdateEntityInput
 ): Promise<Entity> {
-  const json = await requestJson<EntityResponse>(getEntityPath(entityId), {
+  const json = await requestJson<unknown>(getEntityPath(entityId), {
     method: "PATCH",
     body: input
   });
-  return toEntity(json.entity);
+  return parseEntityResponse(json);
 }

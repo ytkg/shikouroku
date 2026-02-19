@@ -51,6 +51,12 @@ export class ApiError extends Error {
   }
 }
 
+export const INVALID_API_RESPONSE_CODE = "INVALID_API_RESPONSE";
+
+export function createInvalidApiResponseError(message: string): ApiError {
+  return new ApiError(502, message, INVALID_API_RESPONSE_CODE);
+}
+
 export async function toApiError(response: Response): Promise<ApiError> {
   const fallbackMessage = `HTTP ${response.status}`;
   const contentType = response.headers.get("content-type") ?? "";

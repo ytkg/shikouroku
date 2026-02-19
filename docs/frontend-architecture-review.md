@@ -25,6 +25,7 @@
   - create/edit 間で重複していたタグ選択ロジックを `shared/model` に共通化
   - CI品質ゲートを `npm run lint/test/typecheck` に統一し、ワークスペース全体で検証
   - ESLintで `/api` と主要ルート文字列のハードコードを禁止
+  - APIレスポンスの実行時バリデーションを導入し、不正なJSON形状を `ApiError(502)` として早期検知
 
 ## 1. Findings（重大度順）
 

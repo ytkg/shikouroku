@@ -1,3 +1,4 @@
+import { parseAuthResponse } from "@/features/auth/api/auth.response";
 import { requestJson } from "@/shared/api/http.client";
 import { apiPaths } from "@/shared/config/api-paths";
 
@@ -6,19 +7,17 @@ export type LoginInput = {
   password: string;
 };
 
-type AuthResponse = {
-  ok: boolean;
-};
-
 export async function login(input: LoginInput): Promise<void> {
-  await requestJson<AuthResponse>(apiPaths.login, {
+  const json = await requestJson<unknown>(apiPaths.login, {
     method: "POST",
     body: input
   });
+  parseAuthResponse(json);
 }
 
 export async function logout(): Promise<void> {
-  await requestJson<AuthResponse>(apiPaths.logout, {
+  const json = await requestJson<unknown>(apiPaths.logout, {
     method: "POST"
   });
+  parseAuthResponse(json);
 }
