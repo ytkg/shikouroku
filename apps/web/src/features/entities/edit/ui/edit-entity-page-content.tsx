@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEditEntityForm } from "../model/use-edit-entity-form";
-import { TagEditDialog } from "../../manage-tags/ui/tag-edit-dialog";
+import { TagEditDialog } from "../../manage-tags";
 import { EntityFormFields } from "../../shared/ui/entity-form-fields";
 import { getEntityDetailPath, routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";

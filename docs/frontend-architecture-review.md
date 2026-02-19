@@ -65,6 +65,8 @@
   - ルーティングのキャッチオール `*` を `routePaths.notFound` へ集約し、直書き禁止ルールへ追加
   - `response.json()` 呼び出しを `shared/api` 境界内に限定するアーキテクチャテストを追加
   - `quality:web` スクリプトを導入し、CI/ローカルで同一の品質ゲート手順（lint/unit/architecture/typecheck）を実行可能にした
+  - `features/entities` にサブ機能単位の `index.ts` を追加し、ルート公開APIの deep export を排除
+  - `features/entities/index.ts` がサブ機能公開indexのみを再エクスポートすることを検証するテストを追加
 
 ## 1. Findings（重大度順）
 
