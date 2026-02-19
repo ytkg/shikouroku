@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { toKindTab } from "@/features/entities/list/model/entity-list";
-import { useEntityListPage } from "@/features/entities/list/model/use-entity-list-page";
+import { toKindTab } from "../model/entity-list";
+import { useEntityListPage } from "../model/use-entity-list-page";
 import { getEntityDetailPath } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 

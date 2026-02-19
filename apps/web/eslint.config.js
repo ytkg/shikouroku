@@ -153,6 +153,11 @@ export default [
         {
           patterns: [
             {
+              group: ["@/features/*/*"],
+              message:
+                "features層内での deep import は禁止です。同一featureは相対import、他featureは `@/features/<slice>` を利用してください。"
+            },
+            {
               group: ["@/app", "@/app/*", "@/pages", "@/pages/*", "@/widgets", "@/widgets/*"],
               message: "features 層から app/pages/widgets への依存は禁止です。"
             }

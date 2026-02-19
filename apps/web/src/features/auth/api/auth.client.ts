@@ -1,4 +1,4 @@
-import { parseAuthResponse } from "@/features/auth/api/auth.response";
+import { parseAuthResponse } from "./auth.response";
 import { requestJson } from "@/shared/api/http.client";
 import { apiPaths } from "@/shared/config/api-paths";
 

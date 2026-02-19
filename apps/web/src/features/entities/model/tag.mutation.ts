@@ -4,13 +4,13 @@ import {
   createTag as createTagRequest,
   deleteTag as deleteTagRequest,
   type CreateTagInput
-} from "@/features/entities/api/entities.client";
+} from "../api/entities.client";
 import {
   ENTITIES_KEY,
   isEntityDetailKey,
   TAGS_KEY
-} from "@/features/entities/model/entity.swr-keys";
-import type { Tag } from "@/features/entities/model/entity-types";
+} from "./entity.swr-keys";
+import type { Tag } from "./entity-types";
 
 export function useTagMutations() {
   const { mutate } = useSWRConfig();

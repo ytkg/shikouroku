@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useEntityDetailPage } from "@/features/entities/detail/model/use-entity-detail-page";
+import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import { getEntityEditPath, routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import {

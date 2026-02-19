@@ -1,4 +1,4 @@
-import type { Kind, Tag } from "@/features/entities/model/entity-types";
+import type { Kind, Tag } from "../../model/entity-types";
 import { Button } from "@/shared/ui/button";
 import { Checkbox, Select, Textarea } from "@/shared/ui/form-controls";
 import { Input } from "@/shared/ui/input";

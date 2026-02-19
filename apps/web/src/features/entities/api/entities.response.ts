@@ -1,4 +1,4 @@
-import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
+import type { Entity, Kind, Tag } from "../model/entity-types";
 import { createInvalidApiResponseError } from "@/shared/api/api-error";
 import {
   expectArray,

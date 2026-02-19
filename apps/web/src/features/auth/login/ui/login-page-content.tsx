@@ -1,6 +1,6 @@
 import type { FormEvent } from "react";
 import { Loader2 } from "lucide-react";
-import { useLoginForm } from "@/features/auth/login/model/use-login-form";
+import { useLoginForm } from "../model/use-login-form";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";

@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
-import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
-import { useEntityMutations } from "@/features/entities/model/entity.mutation";
+import type { Entity, Kind, Tag } from "../../model/entity-types";
+import { useEntityMutations } from "../../model/entity.mutation";
 import {
   useEntityQuery,
   useKindsQuery,
   useTagsQuery
-} from "@/features/entities/model/entity.query";
+} from "../../model/entity.query";
 import {
   addTagId,
   removeTagId,
   toggleTagId
-} from "@/features/entities/shared/model/tag-selection";
+} from "../../shared/model/tag-selection";
 import { ApiError } from "@/shared/api/api-error";
 
 type EditEntityResult = {

@@ -4,8 +4,8 @@ import {
   fetchEntityById,
   fetchKinds,
   fetchTags
-} from "@/features/entities/api/entities.client";
-import { ENTITIES_KEY, entityKey, KINDS_KEY, TAGS_KEY } from "@/features/entities/model/entity.swr-keys";
+} from "../api/entities.client";
+import { ENTITIES_KEY, entityKey, KINDS_KEY, TAGS_KEY } from "./entity.swr-keys";
 
 export function useEntitiesQuery() {
   return useSWR(ENTITIES_KEY, fetchEntities);

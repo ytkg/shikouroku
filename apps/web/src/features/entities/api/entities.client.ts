@@ -5,8 +5,8 @@ import {
   parseOkResponse,
   parseTagResponse,
   parseTagsResponse
-} from "@/features/entities/api/entities.response";
-import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
+} from "./entities.response";
+import type { Entity, Kind, Tag } from "../model/entity-types";
 import { requestJson } from "@/shared/api/http.client";
 import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
 

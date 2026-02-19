@@ -5,9 +5,9 @@ import {
   updateEntity as updateEntityRequest,
   type CreateEntityInput,
   type UpdateEntityInput
-} from "@/features/entities/api/entities.client";
-import { ENTITIES_KEY, entityKey } from "@/features/entities/model/entity.swr-keys";
-import type { Entity } from "@/features/entities/model/entity-types";
+} from "../api/entities.client";
+import { ENTITIES_KEY, entityKey } from "./entity.swr-keys";
+import type { Entity } from "./entity-types";
 
 export function useEntityMutations() {
   const { mutate } = useSWRConfig();

@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
-import type { Entity } from "@/features/entities/model/entity-types";
-import {
-  type EntityTab,
-  getKindTabs,
-  getVisibleEntities
-} from "@/features/entities/list/model/entity-list";
-import { useEntitiesQuery } from "@/features/entities/model/entity.query";
+import type { Entity } from "../../model/entity-types";
+import { type EntityTab, getKindTabs, getVisibleEntities } from "./entity-list";
+import { useEntitiesQuery } from "../../model/entity.query";
 import { ApiError } from "@/shared/api/api-error";
 
 type KindTab = {

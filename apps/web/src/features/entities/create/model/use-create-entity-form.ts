@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
-import type { Entity, Tag } from "@/features/entities/model/entity-types";
-import { useEntityMutations } from "@/features/entities/model/entity.mutation";
-import {
-  useKindsQuery,
-  useTagsQuery
-} from "@/features/entities/model/entity.query";
+import type { Entity, Tag } from "../../model/entity-types";
+import { useEntityMutations } from "../../model/entity.mutation";
+import { useKindsQuery, useTagsQuery } from "../../model/entity.query";
 import {
   addTagId,
   removeTagId,
   toggleTagId
-} from "@/features/entities/shared/model/tag-selection";
+} from "../../shared/model/tag-selection";
 import { ApiError } from "@/shared/api/api-error";
 
 type CreateEntityResult = {

@@ -1,6 +1,6 @@
 import { type FormEvent, useEffect, useState } from "react";
-import type { Tag } from "@/features/entities/model/entity-types";
-import { useTagMutations } from "@/features/entities/model/tag.mutation";
+import type { Tag } from "../../model/entity-types";
+import { useTagMutations } from "../../model/tag.mutation";
 import { ApiError } from "@/shared/api/api-error";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
