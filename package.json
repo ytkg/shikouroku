@@ -10,6 +10,7 @@
     "dev:web": "npm --workspace @shikouroku/web run dev",
     "dev:api": "npm --workspace @shikouroku/api run dev:remote",
     "lint": "npm --workspace @shikouroku/web run lint",
+    "test": "npm --workspace @shikouroku/web run test",
     "build": "npm --workspace @shikouroku/web run build && npm --workspace @shikouroku/api run check",
     "deploy": "npm run build && npm --workspace @shikouroku/api run deploy",
     "d1:migrate:dev": "npm --workspace @shikouroku/api run d1:migrate:dev",
