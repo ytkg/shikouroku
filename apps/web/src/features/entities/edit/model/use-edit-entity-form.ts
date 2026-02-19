@@ -7,6 +7,11 @@ import {
   useKindsQuery,
   useTagsQuery
 } from "@/features/entities/model/entity.query";
+import {
+  addTagId,
+  removeTagId,
+  toggleTagId
+} from "@/features/entities/shared/model/tag-selection";
 import { ApiError } from "@/shared/api/api-error";
 
 type EditEntityResult = {
@@ -108,28 +113,15 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   }, [entityId, entityError, kindsError, tagsError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
-    setSelectedTagIds((current) => {
-      if (checked) {
-        if (current.includes(tagId)) {
-          return current;
-        }
-        return [...current, tagId];
-      }
-      return current.filter((id) => id !== tagId);
-    });
+    setSelectedTagIds((current) => toggleTagId(current, tagId, checked));
   };
 
   const onTagCreated = (tag: Tag) => {
-    setSelectedTagIds((current) => {
-      if (current.includes(tag.id)) {
-        return current;
-      }
-      return [...current, tag.id];
-    });
+    setSelectedTagIds((current) => addTagId(current, tag.id));
   };
 
   const onTagDeleted = (tagId: number) => {
-    setSelectedTagIds((current) => current.filter((id) => id !== tagId));
+    setSelectedTagIds((current) => removeTagId(current, tagId));
   };
 
   const save = async (): Promise<boolean> => {
