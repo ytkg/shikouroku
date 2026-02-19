@@ -9,5 +9,15 @@ export function entityKey(entityId: string): string {
 }
 
 export function isEntityDetailKey(key: unknown): key is string {
-  return typeof key === "string" && key.startsWith(`${apiPaths.entities}/`);
+  if (typeof key !== "string") {
+    return false;
+  }
+
+  const prefix = `${apiPaths.entities}/`;
+  if (!key.startsWith(prefix)) {
+    return false;
+  }
+
+  const entityIdSegment = key.slice(prefix.length);
+  return entityIdSegment.length > 0 && !entityIdSegment.includes("/");
 }

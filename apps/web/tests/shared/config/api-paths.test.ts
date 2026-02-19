@@ -30,7 +30,10 @@ describe("api-paths", () => {
 
   it("isEntityDetailKey は entity detail key だけを許可する", () => {
     expect(isEntityDetailKey("/api/entities/id-1")).toBe(true);
+    expect(isEntityDetailKey("/api/entities/id%2F1")).toBe(true);
     expect(isEntityDetailKey("/api/entities")).toBe(false);
+    expect(isEntityDetailKey("/api/entities/")).toBe(false);
+    expect(isEntityDetailKey("/api/entities/id-1/sub")).toBe(false);
     expect(isEntityDetailKey("/api/tags/1")).toBe(false);
     expect(isEntityDetailKey(undefined)).toBe(false);
   });
