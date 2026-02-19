@@ -31,90 +31,40 @@
 
 ## 1. Findings（重大度順）
 
-### Critical-1: ページが複数責務を抱えすぎており、変更時の回帰リスクが高い
+### High-1: `features/entities` が「ユースケース」と「ドメイン基盤」を同居しており、拡張時の影響範囲が大きい
 
 - 根拠:
-  - `apps/web/src/pages/entity-edit-page.tsx:18`
-  - `apps/web/src/pages/entity-edit-page.tsx:57`
-  - `apps/web/src/pages/entity-edit-page.tsx:111`
-  - `apps/web/src/pages/new-entity-page.tsx:23`
-  - `apps/web/src/pages/new-entity-page.tsx:83`
-  - `apps/web/src/pages/home-page.tsx:29`
+  - `apps/web/src/features/entities/model/entity.query.ts`
+  - `apps/web/src/features/entities/model/entity.mutation.ts`
+  - `apps/web/src/features/entities/create/model/use-create-entity-form.ts`
+  - `apps/web/src/features/entities/edit/model/use-edit-entity-form.ts`
 - 問題:
-  - 1ファイル内に「API連携」「エラー制御」「認証分岐」「フォーム状態」「表示ロジック」が混在。
-  - 修正箇所の局所化ができず、UI変更時にデータ処理へ副作用を起こしやすい。
+  - 現状は `features/entities` に「画面向けロジック」と「実質ドメイン層（query/mutation/types）」が混在。
+  - 仕様追加時に `features/entities` 配下の複数サブ機能へ同時変更が入りやすく、差分が広がりやすい。
 - 推奨:
-  - Pageは「画面構成とルーティング連携」に限定し、ロジックは `features/*/model` へ分離。
-  - 1コンポーネントは1責務（表示 or 操作）に寄せる。
+  - 長期的には `src/entities/*`（domain基盤）を独立させ、`features/*` は画面ユースケースに集中させる。
 
-### Critical-2: APIアクセスの責務境界が崩れており、認証・エラー処理が分散している
+### Medium-1: 実行時レスポンス検証は導入済みだが、今後の新規APIでの適用漏れを自動検知する仕組みが弱い
 
 - 根拠:
-  - `apps/web/src/pages/login-page.tsx:21`
-  - `apps/web/src/widgets/footer/ui/app-footer.tsx:10`
-  - `apps/web/src/features/entities/api/entities-api.ts:56`
+  - `apps/web/src/features/auth/api/auth.client.ts`
+  - `apps/web/src/features/auth/api/auth.response.ts`
+  - `apps/web/src/features/entities/api/entities.client.ts`
+  - `apps/web/src/features/entities/api/entities.response.ts`
 - 問題:
-  - 一部は `features/entities/api` を利用し、一部はUIコンポーネントが直接 `fetch` している。
-  - エラーフォーマット・再試行・認証失効時の挙動が統一されず、バグ温床になる。
+  - 現在のAPIは検証済みだが、新規 `*.client.ts` 追加時に `*.response.ts` を作らない運用漏れが起こり得る。
 - 推奨:
-  - `shared/api/http-client.ts` + 各ドメイン `*.client.ts` にAPI呼び出しを集約。
-  - UI層から `fetch` を禁止し、全通信をQuery/Mutation hook経由に統一。
+  - `*.client.ts` / `*.response.ts` のペア運用をルール化し、lintまたはテンプレートで強制する。
 
-### High-1: ディレクトリ戦略が形だけで、内部実装への深い依存が発生している
+### Medium-2: テストは単体中心で、UI統合（フォーム+ルーティング+API失敗系）の担保が不足
 
 - 根拠:
-  - `apps/web/src/pages/home-page.tsx:4`
-  - `apps/web/src/pages/entity-edit-page.tsx:7`
-  - `apps/web/src/pages/entity-edit-page.tsx:14`
-  - `apps/web/src/pages/entity-edit-page.tsx:15`
+  - `apps/web/tests/features/**/*.test.ts`（純粋関数/クライアント中心）
+  - `apps/web/tests/shared/**/*.test.ts`
 - 問題:
-  - `pages` が `features/*/api` や `features/*/model` の内部ファイルを直接参照。
-  - `features` 配下の内部構成変更が、広範囲のimport破壊につながる。
+  - Hooks/UI連携で起きる回帰（例: 401時の遷移、フォーム送信失敗時表示）の検知はまだ弱い。
 - 推奨:
-  - 各スライスで `index.ts` を公開境界にする。
-  - `pages` は `features/*` の Public API のみ参照可能に制限。
-
-### High-2: 命名が責務と一致しておらず、認知負荷を上げている
-
-- 根拠:
-  - `apps/web/src/features/entities/model/use-entities-api.ts:34`
-  - `apps/web/src/features/entities/model/use-entities-api.ts:38`
-  - `apps/web/src/features/entities/model/entity-types.ts:1`
-  - `apps/web/src/app/router.tsx:10`
-- 問題:
-  - `use-entities-api.ts` が `kinds`/`tags` まで持ち、名前と責務が乖離。
-  - `entity-types.ts` が `Kind`/`Tag` を同居させ、境界が曖昧。
-  - `router.tsx` の default export が `App` 名称で、ファイル名との対応が弱い。
-- 推奨:
-  - ファイル名は責務を直接表す（例: `entity.query.ts`, `tag.mutation.ts`）。
-  - default exportを極力廃止し、命名付きexportでリネーム事故を減らす。
-
-### Medium-1: フォーム要素のクラス重複が多く、UI不整合を生みやすい
-
-- 根拠:
-  - `apps/web/src/pages/new-entity-page.tsx:128`
-  - `apps/web/src/pages/new-entity-page.tsx:148`
-  - `apps/web/src/pages/entity-edit-page.tsx:156`
-  - `apps/web/src/pages/entity-edit-page.tsx:175`
-- 問題:
-  - `select` や `textarea` のTailwindクラスを手書きで重複管理。
-  - 見た目・アクセシビリティ修正が横展開されず、差分が発生しやすい。
-- 推奨:
-  - `shared/ui/form-controls` に `SelectField` / `TextareaField` / `CheckboxField` を定義。
-  - 見た目は `cva` でvariant管理し、UI差分を型で制御する。
-
-### Medium-2: 設定/ドキュメントと実体の命名がズレている
-
-- 根拠:
-  - `apps/web/components.json:14`
-  - `README.md:36`
-  - `README.md:37`
-- 問題:
-  - shadcn alias や README のパス記述が現行構成と不一致。
-  - 新規開発者が誤ったパスに実装しやすい。
-- 推奨:
-  - `components.json` の alias を `@/shared/ui`, `@/shared/lib` へ同期。
-  - README の構成説明を現状または新設計に合わせて更新。
+  - Testing Library + MSW で `create/edit/login` の統合テストを追加する。
 
 ## 2. 推奨ターゲット構成（大幅変更案）
 
@@ -220,12 +170,10 @@ apps/web/src
 
 ## 5. 優先移行ステップ
 
-1. API統一: `login/logout` を含む全 `fetch` を `*.client.ts` へ移動。  
-2. ページ分割: `entity-edit-page.tsx`, `new-entity-page.tsx` を feature単位に分解。  
-3. Public API化: `features/*` / `entities/*` に `index.ts` を追加し深いimportを禁止。  
-4. UI統一: `select/textarea/checkbox` を `shared/ui/form-controls` 化。  
-5. ルール強制: ESLintで依存境界・命名規約をCI必須化。  
-6. ドキュメント同期: `README.md` と `components.json` の命名/パスを実体へ合わせる。  
+1. Domain分離: `features/entities/model` を段階的に `src/entities/*` へ分離し、featureとの責務境界を明確化。  
+2. UI統合テスト: `login/create/edit` の主要フロー（成功/失敗/401）を Testing Library + MSW で追加。  
+3. API検証運用: 新規API追加時に `*.response.ts` を必須化し、適用漏れをlintまたはテンプレートで防止。  
+4. ルール維持: 既存の import 境界・命名規約をCIで継続監視し、例外運用を増やさない。  
 
 ## 6. 期待効果
 
@@ -235,4 +183,4 @@ apps/web/src
 
 ## 7. 残タスク（優先順）
 
-- 主要な再設計タスクは完了。次は機能追加時に同ルールを維持する運用フェーズ。  
+- 主要な再設計タスクは完了。現在は「Domain分離」と「UI統合テスト拡充」が次の重点。  
