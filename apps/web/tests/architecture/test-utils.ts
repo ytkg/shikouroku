@@ -13,6 +13,7 @@ let allFilesCache: string[] | null = null;
 let sourceFilesCache: string[] | null = null;
 const sourceTextCache = new Map<string, string>();
 const sourceAstCache = new Map<string, ts.SourceFile>();
+const moduleSpecifiersCache = new Map<string, string[]>();
 
 export function walkFiles(
   dir: string,
@@ -77,6 +78,12 @@ export function parseSourceFile(filePath: string): ts.SourceFile {
 }
 
 export function collectModuleSpecifiers(sourceFile: ts.SourceFile): string[] {
+  const cacheKey = sourceFile.fileName;
+  const cached = moduleSpecifiersCache.get(cacheKey);
+  if (cached) {
+    return [...cached];
+  }
+
   const specifiers: string[] = [];
 
   function addSpecifier(node: ts.Expression | ts.LiteralTypeNode | undefined) {
@@ -118,7 +125,8 @@ export function collectModuleSpecifiers(sourceFile: ts.SourceFile): string[] {
   }
 
   visit(sourceFile);
-  return specifiers;
+  moduleSpecifiersCache.set(cacheKey, specifiers);
+  return [...specifiers];
 }
 
 export function toSrcRelative(absolutePath: string): string {
