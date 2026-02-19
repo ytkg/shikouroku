@@ -27,14 +27,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Unit Test
-        run: npm run test:unit
-
-      - name: Architecture Test
-        run: npm run test:architecture
-
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Quality Gate
+        run: npm run quality:web
