@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
-import { ApiError, fetchEntities } from "@/features/entities/api/entities-api";
+import { ApiError } from "@/features/entities/api/entities-api";
 import type { Entity } from "@/features/entities/model/entity-types";
+import { useEntitiesQuery } from "@/features/entities/model/use-entities-api";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 type EntityTab = "all" | "wishlist" | `kind:${number}`;
@@ -29,36 +30,21 @@ export default function HomePage() {
   const navigate = useNavigate();
   const ensureAuthorized = useAuthGuard();
   const [error, setError] = useState<string | null>(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [entities, setEntities] = useState<Entity[]>([]);
   const [selectedTab, setSelectedTab] = useState<EntityTab>("all");
-
-  const loadEntities = async () => {
-    try {
-      const entitiesData = await fetchEntities();
-      setEntities(entitiesData);
-    } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-        return;
-      }
-      throw e;
-    }
-  };
+  const { data: entities = [], error: queryError, isLoading } = useEntitiesQuery();
 
   useEffect(() => {
-    const init = async () => {
+    if (!queryError) {
       setError(null);
-      try {
-        await loadEntities();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "unknown error");
-      } finally {
-        setCheckingAuth(false);
-      }
-    };
+      return;
+    }
 
-    void init();
-  }, []);
+    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
+      return;
+    }
+
+    setError(queryError instanceof Error ? queryError.message : "unknown error");
+  }, [queryError, ensureAuthorized]);
 
   const kindTabs = useMemo(() => {
     const kindMap = new Map<number, string>();
@@ -79,7 +65,7 @@ export default function HomePage() {
     [entities, selectedTab]
   );
 
-  if (checkingAuth) {
+  if (isLoading) {
     return <main className="w-full bg-background pt-20" />;
   }
 

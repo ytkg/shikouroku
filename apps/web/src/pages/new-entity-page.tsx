@@ -10,49 +10,50 @@ import {
 } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { ApiError, createEntity, fetchKinds, fetchTags } from "@/features/entities/api/entities-api";
-import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
+import { ApiError } from "@/features/entities/api/entities-api";
+import type { Entity, Tag } from "@/features/entities/model/entity-types";
+import {
+  useEntityMutations,
+  useKindsQuery,
+  useTagsQuery
+} from "@/features/entities/model/use-entities-api";
 import { TagEditDialog } from "@/features/entities/ui/tag-edit-dialog";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 export default function NewEntityPage() {
   const navigate = useNavigate();
   const ensureAuthorized = useAuthGuard();
-  const [kinds, setKinds] = useState<Kind[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const [kindId, setKindId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isWishlist, setIsWishlist] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<Entity | null>(null);
-
-  const loadFormOptions = async () => {
-    setError(null);
-    try {
-      const [kindsData, tagsData] = await Promise.all([fetchKinds(), fetchTags()]);
-      setKinds(kindsData);
-      setTags(tagsData);
-      if (kindsData.length > 0) {
-        setKindId(String(kindsData[0].id));
-      }
-    } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-        return;
-      }
-      setError(e instanceof Error ? e.message : "unknown error");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: kinds = [], error: kindsError, isLoading: kindsLoading } = useKindsQuery();
+  const { data: tags = [], error: tagsError, isLoading: tagsLoading } = useTagsQuery();
+  const { createEntity } = useEntityMutations();
 
   useEffect(() => {
-    void loadFormOptions();
-  }, []);
+    if (kinds.length === 0 || kindId.length > 0) {
+      return;
+    }
+    setKindId(String(kinds[0].id));
+  }, [kinds, kindId]);
+
+  useEffect(() => {
+    const queryError = kindsError ?? tagsError;
+    if (!queryError) {
+      setError(null);
+      return;
+    }
+    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
+      return;
+    }
+    setError(queryError instanceof Error ? queryError.message : "unknown error");
+  }, [kindsError, tagsError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
     setSelectedTagIds((current) => {
@@ -67,12 +68,6 @@ export default function NewEntityPage() {
   };
 
   const onTagCreated = (tag: Tag) => {
-    setTags((current) => {
-      if (current.some((item) => item.id === tag.id)) {
-        return current;
-      }
-      return [...current, tag].sort((a, b) => a.name.localeCompare(b.name, "ja"));
-    });
     setSelectedTagIds((current) => {
       if (current.includes(tag.id)) {
         return current;
@@ -82,7 +77,6 @@ export default function NewEntityPage() {
   };
 
   const onTagDeleted = (tagId: number) => {
-    setTags((current) => current.filter((tag) => tag.id !== tagId));
     setSelectedTagIds((current) => current.filter((id) => id !== tagId));
   };
 
@@ -114,7 +108,7 @@ export default function NewEntityPage() {
     }
   };
 
-  if (loading) {
+  if (kindsLoading || tagsLoading) {
     return <main className="w-full bg-background pt-20" />;
   }
 

@@ -2,48 +2,41 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { ApiError, fetchEntityById } from "@/features/entities/api/entities-api";
-import type { Entity } from "@/features/entities/model/entity-types";
+import { ApiError } from "@/features/entities/api/entities-api";
+import { useEntityQuery } from "@/features/entities/model/use-entities-api";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 export default function EntityDetailPage() {
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
   const ensureAuthorized = useAuthGuard();
-  const [loading, setLoading] = useState(true);
+  const { data: entity, error: queryError, isLoading } = useEntityQuery(entityId);
   const [error, setError] = useState<string | null>(null);
-  const [entity, setEntity] = useState<Entity | null>(null);
 
   useEffect(() => {
-    const load = async () => {
-      if (!entityId) {
-        setError("嗜好 ID が不正です");
-        setLoading(false);
-        return;
-      }
+    if (!entityId) {
+      setError("嗜好 ID が不正です");
+      return;
+    }
 
+    if (!queryError) {
       setError(null);
-      try {
-        const entityData = await fetchEntityById(entityId);
-        setEntity(entityData);
-      } catch (e) {
-        if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-          return;
-        }
-        if (e instanceof ApiError && e.status === 404) {
-          setError("データが見つかりませんでした");
-        } else {
-          setError(e instanceof Error ? e.message : "unknown error");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+      return;
+    }
 
-    void load();
-  }, [entityId]);
+    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
+      return;
+    }
 
-  if (loading) {
+    if (queryError instanceof ApiError && queryError.status === 404) {
+      setError("データが見つかりませんでした");
+      return;
+    }
+
+    setError(queryError instanceof Error ? queryError.message : "unknown error");
+  }, [entityId, queryError, ensureAuthorized]);
+
+  if (entityId && isLoading) {
     return <main className="w-full bg-background pt-20" />;
   }
 

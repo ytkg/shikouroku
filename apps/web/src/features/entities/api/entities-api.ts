@@ -11,6 +11,26 @@ type ApiEntity = {
   updated_at?: string;
 };
 
+export type CreateTagInput = {
+  name: string;
+};
+
+export type CreateEntityInput = {
+  kindId: number;
+  name: string;
+  description: string;
+  isWishlist: boolean;
+  tagIds: number[];
+};
+
+export type UpdateEntityInput = {
+  kindId: number;
+  name: string;
+  description: string;
+  isWishlist: boolean;
+  tagIds: number[];
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -51,7 +71,7 @@ export async function fetchTags(): Promise<Tag[]> {
   return json.tags;
 }
 
-export async function createTag(input: { name: string }): Promise<Tag> {
+export async function createTag(input: CreateTagInput): Promise<Tag> {
   const res = await fetch("/api/tags", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -96,13 +116,7 @@ export async function fetchEntityById(entityId: string): Promise<Entity> {
   return toEntity(json.entity);
 }
 
-export async function createEntity(input: {
-  kindId: number;
-  name: string;
-  description: string;
-  isWishlist: boolean;
-  tagIds: number[];
-}): Promise<Entity> {
+export async function createEntity(input: CreateEntityInput): Promise<Entity> {
   const res = await fetch("/api/entities", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -120,13 +134,7 @@ export async function createEntity(input: {
 
 export async function updateEntity(
   entityId: string,
-  input: {
-    kindId: number;
-    name: string;
-    description: string;
-    isWishlist: boolean;
-    tagIds: number[];
-  }
+  input: UpdateEntityInput
 ): Promise<Entity> {
   const res = await fetch(`/api/entities/${entityId}`, {
     method: "PATCH",

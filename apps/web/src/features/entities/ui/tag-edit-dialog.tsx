@@ -1,6 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { ApiError, createTag, deleteTag } from "@/features/entities/api/entities-api";
+import { ApiError } from "@/features/entities/api/entities-api";
 import type { Tag } from "@/features/entities/model/entity-types";
+import { useTagMutations } from "@/features/entities/model/use-entities-api";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -22,6 +23,7 @@ export function TagEditDialog({
   onDeleted,
   ensureAuthorized
 }: TagEditDialogProps) {
+  const { createTag, deleteTag } = useTagMutations();
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);

@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { ApiError, fetchEntityById, fetchKinds, fetchTags, updateEntity } from "@/features/entities/api/entities-api";
-import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
+import { ApiError } from "@/features/entities/api/entities-api";
+import type { Tag } from "@/features/entities/model/entity-types";
+import {
+  useEntityMutations,
+  useEntityQuery,
+  useKindsQuery,
+  useTagsQuery
+} from "@/features/entities/model/use-entities-api";
 import { TagEditDialog } from "@/features/entities/ui/tag-edit-dialog";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
@@ -13,11 +19,11 @@ export default function EntityEditPage() {
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
   const ensureAuthorized = useAuthGuard();
-  const [loading, setLoading] = useState(true);
+  const { data: entity, error: entityError, isLoading: entityLoading } = useEntityQuery(entityId);
+  const { data: kinds = [], error: kindsError, isLoading: kindsLoading } = useKindsQuery();
+  const { data: tags = [], error: tagsError, isLoading: tagsLoading } = useTagsQuery();
+  const { updateEntity } = useEntityMutations();
   const [error, setError] = useState<string | null>(null);
-  const [entity, setEntity] = useState<Entity | null>(null);
-  const [kinds, setKinds] = useState<Kind[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   const [kindId, setKindId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -25,47 +31,54 @@ export default function EntityEditPage() {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const initializedEntityIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const load = async () => {
-      if (!entityId) {
-        setError("嗜好 ID が不正です");
-        setLoading(false);
-        return;
-      }
-
-      setError(null);
-      try {
-        const [entityData, kindsData, tagsData] = await Promise.all([
-          fetchEntityById(entityId),
-          fetchKinds(),
-          fetchTags()
-        ]);
-        setEntity(entityData);
-        setKinds(kindsData);
-        setTags(tagsData);
-        setKindId(String(entityData.kind.id));
-        setName(entityData.name);
-        setDescription(entityData.description ?? "");
-        setIsWishlist(entityData.isWishlist);
-        setSelectedTagIds(entityData.tags.map((tag) => tag.id));
-      } catch (e) {
-        if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-          return;
-        }
-        if (e instanceof ApiError && e.status === 404) {
-          setError("データが見つかりませんでした");
-        } else {
-          setError(e instanceof Error ? e.message : "unknown error");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void load();
+    initializedEntityIdRef.current = null;
   }, [entityId]);
 
+  useEffect(() => {
+    if (!entity || !entityId) {
+      return;
+    }
+
+    if (initializedEntityIdRef.current === entityId) {
+      return;
+    }
+
+    setKindId(String(entity.kind.id));
+    setName(entity.name);
+    setDescription(entity.description ?? "");
+    setIsWishlist(entity.isWishlist);
+    setSelectedTagIds(entity.tags.map((tag) => tag.id));
+    initializedEntityIdRef.current = entityId;
+  }, [entity, entityId]);
+
+  useEffect(() => {
+    if (!entityId) {
+      setError("嗜好 ID が不正です");
+      return;
+    }
+
+    const queryError = entityError ?? kindsError ?? tagsError;
+    if (!queryError) {
+      setError(null);
+      return;
+    }
+
+    if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
+      return;
+    }
+
+    if (queryError instanceof ApiError && queryError.status === 404) {
+      setError("データが見つかりませんでした");
+      return;
+    }
+
+    setError(queryError instanceof Error ? queryError.message : "unknown error");
+  }, [entityId, entityError, kindsError, tagsError, ensureAuthorized]);
+
+  const loading = Boolean(entityId) && (entityLoading || kindsLoading || tagsLoading);
   if (loading) {
     return <main className="w-full bg-background pt-20" />;
   }
@@ -83,12 +96,6 @@ export default function EntityEditPage() {
   };
 
   const onTagCreated = (tag: Tag) => {
-    setTags((current) => {
-      if (current.some((item) => item.id === tag.id)) {
-        return current;
-      }
-      return [...current, tag].sort((a, b) => a.name.localeCompare(b.name, "ja"));
-    });
     setSelectedTagIds((current) => {
       if (current.includes(tag.id)) {
         return current;
@@ -98,7 +105,6 @@ export default function EntityEditPage() {
   };
 
   const onTagDeleted = (tagId: number) => {
-    setTags((current) => current.filter((tag) => tag.id !== tagId));
     setSelectedTagIds((current) => current.filter((id) => id !== tagId));
   };
 
