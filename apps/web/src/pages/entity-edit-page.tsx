@@ -4,8 +4,9 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { ApiError, fetchEntityById, fetchKinds, updateEntity } from "@/features/entities/api/entities-api";
-import type { Entity, Kind } from "@/features/entities/model/entity-types";
+import { ApiError, fetchEntityById, fetchKinds, fetchTags, updateEntity } from "@/features/entities/api/entities-api";
+import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
+import { TagCreateDialog } from "@/features/entities/ui/tag-create-dialog";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 export default function EntityEditPage() {
@@ -16,10 +17,13 @@ export default function EntityEditPage() {
   const [error, setError] = useState<string | null>(null);
   const [entity, setEntity] = useState<Entity | null>(null);
   const [kinds, setKinds] = useState<Kind[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [kindId, setKindId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isWishlist, setIsWishlist] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -32,13 +36,19 @@ export default function EntityEditPage() {
 
       setError(null);
       try {
-        const [entityData, kindsData] = await Promise.all([fetchEntityById(entityId), fetchKinds()]);
+        const [entityData, kindsData, tagsData] = await Promise.all([
+          fetchEntityById(entityId),
+          fetchKinds(),
+          fetchTags()
+        ]);
         setEntity(entityData);
         setKinds(kindsData);
+        setTags(tagsData);
         setKindId(String(entityData.kindId));
         setName(entityData.name);
         setDescription(entityData.description ?? "");
         setIsWishlist(entityData.isWishlist);
+        setSelectedTagIds(entityData.tags.map((tag) => tag.id));
       } catch (e) {
         if (e instanceof ApiError && !ensureAuthorized(e.status)) {
           return;
@@ -60,6 +70,33 @@ export default function EntityEditPage() {
     return <main className="w-full bg-background pt-20" />;
   }
 
+  const onToggleTag = (tagId: number, checked: boolean) => {
+    setSelectedTagIds((current) => {
+      if (checked) {
+        if (current.includes(tagId)) {
+          return current;
+        }
+        return [...current, tagId];
+      }
+      return current.filter((id) => id !== tagId);
+    });
+  };
+
+  const onTagCreated = (tag: Tag) => {
+    setTags((current) => {
+      if (current.some((item) => item.id === tag.id)) {
+        return current;
+      }
+      return [...current, tag].sort((a, b) => a.name.localeCompare(b.name, "ja"));
+    });
+    setSelectedTagIds((current) => {
+      if (current.includes(tag.id)) {
+        return current;
+      }
+      return [...current, tag.id];
+    });
+  };
+
   const onSave = async () => {
     if (!entityId) return;
     setError(null);
@@ -69,13 +106,15 @@ export default function EntityEditPage() {
         kindId: Number(kindId),
         name,
         description,
-        isWishlist
+        isWishlist,
+        tagIds: selectedTagIds
       });
       setEntity(updated);
       setKindId(String(updated.kindId));
       setName(updated.name);
       setDescription(updated.description ?? "");
       setIsWishlist(updated.isWishlist);
+      setSelectedTagIds(updated.tags.map((tag) => tag.id));
       navigate(`/entities/${entityId}`);
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
@@ -129,6 +168,38 @@ export default function EntityEditPage() {
                   />
                 </div>
                 <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>タグ</Label>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setTagDialogOpen(true)}
+                    >
+                      タグを追加
+                    </Button>
+                  </div>
+                  {tags.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">タグが登録されていません。</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map((tag) => (
+                        <label
+                          key={tag.id}
+                          className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedTagIds.includes(tag.id)}
+                            onChange={(e) => onToggleTag(tag.id, e.target.checked)}
+                          />
+                          {tag.name}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1">
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"
@@ -151,6 +222,12 @@ export default function EntityEditPage() {
       <Button variant="outline" onClick={() => navigate(`/entities/${entityId}`)}>
         詳細へ戻る
       </Button>
+      <TagCreateDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        onCreated={onTagCreated}
+        ensureAuthorized={ensureAuthorized}
+      />
     </main>
   );
 }

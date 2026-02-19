@@ -77,6 +77,20 @@ export default function EntityDetailPage() {
                   </p>
                 </div>
                 <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">タグ</p>
+                  {entity.tags.length === 0 ? (
+                    <p className="text-sm">（タグなし）</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {entity.tags.map((tag) => (
+                        <span key={tag.id} className="rounded-full border px-2 py-0.5 text-xs">
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">ID</p>
                   <p className="break-all text-xs">{entity.id}</p>
                 </div>

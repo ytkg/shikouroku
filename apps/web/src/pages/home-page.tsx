@@ -135,6 +135,15 @@ export default function HomePage() {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">種別: {kindLabel}</p>
+                {entity.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {entity.tags.map((tag) => (
+                      <span key={tag.id} className="rounded-full border px-2 py-0.5 text-xs">
+                        {tag.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {entity.description && (
                   <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{entity.description}</p>
                 )}

@@ -1,4 +1,4 @@
-import type { Entity, Kind } from "@/features/entities/model/entity-types";
+import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
 
 type ApiEntity = {
   id: string;
@@ -6,6 +6,7 @@ type ApiEntity = {
   name: string;
   description: string | null;
   is_wishlist: number;
+  tags?: Tag[];
   created_at?: string;
   updated_at?: string;
 };
@@ -26,6 +27,7 @@ function toEntity(apiEntity: ApiEntity): Entity {
     name: apiEntity.name,
     description: apiEntity.description,
     isWishlist: apiEntity.is_wishlist === 1,
+    tags: apiEntity.tags ?? [],
     createdAt: apiEntity.created_at,
     updatedAt: apiEntity.updated_at
   };
@@ -38,6 +40,31 @@ export async function fetchKinds(): Promise<Kind[]> {
   }
   const json = (await res.json()) as { ok: boolean; kinds: Kind[] };
   return json.kinds;
+}
+
+export async function fetchTags(): Promise<Tag[]> {
+  const res = await fetch("/api/tags");
+  if (!res.ok) {
+    throw new ApiError(res.status, `HTTP ${res.status}`);
+  }
+  const json = (await res.json()) as { ok: boolean; tags: Tag[] };
+  return json.tags;
+}
+
+export async function createTag(input: { name: string }): Promise<Tag> {
+  const res = await fetch("/api/tags", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input)
+  });
+
+  if (!res.ok) {
+    const json = (await res.json()) as { message?: string };
+    throw new ApiError(res.status, json.message ?? `HTTP ${res.status}`);
+  }
+
+  const json = (await res.json()) as { ok: boolean; tag: Tag };
+  return json.tag;
 }
 
 export async function fetchEntities(): Promise<Entity[]> {
@@ -63,6 +90,7 @@ export async function createEntity(input: {
   name: string;
   description: string;
   isWishlist: boolean;
+  tagIds: number[];
 }): Promise<Entity> {
   const res = await fetch("/api/entities", {
     method: "POST",
@@ -86,6 +114,7 @@ export async function updateEntity(
     name: string;
     description: string;
     isWishlist: boolean;
+    tagIds: number[];
   }
 ): Promise<Entity> {
   const res = await fetch(`/api/entities/${entityId}`, {

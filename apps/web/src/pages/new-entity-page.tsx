@@ -10,28 +10,33 @@ import {
 } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { ApiError, createEntity, fetchKinds } from "@/features/entities/api/entities-api";
-import type { Entity, Kind } from "@/features/entities/model/entity-types";
+import { ApiError, createEntity, fetchKinds, fetchTags } from "@/features/entities/api/entities-api";
+import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
+import { TagCreateDialog } from "@/features/entities/ui/tag-create-dialog";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 export default function NewEntityPage() {
   const navigate = useNavigate();
   const ensureAuthorized = useAuthGuard();
   const [kinds, setKinds] = useState<Kind[]>([]);
+  const [tags, setTags] = useState<Tag[]>([]);
   const [kindId, setKindId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isWishlist, setIsWishlist] = useState(false);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<Entity | null>(null);
 
-  const loadKinds = async () => {
+  const loadFormOptions = async () => {
     setError(null);
     try {
-      const kindsData = await fetchKinds();
+      const [kindsData, tagsData] = await Promise.all([fetchKinds(), fetchTags()]);
       setKinds(kindsData);
+      setTags(tagsData);
       if (kindsData.length > 0) {
         setKindId(String(kindsData[0].id));
       }
@@ -46,8 +51,35 @@ export default function NewEntityPage() {
   };
 
   useEffect(() => {
-    void loadKinds();
+    void loadFormOptions();
   }, []);
+
+  const onToggleTag = (tagId: number, checked: boolean) => {
+    setSelectedTagIds((current) => {
+      if (checked) {
+        if (current.includes(tagId)) {
+          return current;
+        }
+        return [...current, tagId];
+      }
+      return current.filter((id) => id !== tagId);
+    });
+  };
+
+  const onTagCreated = (tag: Tag) => {
+    setTags((current) => {
+      if (current.some((item) => item.id === tag.id)) {
+        return current;
+      }
+      return [...current, tag].sort((a, b) => a.name.localeCompare(b.name, "ja"));
+    });
+    setSelectedTagIds((current) => {
+      if (current.includes(tag.id)) {
+        return current;
+      }
+      return [...current, tag.id];
+    });
+  };
 
   const onCreateEntity = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -59,12 +91,14 @@ export default function NewEntityPage() {
         kindId: Number(kindId),
         name,
         description,
-        isWishlist
+        isWishlist,
+        tagIds: selectedTagIds
       });
       setSubmitResult(entity);
       setName("");
       setDescription("");
       setIsWishlist(false);
+      setSelectedTagIds([]);
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return;
@@ -117,6 +151,35 @@ export default function NewEntityPage() {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label>タグ</Label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setTagDialogOpen(true)}
+                >
+                  タグを追加
+                </Button>
+              </div>
+              {tags.length === 0 ? (
+                <p className="text-sm text-muted-foreground">タグが登録されていません。</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag) => (
+                    <label key={tag.id} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={selectedTagIds.includes(tag.id)}
+                        onChange={(e) => onToggleTag(tag.id, e.target.checked)}
+                      />
+                      {tag.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
             <label className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -143,6 +206,12 @@ export default function NewEntityPage() {
       <Button variant="outline" onClick={() => navigate("/")}>
         一覧へ戻る
       </Button>
+      <TagCreateDialog
+        open={tagDialogOpen}
+        onOpenChange={setTagDialogOpen}
+        onCreated={onTagCreated}
+        ensureAuthorized={ensureAuthorized}
+      />
     </main>
   );
 }
