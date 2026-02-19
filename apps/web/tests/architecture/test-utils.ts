@@ -133,6 +133,25 @@ export function toSrcRelative(absolutePath: string): string {
   return path.relative(srcRoot, absolutePath);
 }
 
+export function toPosixPath(value: string): string {
+  return value.split(path.sep).join("/");
+}
+
+export function collectExportModuleSpecifiers(sourceFile: ts.SourceFile): string[] {
+  const specifiers: string[] = [];
+
+  function visit(node: ts.Node) {
+    if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
+      specifiers.push(node.moduleSpecifier.text);
+    }
+
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return specifiers;
+}
+
 export function isDomainApiClientRelative(relativePath: string): boolean {
   if (!relativePath.endsWith(".client.ts")) {
     return false;

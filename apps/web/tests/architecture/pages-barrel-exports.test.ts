@@ -1,26 +1,12 @@
 import path from "node:path";
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { parseSourceFile, srcRoot, walkFiles } from "./test-utils";
-
-function toPosixPath(value: string): string {
-  return value.split(path.sep).join("/");
-}
-
-function collectExportSpecifiers(sourceFile: ts.SourceFile): string[] {
-  const specifiers: string[] = [];
-
-  function visit(node: ts.Node) {
-    if (ts.isExportDeclaration(node) && node.moduleSpecifier && ts.isStringLiteral(node.moduleSpecifier)) {
-      specifiers.push(node.moduleSpecifier.text);
-    }
-
-    ts.forEachChild(node, visit);
-  }
-
-  visit(sourceFile);
-  return specifiers;
-}
+import {
+  collectExportModuleSpecifiers,
+  parseSourceFile,
+  srcRoot,
+  toPosixPath,
+  walkFiles
+} from "./test-utils";
 
 describe("architecture: pages barrel exports", () => {
   it("pages/index.ts は pages/*/page.tsx をすべて再エクスポートする", () => {
@@ -31,7 +17,7 @@ describe("architecture: pages barrel exports", () => {
       .map((filePath) => `./${toPosixPath(path.relative(pagesRoot, filePath)).replace(/\.tsx$/, "")}`)
       .sort();
 
-    const actual = collectExportSpecifiers(parseSourceFile(pagesIndexPath)).sort();
+    const actual = collectExportModuleSpecifiers(parseSourceFile(pagesIndexPath)).sort();
 
     expect(actual).toEqual(expected);
   });
