@@ -10,7 +10,7 @@ import {
   isEntityDetailKey,
   TAGS_KEY
 } from "./entity.swr-keys";
-import type { Tag } from "./entity-types";
+import type { Tag } from "./entity.types";
 
 export function useTagMutations() {
   const { mutate } = useSWRConfig();

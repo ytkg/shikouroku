@@ -1,4 +1,4 @@
-export type { Entity, Kind, Tag } from "./model/entity-types";
+export type { Entity, Kind, Tag } from "./model/entity.types";
 export { useEntitiesQuery, useEntityQuery, useKindsQuery, useTagsQuery } from "./model/entity.query";
 export { useEntityMutations } from "./model/entity.mutation";
 export { useTagMutations } from "./model/tag.mutation";
