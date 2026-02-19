@@ -33,8 +33,22 @@ npm --workspace @shikouroku/web install class-variance-authority clsx tailwind-m
 - `apps/web/tailwind.config.ts`
 - `apps/web/postcss.config.js`
 - `apps/web/components.json`
-- `apps/web/src/lib/utils.ts`
-- `apps/web/src/components/ui/*`
+- `apps/web/eslint.config.js`
+- `apps/web/src/shared/lib/utils.ts`
+- `apps/web/src/shared/ui/*`
+- `apps/web/src/shared/ui/form-controls/*`
+- `apps/web/src/features/auth/index.ts`
+- `apps/web/src/features/entities/index.ts`
+
+## フロントエンド構成（現行）
+
+`apps/web/src` は次の責務分割で管理しています。
+
+- `app`: ルーターやアプリ全体の構成
+- `pages`: ルーティング単位の薄い画面コンポーネント
+- `features`: ユースケース単位のUI/ロジック
+- `shared`: 共通UI・APIクライアント・ユーティリティ
+- `widgets`: レイアウト共通部品（ヘッダー・フッター）
 
 ## ローカル開発
 
@@ -78,6 +92,19 @@ npm run build
 
 - `apps/web/dist` を生成
 - API の型チェック実行
+
+## 品質チェック
+
+```bash
+npm run lint
+npm run test
+npm run typecheck
+```
+
+- `lint`: `apps/web/eslint.config.js` の依存境界・命名規約を検証
+- `test`: `apps/web/tests` のユニットテスト（Vitest）を実行
+- `typecheck`: ワークスペース全体の型チェックを実行
+- CI: `.github/workflows/web-quality.yml` で `lint` / `test` / `typecheck` を実行
 
 ## D1 セットアップ
 
