@@ -32,6 +32,7 @@
   - ESLintに `entities` 層ルールを追加し、`app/pages/widgets/features` からの依存境界を強化
   - `api/*.client.ts` と `api/*.response.ts` のペア存在を検証するアーキテクチャテストを追加
   - `src/entities/auth` を新設し、`features/auth/api` を移管
+  - `api/*.client.ts` が `*.response.ts` の parser を利用しているかを静的テストで検証
 
 ## 1. Findings（重大度順）
 
@@ -45,16 +46,15 @@
 - 推奨:
   - Testing Library + MSW で `create/edit/login` の統合テストを追加する。
 
-### Medium-2: `client/response` ペア存在は検証済みだが、client側で実際に parser を使っているかは未検証
+### Medium-2: parser利用検証は導入済みだが、現在は文字列ベース判定で厳密性に限界がある
 
 - 根拠:
   - `apps/web/tests/architecture/api-response-pairing.test.ts`
-  - `apps/web/src/entities/auth/api/auth.client.ts`
-  - `apps/web/src/entities/entity/api/entities.client.ts`
+  - `apps/web/tests/architecture/api-parser-usage.test.ts`
 - 問題:
-  - `.response.ts` ファイルが存在しても、clientで未使用のまま通ってしまう余地がある。
+  - 現状は import 文と `parseXxx(` の文字列検知であり、ASTレベルの厳密検査ではない。
 - 推奨:
-  - `*.client.ts` が `*.response.ts` から parser をimportしていることを検証する静的テストを追加する。
+  - ESLintカスタムルールまたはASTベーステストへ移行し、検査の抜け道を減らす。
 
 ## 2. 推奨ターゲット構成（大幅変更案）
 
@@ -161,7 +161,7 @@ apps/web/src
 ## 5. 優先移行ステップ
 
 1. UI統合テスト: `login/create/edit` の主要フロー（成功/失敗/401）を Testing Library + MSW で追加。  
-2. API検証運用: `*.client.ts` が対応 parser を使用しているかを静的テストで強制。  
+2. API検証運用: parser適用チェックをASTベースへ強化。  
 3. ルール維持: 既存の import 境界・命名規約をCIで継続監視し、例外運用を増やさない。  
 
 ## 6. 期待効果
@@ -172,4 +172,4 @@ apps/web/src
 
 ## 7. 残タスク（優先順）
 
-- ドメイン分離は完了。次は UI統合テスト拡充と parser適用漏れ防止が重点。  
+- ドメイン分離は完了。次は UI統合テスト拡充と parser適用チェックの厳密化が重点。  
