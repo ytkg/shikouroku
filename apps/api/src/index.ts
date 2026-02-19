@@ -264,6 +264,30 @@ app.post("/api/tags", async (c) => {
   return c.json({ ok: true, tag }, 201);
 });
 
+app.delete("/api/tags/:id", async (c) => {
+  const idRaw = c.req.param("id");
+  const id = Number(idRaw);
+  if (!Number.isInteger(id) || id <= 0) {
+    return c.json({ ok: false, message: "tag id is invalid" }, 400);
+  }
+
+  const existing = await c.env.DB.prepare("SELECT id FROM tags WHERE id = ? LIMIT 1").bind(id).first<{ id: number }>();
+  if (!existing) {
+    return c.json({ ok: false, message: "tag not found" }, 404);
+  }
+
+  try {
+    await c.env.DB.batch([
+      c.env.DB.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id),
+      c.env.DB.prepare("DELETE FROM tags WHERE id = ?").bind(id)
+    ]);
+  } catch {
+    return c.json({ ok: false, message: "failed to delete tag" }, 500);
+  }
+
+  return c.json({ ok: true });
+});
+
 app.get("/api/entities", async (c) => {
   const result = await c.env.DB.prepare(
     "SELECT id, kind_id, name, description, is_wishlist, created_at, updated_at FROM entities ORDER BY created_at DESC LIMIT 50"

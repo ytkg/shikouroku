@@ -12,7 +12,7 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { ApiError, createEntity, fetchKinds, fetchTags } from "@/features/entities/api/entities-api";
 import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
-import { TagCreateDialog } from "@/features/entities/ui/tag-create-dialog";
+import { TagEditDialog } from "@/features/entities/ui/tag-edit-dialog";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 export default function NewEntityPage() {
@@ -79,6 +79,11 @@ export default function NewEntityPage() {
       }
       return [...current, tag.id];
     });
+  };
+
+  const onTagDeleted = (tagId: number) => {
+    setTags((current) => current.filter((tag) => tag.id !== tagId));
+    setSelectedTagIds((current) => current.filter((id) => id !== tagId));
   };
 
   const onCreateEntity = async (event: FormEvent<HTMLFormElement>) => {
@@ -160,7 +165,7 @@ export default function NewEntityPage() {
                   variant="outline"
                   onClick={() => setTagDialogOpen(true)}
                 >
-                  タグを追加
+                  タグを編集
                 </Button>
               </div>
               {tags.length === 0 ? (
@@ -206,10 +211,12 @@ export default function NewEntityPage() {
       <Button variant="outline" onClick={() => navigate("/")}>
         一覧へ戻る
       </Button>
-      <TagCreateDialog
+      <TagEditDialog
         open={tagDialogOpen}
         onOpenChange={setTagDialogOpen}
+        tags={tags}
         onCreated={onTagCreated}
+        onDeleted={onTagDeleted}
         ensureAuthorized={ensureAuthorized}
       />
     </main>

@@ -6,7 +6,7 @@ import { Label } from "@/shared/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
 import { ApiError, fetchEntityById, fetchKinds, fetchTags, updateEntity } from "@/features/entities/api/entities-api";
 import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
-import { TagCreateDialog } from "@/features/entities/ui/tag-create-dialog";
+import { TagEditDialog } from "@/features/entities/ui/tag-edit-dialog";
 import { useAuthGuard } from "@/features/auth/model/use-auth-guard";
 
 export default function EntityEditPage() {
@@ -97,6 +97,11 @@ export default function EntityEditPage() {
     });
   };
 
+  const onTagDeleted = (tagId: number) => {
+    setTags((current) => current.filter((tag) => tag.id !== tagId));
+    setSelectedTagIds((current) => current.filter((id) => id !== tagId));
+  };
+
   const onSave = async () => {
     if (!entityId) return;
     setError(null);
@@ -176,7 +181,7 @@ export default function EntityEditPage() {
                       variant="outline"
                       onClick={() => setTagDialogOpen(true)}
                     >
-                      タグを追加
+                      タグを編集
                     </Button>
                   </div>
                   {tags.length === 0 ? (
@@ -222,10 +227,12 @@ export default function EntityEditPage() {
       <Button variant="outline" onClick={() => navigate(`/entities/${entityId}`)}>
         詳細へ戻る
       </Button>
-      <TagCreateDialog
+      <TagEditDialog
         open={tagDialogOpen}
         onOpenChange={setTagDialogOpen}
+        tags={tags}
         onCreated={onTagCreated}
+        onDeleted={onTagDeleted}
         ensureAuthorized={ensureAuthorized}
       />
     </main>

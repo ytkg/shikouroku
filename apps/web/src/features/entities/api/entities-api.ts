@@ -67,6 +67,17 @@ export async function createTag(input: { name: string }): Promise<Tag> {
   return json.tag;
 }
 
+export async function deleteTag(tagId: number): Promise<void> {
+  const res = await fetch(`/api/tags/${tagId}`, {
+    method: "DELETE"
+  });
+
+  if (!res.ok) {
+    const json = (await res.json()) as { message?: string };
+    throw new ApiError(res.status, json.message ?? `HTTP ${res.status}`);
+  }
+}
+
 export async function fetchEntities(): Promise<Entity[]> {
   const res = await fetch("/api/entities");
   if (!res.ok) {
