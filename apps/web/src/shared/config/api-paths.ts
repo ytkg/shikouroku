@@ -11,5 +11,5 @@ export function getTagPath(tagId: number): string {
 }
 
 export function getEntityPath(entityId: string): string {
-  return `${apiPaths.entities}/${entityId}`;
+  return `${apiPaths.entities}/${encodeURIComponent(entityId)}`;
 }

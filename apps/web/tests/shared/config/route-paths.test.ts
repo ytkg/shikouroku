@@ -18,4 +18,9 @@ describe("route-paths", () => {
     expect(getEntityDetailPath("abc")).toBe("/entities/abc");
     expect(getEntityEditPath("abc")).toBe("/entities/abc/edit");
   });
+
+  it("entityIdの特殊文字をURLエンコードする", () => {
+    expect(getEntityDetailPath("id with/slash")).toBe("/entities/id%20with%2Fslash");
+    expect(getEntityEditPath("id with/slash")).toBe("/entities/id%20with%2Fslash/edit");
+  });
 });

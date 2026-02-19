@@ -15,6 +15,7 @@
 - 追加実施:
   - `home/detail/login` も `features` 側へ分離し、`pages` は薄いラッパー化
   - ルート/APIパスを `shared/config` へ定数化
+  - 動的ルート/APIパス生成で `entityId` をURLエンコードし、特殊文字IDでの経路破綻を防止
   - `pages` / `widgets` のバレルエクスポートを導入し、`app` からのdeep importを抑制
   - `app` / `pages` の `default export` を廃止し、命名付きexportへ移行
   - ESLintで `import/no-default-export` を有効化し、再発を防止

@@ -16,6 +16,10 @@ describe("api-paths", () => {
     expect(getEntityPath("entity-1")).toBe("/api/entities/entity-1");
   });
 
+  it("entityIdの特殊文字をURLエンコードする", () => {
+    expect(getEntityPath("id with/slash")).toBe("/api/entities/id%20with%2Fslash");
+  });
+
   it("entityKey は entity path と一致する", () => {
     expect(entityKey("id-1")).toBe("/api/entities/id-1");
   });

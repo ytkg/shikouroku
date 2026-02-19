@@ -7,9 +7,9 @@ export const routePaths = {
 } as const;
 
 export function getEntityDetailPath(entityId: string): string {
-  return `/entities/${entityId}`;
+  return `/entities/${encodeURIComponent(entityId)}`;
 }
 
 export function getEntityEditPath(entityId: string): string {
-  return `/entities/${entityId}/edit`;
+  return `/entities/${encodeURIComponent(entityId)}/edit`;
 }
