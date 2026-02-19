@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit",
     "d1:migrate:dev": "wrangler d1 migrations apply shikouroku-prod --remote --preview",
     "d1:migrate:prod": "wrangler d1 migrations apply shikouroku-prod --remote",
+    "d1:seed:dev": "wrangler d1 execute shikouroku-prod --remote --preview --file=./seeds/dev.sql",
+    "d1:seed:prod": "wrangler d1 execute shikouroku-prod --remote --file=./seeds/prod.sql",
     "d1:tables:dev": "wrangler d1 execute shikouroku-prod --remote --preview --command \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\"",
     "d1:tables:prod": "wrangler d1 execute shikouroku-prod --remote --command \"SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;\""
   },

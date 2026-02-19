@@ -49,6 +49,7 @@ npm run dev
 - Web側は `/api` を Wrangler に proxy するため、フロントから同一オリジン感覚で API を呼び出せます。
 - API は `wrangler dev --remote` で起動し、`preview_database_id`（開発DB）を参照します。
 - 事前に `npm run d1:migrate:dev` を実行してください（`--preview` で開発DBへ適用）。
+- 開発データを入れる場合は `npm run d1:seed:dev` を実行してください。
 
 ### 本番相当（Workerで静的配信まで確認）
 
@@ -103,7 +104,13 @@ preview_database_id = "DEV_DATABASE_ID"
 npm run d1:migrate:dev
 ```
 
-4. マイグレーション適用（本番DB = `database_id`）
+4. シードデータ投入（開発DB = `preview_database_id`）
+
+```bash
+npm run d1:seed:dev
+```
+
+5. マイグレーション適用（本番DB = `database_id`）
 
 ```bash
 npm run d1:migrate:prod
@@ -150,18 +157,6 @@ erDiagram
 ```
 
 `entity_tags` は `(entity_id, tag_id)` の複合主キーです。
-
-## kinds 初期データメモ
-
-```sql
-INSERT INTO kinds (id, label, created_at, updated_at) VALUES
-  (1, '場所', datetime('now'), datetime('now')),
-  (2, '商品', datetime('now'), datetime('now')),
-  (3, '体験', datetime('now'), datetime('now'))
-ON CONFLICT(id) DO UPDATE SET
-  label = excluded.label,
-  updated_at = datetime('now');
-```
 
 ## デプロイ（Workers一本）
 

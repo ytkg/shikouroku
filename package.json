@@ -13,6 +13,8 @@
     "deploy": "npm run build && npm --workspace @shikouroku/api run deploy",
     "d1:migrate:dev": "npm --workspace @shikouroku/api run d1:migrate:dev",
     "d1:migrate:prod": "npm --workspace @shikouroku/api run d1:migrate:prod",
+    "d1:seed:dev": "npm --workspace @shikouroku/api run d1:seed:dev",
+    "d1:seed:prod": "npm --workspace @shikouroku/api run d1:seed:prod",
     "d1:tables:dev": "npm --workspace @shikouroku/api run d1:tables:dev",
     "d1:tables:prod": "npm --workspace @shikouroku/api run d1:tables:prod",
     "typecheck": "npm --workspaces run typecheck"
