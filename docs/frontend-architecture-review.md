@@ -27,6 +27,7 @@
   - ESLintで `/api` と主要ルート文字列のハードコードを禁止
   - APIレスポンスの実行時バリデーションを導入し、不正なJSON形状を `ApiError(502)` として早期検知
   - `features` 層の deep import（`@/features/*/*`）をESLintで禁止し、同一featureは相対importへ統一
+  - `auth/entities` APIクライアント統合テストを追加し、`fetch -> client` 経路の検証を固定化
 
 ## 1. Findings（重大度順）
 
