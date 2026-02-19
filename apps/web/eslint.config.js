@@ -133,6 +133,10 @@ export default [
               message: "features/entities は公開API `@/features/entities` 経由で参照してください。"
             },
             {
+              group: ["@/entities/*/*"],
+              message: "entities は公開API `@/entities/<slice>` 経由で参照してください。"
+            },
+            {
               group: ["@/pages/*"],
               message: "app 層から pages の内部実装へ直接依存せず、`@/pages` を利用してください。"
             },
@@ -158,8 +162,33 @@ export default [
                 "features層内での deep import は禁止です。同一featureは相対import、他featureは `@/features/<slice>` を利用してください。"
             },
             {
+              group: ["@/entities/*/*"],
+              message:
+                "features層から entities の deep import は禁止です。`@/entities/<slice>` の公開APIを利用してください。"
+            },
+            {
               group: ["@/app", "@/app/*", "@/pages", "@/pages/*", "@/widgets", "@/widgets/*"],
               message: "features 層から app/pages/widgets への依存は禁止です。"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    files: ["src/entities/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@/app", "@/app/*", "@/pages", "@/pages/*", "@/widgets", "@/widgets/*"],
+              message: "entities 層から app/pages/widgets への依存は禁止です。"
+            },
+            {
+              group: ["@/features", "@/features/*"],
+              message: "entities 層から features への依存は禁止です。"
             }
           ]
         }
@@ -182,7 +211,9 @@ export default [
                 "@/widgets",
                 "@/widgets/*",
                 "@/features",
-                "@/features/*"
+                "@/features/*",
+                "@/entities",
+                "@/entities/*"
               ],
               message: "shared 層から上位層への依存は禁止です。"
             }

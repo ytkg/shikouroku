@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Entity } from "@/features/entities/model/entity-types";
+import type { Entity } from "@/entities/entity";
 import {
   getKindTabs,
   getVisibleEntities,

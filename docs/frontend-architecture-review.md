@@ -28,23 +28,24 @@
   - APIレスポンスの実行時バリデーションを導入し、不正なJSON形状を `ApiError(502)` として早期検知
   - `features` 層の deep import（`@/features/*/*`）をESLintで禁止し、同一featureは相対importへ統一
   - `auth/entities` APIクライアント統合テストを追加し、`fetch -> client` 経路の検証を固定化
+  - `src/entities/entity` を新設し、`features/entities` の model/api を移管（types/query/mutation/client/response）
+  - ESLintに `entities` 層ルールを追加し、`app/pages/widgets/features` からの依存境界を強化
 
 ## 1. Findings（重大度順）
 
-### High-1: `features/entities` が「ユースケース」と「ドメイン基盤」を同居しており、拡張時の影響範囲が大きい
+### Medium-1: Domain分離は `entities` で完了したが、`auth` はまだ feature 内にドメイン責務が残っている
 
 - 根拠:
-  - `apps/web/src/features/entities/model/entity.query.ts`
-  - `apps/web/src/features/entities/model/entity.mutation.ts`
-  - `apps/web/src/features/entities/create/model/use-create-entity-form.ts`
-  - `apps/web/src/features/entities/edit/model/use-edit-entity-form.ts`
+  - `apps/web/src/features/auth/api/auth.client.ts`
+  - `apps/web/src/features/auth/api/auth.response.ts`
+  - `apps/web/src/features/auth/login/model/use-login-form.ts`
 - 問題:
-  - 現状は `features/entities` に「画面向けロジック」と「実質ドメイン層（query/mutation/types）」が混在。
-  - 仕様追加時に `features/entities` 配下の複数サブ機能へ同時変更が入りやすく、差分が広がりやすい。
+  - `entities` は分離済みだが、`auth` はAPI/検証/ユースケースが `features` 内に同居。
+  - 認証仕様変更時に `features/auth` の複数レイヤへ変更が波及しやすい。
 - 推奨:
-  - 長期的には `src/entities/*`（domain基盤）を独立させ、`features/*` は画面ユースケースに集中させる。
+  - `src/entities/auth`（または `src/domains/auth`）を導入し、`features/auth` は画面ユースケースに集中させる。
 
-### Medium-1: 実行時レスポンス検証は導入済みだが、今後の新規APIでの適用漏れを自動検知する仕組みが弱い
+### Medium-2: 実行時レスポンス検証は導入済みだが、今後の新規APIでの適用漏れを自動検知する仕組みが弱い
 
 - 根拠:
   - `apps/web/src/features/auth/api/auth.client.ts`
@@ -56,7 +57,7 @@
 - 推奨:
   - `*.client.ts` / `*.response.ts` のペア運用をルール化し、lintまたはテンプレートで強制する。
 
-### Medium-2: テストは単体中心で、UI統合（フォーム+ルーティング+API失敗系）の担保が不足
+### Medium-3: テストは単体中心で、UI統合（フォーム+ルーティング+API失敗系）の担保が不足
 
 - 根拠:
   - `apps/web/tests/features/**/*.test.ts`（純粋関数/クライアント中心）
@@ -170,7 +171,7 @@ apps/web/src
 
 ## 5. 優先移行ステップ
 
-1. Domain分離: `features/entities/model` を段階的に `src/entities/*` へ分離し、featureとの責務境界を明確化。  
+1. Auth分離: `features/auth` の API/検証ロジックを `src/entities/auth` へ段階移管。  
 2. UI統合テスト: `login/create/edit` の主要フロー（成功/失敗/401）を Testing Library + MSW で追加。  
 3. API検証運用: 新規API追加時に `*.response.ts` を必須化し、適用漏れをlintまたはテンプレートで防止。  
 4. ルール維持: 既存の import 境界・命名規約をCIで継続監視し、例外運用を増やさない。  
@@ -183,4 +184,4 @@ apps/web/src
 
 ## 7. 残タスク（優先順）
 
-- 主要な再設計タスクは完了。現在は「Domain分離」と「UI統合テスト拡充」が次の重点。  
+- `entities` 分離は完了。次は `auth` 分離と UI統合テスト拡充が重点。  

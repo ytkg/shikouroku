@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
-import type { Entity, Tag } from "../../model/entity-types";
-import { useEntityMutations } from "../../model/entity.mutation";
-import { useKindsQuery, useTagsQuery } from "../../model/entity.query";
+import type { Entity, Tag } from "@/entities/entity";
+import { useEntityMutations, useKindsQuery, useTagsQuery } from "@/entities/entity";
 import {
   addTagId,
   removeTagId,

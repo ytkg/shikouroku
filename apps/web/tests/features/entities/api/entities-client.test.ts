@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { fetchEntities, fetchKinds } from "@/entities/entity";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
-import { fetchEntities, fetchKinds } from "@/features/entities/api/entities.client";
 
 afterEach(() => {
   vi.restoreAllMocks();

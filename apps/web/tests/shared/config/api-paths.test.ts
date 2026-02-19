@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { entityKey, isEntityDetailKey } from "@/entities/entity";
 import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
-import { entityKey, isEntityDetailKey } from "@/features/entities/model/entity.swr-keys";
 
 describe("api-paths", () => {
   it("固定APIパス定数が期待値を持つ", () => {

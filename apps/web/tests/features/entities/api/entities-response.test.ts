@@ -7,7 +7,7 @@ import {
   parseOkResponse,
   parseTagResponse,
   parseTagsResponse
-} from "@/features/entities/api/entities.response";
+} from "@/entities/entity/api/entities.response";
 
 describe("entities.response", () => {
   it("Entityレスポンスを正規化して返す", () => {

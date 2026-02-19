@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { useEntityQuery } from "@/entities/entity";
 import { useAuthGuard } from "@/features/auth";
-import { useEntityQuery } from "../../model/entity.query";
 import { ApiError } from "@/shared/api/api-error";
 
 type EntityDetailPageResult = {

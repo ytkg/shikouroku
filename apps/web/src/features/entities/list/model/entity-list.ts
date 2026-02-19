@@ -1,4 +1,4 @@
-import type { Entity } from "../../model/entity-types";
+import type { Entity } from "@/entities/entity";
 
 export type EntityTab = "all" | "wishlist" | `kind:${number}`;
 
