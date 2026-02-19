@@ -7,6 +7,7 @@ import {
   removeTagId,
   toggleTagId
 } from "../../shared/model/tag-selection";
+import { errorMessages } from "@/shared/config/error-messages";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
 import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
@@ -91,7 +92,7 @@ export function useCreateEntityForm(): CreateEntityResult {
   const submit = async () => {
     const parsedKindId = toKindId(kindId);
     if (parsedKindId === null) {
-      setError("種別を選択してください");
+      setError(errorMessages.kindRequired);
       return;
     }
 

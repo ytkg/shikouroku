@@ -7,6 +7,7 @@ import {
   removeTagId,
   toggleTagId
 } from "../../shared/model/tag-selection";
+import { errorMessages } from "@/shared/config/error-messages";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
 import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
@@ -83,14 +84,14 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
 
   useEffect(() => {
     if (!entityId) {
-      setError("嗜好 ID が不正です");
+      setError(errorMessages.invalidEntityId);
       return;
     }
 
     const nextError = resolveQueryError({
       queryError: entityError ?? kindsError ?? tagsError,
       ensureAuthorized,
-      notFoundMessage: "データが見つかりませんでした"
+      notFoundMessage: errorMessages.entityNotFound
     });
     if (nextError !== KEEP_CURRENT_ERROR) {
       setError(nextError);
@@ -116,7 +117,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
 
     const parsedKindId = toKindId(kindId);
     if (parsedKindId === null) {
-      setError("種別を選択してください");
+      setError(errorMessages.kindRequired);
       return false;
     }
 

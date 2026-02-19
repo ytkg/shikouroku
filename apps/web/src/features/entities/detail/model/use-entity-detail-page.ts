@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useEntityQuery } from "@/entities/entity";
 import { useAuthGuard } from "@/features/auth";
+import { errorMessages } from "@/shared/config/error-messages";
 import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
 
 type EntityDetailPageResult = {
@@ -16,14 +17,14 @@ export function useEntityDetailPage(entityId: string | undefined): EntityDetailP
 
   useEffect(() => {
     if (!entityId) {
-      setError("嗜好 ID が不正です");
+      setError(errorMessages.invalidEntityId);
       return;
     }
 
     const nextError = resolveQueryError({
       queryError,
       ensureAuthorized,
-      notFoundMessage: "データが見つかりませんでした"
+      notFoundMessage: errorMessages.entityNotFound
     });
     if (nextError !== KEEP_CURRENT_ERROR) {
       setError(nextError);

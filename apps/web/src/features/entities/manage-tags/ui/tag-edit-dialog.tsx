@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import type { Tag } from "@/entities/entity";
 import { useTagMutations } from "@/entities/entity";
 import { ApiError } from "@/shared/api/api-error";
+import { errorMessages } from "@/shared/config/error-messages";
 import { toErrorMessage } from "@/shared/lib/error-message";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -68,7 +69,7 @@ export function TagEditDialog({
     event.preventDefault();
     const normalizedName = name.trim();
     if (normalizedName.length === 0) {
-      setError("タグ名を入力してください");
+      setError(errorMessages.tagNameRequired);
       return;
     }
 
