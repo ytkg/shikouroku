@@ -1,9 +1,10 @@
-import fs from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { srcRoot, toSrcRelative, walkFiles } from "./test-utils";
-
-const sourceFilePattern = /\.(ts|tsx)$/;
+import {
+  getSourceFiles,
+  parseSourceFile,
+  toSrcRelative
+} from "./test-utils";
 const allowList = new Set(["shared/api/http.client.ts"]);
 
 function hasFetchCall(sourceFile: ts.SourceFile): boolean {
@@ -35,7 +36,7 @@ function hasFetchCall(sourceFile: ts.SourceFile): boolean {
 
 describe("architecture: no direct fetch", () => {
   it("fetch() は shared/api/http.client.ts からのみ呼び出される", () => {
-    const sourceFiles = walkFiles(srcRoot, (filePath) => sourceFilePattern.test(filePath));
+    const sourceFiles = getSourceFiles();
     const violations: string[] = [];
 
     for (const sourceFilePath of sourceFiles) {
@@ -44,8 +45,7 @@ describe("architecture: no direct fetch", () => {
         continue;
       }
 
-      const source = fs.readFileSync(sourceFilePath, "utf-8");
-      const sourceFile = ts.createSourceFile(sourceFilePath, source, ts.ScriptTarget.Latest, true);
+      const sourceFile = parseSourceFile(sourceFilePath);
       if (hasFetchCall(sourceFile)) {
         violations.push(`${relativePath}: direct fetch() is forbidden`);
       }

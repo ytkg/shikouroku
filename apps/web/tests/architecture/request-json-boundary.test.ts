@@ -1,9 +1,10 @@
-import fs from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { srcRoot, toSrcRelative, walkFiles } from "./test-utils";
-
-const sourceFilePattern = /\.(ts|tsx)$/;
+import {
+  getSourceFiles,
+  parseSourceFile,
+  toSrcRelative
+} from "./test-utils";
 
 function isAllowedRequestJsonCaller(relativePath: string): boolean {
   if (relativePath === "shared/api/http.client.ts") {
@@ -68,13 +69,12 @@ function hasIdentifierCall(sourceFile: ts.SourceFile, identifierName: string): b
 
 describe("architecture: requestJson boundary", () => {
   it("requestJson は entities/*/api/*.client.ts からのみ呼び出される", () => {
-    const sourceFiles = walkFiles(srcRoot, (filePath) => sourceFilePattern.test(filePath));
+    const sourceFiles = getSourceFiles();
     const violations: string[] = [];
 
     for (const sourceFilePath of sourceFiles) {
       const relativePath = toSrcRelative(sourceFilePath);
-      const source = fs.readFileSync(sourceFilePath, "utf-8");
-      const sourceFile = ts.createSourceFile(sourceFilePath, source, ts.ScriptTarget.Latest, true);
+      const sourceFile = parseSourceFile(sourceFilePath);
       const importedIdentifiers = collectRequestJsonIdentifiers(sourceFile);
 
       for (const imported of importedIdentifiers) {

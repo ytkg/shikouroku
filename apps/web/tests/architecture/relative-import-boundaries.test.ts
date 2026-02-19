@@ -2,12 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  srcRoot,
+  getSourceFiles,
+  readSourceText,
   toSrcRelative,
-  topLayerFromAbsolute,
-  walkFiles
+  topLayerFromAbsolute
 } from "./test-utils";
-const sourceFilePattern = /\.(ts|tsx)$/;
 
 function extractImportPaths(source: string): string[] {
   const fromImportMatches = source.matchAll(/from\s+["']([^"']+)["']/g);
@@ -37,7 +36,7 @@ function resolveRelativeImport(sourceFilePath: string, importPath: string): stri
 
 describe("architecture: relative import boundaries", () => {
   it("相対importでトップレイヤをまたがない", () => {
-    const sourceFiles = walkFiles(srcRoot, (filePath) => sourceFilePattern.test(filePath));
+    const sourceFiles = getSourceFiles();
     const violations: string[] = [];
 
     for (const sourceFilePath of sourceFiles) {
@@ -46,7 +45,7 @@ describe("architecture: relative import boundaries", () => {
         continue;
       }
 
-      const sourceText = fs.readFileSync(sourceFilePath, "utf-8");
+      const sourceText = readSourceText(sourceFilePath);
       const importPaths = extractImportPaths(sourceText);
 
       for (const importPath of importPaths) {

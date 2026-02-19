@@ -1,12 +1,11 @@
-import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import {
+  getSourceFiles,
   isDomainApiClientRelative,
-  srcRoot,
+  parseSourceFile,
   toSrcRelative,
-  walkFiles
 } from "./test-utils";
 
 function getImportedParserIdentifiers(sourceFile: ts.SourceFile, expectedImportPath: string): Set<string> {
@@ -71,7 +70,7 @@ function hasParserCall(sourceFile: ts.SourceFile, parserIdentifiers: Set<string>
 
 describe("architecture: api parser usage", () => {
   it("api配下の*.client.tsは対応*.response.tsからimportしたparse関数を呼び出す", () => {
-    const clientFiles = walkFiles(srcRoot).filter((filePath) =>
+    const clientFiles = getSourceFiles().filter((filePath) =>
       isDomainApiClientRelative(toSrcRelative(filePath))
     );
     expect(clientFiles.length).toBeGreaterThan(0);
@@ -79,8 +78,7 @@ describe("architecture: api parser usage", () => {
     const violations: string[] = [];
 
     for (const filePath of clientFiles) {
-      const sourceText = fs.readFileSync(filePath, "utf-8");
-      const sourceFile = ts.createSourceFile(filePath, sourceText, ts.ScriptTarget.Latest, true);
+      const sourceFile = parseSourceFile(filePath);
       const baseName = path.basename(filePath, ".client.ts");
       const expectedImportPath = `./${baseName}.response`;
       const relativePath = toSrcRelative(filePath);

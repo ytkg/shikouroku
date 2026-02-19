@@ -1,7 +1,5 @@
-import fs from "node:fs";
 import { describe, expect, it } from "vitest";
-import { srcRoot, toSrcRelative, walkFiles } from "./test-utils";
-const sourceFilePattern = /\.(ts|tsx)$/;
+import { getSourceFiles, readSourceText, toSrcRelative } from "./test-utils";
 
 function extractAliasImports(source: string): string[] {
   const importMatches = source.matchAll(/from\s+["'](@\/[^"']+)["']/g);
@@ -18,12 +16,12 @@ function isDeepSliceImport(value: string, slice: "features" | "entities"): boole
 
 describe("architecture: layer import boundaries", () => {
   it("各レイヤが禁止レイヤへ依存していない", () => {
-    const files = walkFiles(srcRoot, (filePath) => sourceFilePattern.test(filePath));
+    const files = getSourceFiles();
     const violations: string[] = [];
 
     for (const filePath of files) {
       const relativePath = toSrcRelative(filePath);
-      const source = fs.readFileSync(filePath, "utf-8");
+      const source = readSourceText(filePath);
       const imports = extractAliasImports(source);
 
       for (const importPath of imports) {

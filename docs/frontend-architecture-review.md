@@ -41,7 +41,7 @@
   - `features/*` / `entities/*` 各スライスの `index.ts` 存在を検証し、公開境界の抜け漏れを防止
   - `test:architecture` を追加し、アーキテクチャ検証テストを独立実行可能にした
   - CIのテスト実行を `test:unit` と `test:architecture` に分離し、重複実行を解消
-  - アーキテクチャテストの共通ユーティリティを導入し、重複実装を削減
+  - アーキテクチャテストの共通ユーティリティ（ファイル/ASTキャッシュ付き）を導入し、重複実装を削減
   - `toErrorMessage` を `shared/lib` へ集約し、複数featureの重複エラーメッセージ処理を統一
   - `resolveQueryError` を `shared/lib` へ導入し、ApiError/認証ガード/404処理の判定分岐を共通化
   - 共通エラーメッセージを `shared/config/error-messages` に集約し、feature間の文言揺れを抑制

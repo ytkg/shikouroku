@@ -1,9 +1,10 @@
-import fs from "node:fs";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
-import { srcRoot, toSrcRelative, walkFiles } from "./test-utils";
-
-const sourceFilePattern = /\.(ts|tsx)$/;
+import {
+  getSourceFiles,
+  parseSourceFile,
+  toSrcRelative
+} from "./test-utils";
 const allowedFiles = new Set(["shared/config/api-paths.ts", "shared/config/route-paths.ts"]);
 
 function isForbiddenPathLiteral(value: string): boolean {
@@ -31,7 +32,7 @@ function collectForbiddenLiterals(sourceFile: ts.SourceFile): string[] {
 
 describe("architecture: no hardcoded path literals", () => {
   it("API/主要ルートはshared/config定数のみで定義される", () => {
-    const sourceFiles = walkFiles(srcRoot, (filePath) => sourceFilePattern.test(filePath));
+    const sourceFiles = getSourceFiles();
     const violations: string[] = [];
 
     for (const sourceFilePath of sourceFiles) {
@@ -40,8 +41,7 @@ describe("architecture: no hardcoded path literals", () => {
         continue;
       }
 
-      const source = fs.readFileSync(sourceFilePath, "utf-8");
-      const sourceFile = ts.createSourceFile(sourceFilePath, source, ts.ScriptTarget.Latest, true);
+      const sourceFile = parseSourceFile(sourceFilePath);
       const literals = collectForbiddenLiterals(sourceFile);
 
       for (const literal of literals) {

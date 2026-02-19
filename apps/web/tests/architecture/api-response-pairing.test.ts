@@ -1,14 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  getAllFiles,
   isDomainApiClientRelative,
-  srcRoot,
-  toSrcRelative,
-  walkFiles
+  toSrcRelative
 } from "./test-utils";
 
 describe("architecture: api client/response pairing", () => {
   it("api配下の*.client.tsは対応する*.response.tsを持つ", () => {
-    const allFiles = walkFiles(srcRoot).map(toSrcRelative);
+    const allFiles = getAllFiles().map(toSrcRelative);
     const clientFiles = allFiles.filter(isDomainApiClientRelative);
 
     expect(clientFiles.length).toBeGreaterThan(0);
