@@ -37,6 +37,7 @@
   - 相対importでトップレイヤをまたぐ参照を禁止する静的テストを追加（aliasルール迂回を防止）
   - `shared/api/http.client.ts` 以外での `fetch()` 直接呼び出しを禁止する静的テストを追加
   - API/主要ルート文字列のハードコードを検知するASTテストを追加（lint設定のバックアップガード）
+  - `features/*` / `entities/*` 各スライスの `index.ts` 存在を検証し、公開境界の抜け漏れを防止
   - `test:architecture` を追加し、アーキテクチャ検証テストを独立実行可能にした
   - アーキテクチャテストの共通ユーティリティを導入し、重複実装を削減
   - `toErrorMessage` を `shared/lib` へ集約し、複数featureの重複エラーメッセージ処理を統一
