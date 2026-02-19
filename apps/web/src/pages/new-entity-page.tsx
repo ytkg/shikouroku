@@ -131,7 +131,7 @@ export default function NewEntityPage() {
               <Label htmlFor="kind">種別</Label>
               <select
                 id="kind"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm"
                 value={kindId}
                 onChange={(e) => setKindId(e.target.value)}
                 required
@@ -151,7 +151,7 @@ export default function NewEntityPage() {
               <Label htmlFor="description">メモ</Label>
               <textarea
                 id="description"
-                className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
