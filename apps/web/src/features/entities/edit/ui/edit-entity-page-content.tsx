@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEditEntityForm } from "@/features/entities/edit/model/use-edit-entity-form";
 import { EntityFormFields } from "@/features/entities/shared/ui/entity-form-fields";
 import { TagEditDialog } from "@/features/entities/ui/tag-edit-dialog";
+import { getEntityDetailPath, routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import {
   Card,
@@ -16,6 +17,7 @@ export function EditEntityPageContent() {
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
   const form = useEditEntityForm(entityId);
+  const detailPath = entityId ? getEntityDetailPath(entityId) : routePaths.home;
 
   if (form.loading) {
     return <main className="w-full bg-background pt-20" />;
@@ -23,8 +25,8 @@ export function EditEntityPageContent() {
 
   const onSave = async () => {
     const saved = await form.save();
-    if (saved && entityId) {
-      navigate(`/entities/${entityId}`);
+    if (saved) {
+      navigate(detailPath);
     }
   };
 
@@ -65,7 +67,7 @@ export function EditEntityPageContent() {
           </Button>
         </CardFooter>
       </Card>
-      <Button variant="outline" onClick={() => navigate(`/entities/${entityId}`)}>
+      <Button variant="outline" onClick={() => navigate(detailPath)}>
         詳細へ戻る
       </Button>
       <TagEditDialog

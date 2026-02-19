@@ -1,4 +1,5 @@
 import type { Entity, Kind, Tag } from "@/features/entities/model/entity-types";
+import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
 import { requestJson } from "@/shared/api/http.client";
 
 type ApiEntity = {
@@ -75,17 +76,17 @@ function toEntity(apiEntity: ApiEntity): Entity {
 }
 
 export async function fetchKinds(): Promise<Kind[]> {
-  const json = await requestJson<KindsResponse>("/api/kinds");
+  const json = await requestJson<KindsResponse>(apiPaths.kinds);
   return json.kinds;
 }
 
 export async function fetchTags(): Promise<Tag[]> {
-  const json = await requestJson<TagsResponse>("/api/tags");
+  const json = await requestJson<TagsResponse>(apiPaths.tags);
   return json.tags;
 }
 
 export async function createTag(input: CreateTagInput): Promise<Tag> {
-  const json = await requestJson<TagResponse>("/api/tags", {
+  const json = await requestJson<TagResponse>(apiPaths.tags, {
     method: "POST",
     body: input
   });
@@ -93,23 +94,23 @@ export async function createTag(input: CreateTagInput): Promise<Tag> {
 }
 
 export async function deleteTag(tagId: number): Promise<void> {
-  await requestJson<OkResponse>(`/api/tags/${tagId}`, {
+  await requestJson<OkResponse>(getTagPath(tagId), {
     method: "DELETE"
   });
 }
 
 export async function fetchEntities(): Promise<Entity[]> {
-  const json = await requestJson<EntitiesResponse>("/api/entities");
+  const json = await requestJson<EntitiesResponse>(apiPaths.entities);
   return json.entities.map(toEntity);
 }
 
 export async function fetchEntityById(entityId: string): Promise<Entity> {
-  const json = await requestJson<EntityResponse>(`/api/entities/${entityId}`);
+  const json = await requestJson<EntityResponse>(getEntityPath(entityId));
   return toEntity(json.entity);
 }
 
 export async function createEntity(input: CreateEntityInput): Promise<Entity> {
-  const json = await requestJson<EntityResponse>("/api/entities", {
+  const json = await requestJson<EntityResponse>(apiPaths.entities, {
     method: "POST",
     body: input
   });
@@ -120,7 +121,7 @@ export async function updateEntity(
   entityId: string,
   input: UpdateEntityInput
 ): Promise<Entity> {
-  const json = await requestJson<EntityResponse>(`/api/entities/${entityId}`, {
+  const json = await requestJson<EntityResponse>(getEntityPath(entityId), {
     method: "PATCH",
     body: input
   });

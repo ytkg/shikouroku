@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { toKindTab, useEntityListPage } from "@/features/entities/list/model/use-entity-list-page";
+import { getEntityDetailPath } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 
 export function EntityListPageContent() {
@@ -54,7 +55,7 @@ export function EntityListPageContent() {
               <article
                 key={entity.id}
                 className="cursor-pointer rounded-lg border bg-card p-4 transition-colors hover:bg-accent/40"
-                onClick={() => navigate(`/entities/${entity.id}`)}
+                onClick={() => navigate(getEntityDetailPath(entity.id))}
               >
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-base font-semibold">{entity.name}</h3>

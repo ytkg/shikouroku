@@ -1,15 +1,16 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { logout as logoutRequest } from "@/features/auth";
+import { routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 
 export function AppFooter() {
   const navigate = useNavigate();
   const location = useLocation();
-  const showLogout = location.pathname !== "/login";
+  const showLogout = location.pathname !== routePaths.login;
 
   const logout = async () => {
     await logoutRequest().catch(() => undefined);
-    navigate("/login", { replace: true });
+    navigate(routePaths.login, { replace: true });
   };
 
   return (

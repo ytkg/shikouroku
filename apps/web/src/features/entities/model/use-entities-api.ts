@@ -14,17 +14,14 @@ import {
   type UpdateEntityInput
 } from "@/features/entities/api/entities.client";
 import type { Entity, Tag } from "@/features/entities/model/entity-types";
-
-const ENTITIES_KEY = "/api/entities";
-const KINDS_KEY = "/api/kinds";
-const TAGS_KEY = "/api/tags";
+import { apiPaths, getEntityPath } from "@/shared/config/api-paths";
 
 function entityKey(entityId: string): string {
-  return `/api/entities/${entityId}`;
+  return getEntityPath(entityId);
 }
 
 export function useEntitiesQuery() {
-  return useSWR(ENTITIES_KEY, fetchEntities);
+  return useSWR(apiPaths.entities, fetchEntities);
 }
 
 export function useEntityQuery(entityId: string | undefined) {
@@ -32,11 +29,11 @@ export function useEntityQuery(entityId: string | undefined) {
 }
 
 export function useKindsQuery() {
-  return useSWR(KINDS_KEY, fetchKinds);
+  return useSWR(apiPaths.kinds, fetchKinds);
 }
 
 export function useTagsQuery() {
-  return useSWR(TAGS_KEY, fetchTags);
+  return useSWR(apiPaths.tags, fetchTags);
 }
 
 export function useEntityMutations() {
@@ -46,7 +43,7 @@ export function useEntityMutations() {
     async (input: CreateEntityInput): Promise<Entity> => {
       const entity = await createEntityRequest(input);
       await Promise.all([
-        mutate(ENTITIES_KEY),
+        mutate(apiPaths.entities),
         mutate(entityKey(entity.id), entity, false)
       ]);
       return entity;
@@ -58,7 +55,7 @@ export function useEntityMutations() {
     async (entityId: string, input: UpdateEntityInput): Promise<Entity> => {
       const entity = await updateEntityRequest(entityId, input);
       await Promise.all([
-        mutate(ENTITIES_KEY),
+        mutate(apiPaths.entities),
         mutate(entityKey(entityId), entity, false)
       ]);
       return entity;
@@ -75,7 +72,7 @@ export function useTagMutations() {
   const createTag = useCallback(
     async (input: CreateTagInput): Promise<Tag> => {
       const tag = await createTagRequest(input);
-      await mutate(TAGS_KEY);
+      await mutate(apiPaths.tags);
       return tag;
     },
     [mutate]
@@ -85,9 +82,9 @@ export function useTagMutations() {
     async (tagId: number): Promise<void> => {
       await deleteTagRequest(tagId);
       await Promise.all([
-        mutate(TAGS_KEY),
-        mutate(ENTITIES_KEY),
-        mutate((key) => typeof key === "string" && key.startsWith("/api/entities/"))
+        mutate(apiPaths.tags),
+        mutate(apiPaths.entities),
+        mutate((key) => typeof key === "string" && key.startsWith(`${apiPaths.entities}/`))
       ]);
     },
     [mutate]

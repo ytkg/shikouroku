@@ -6,6 +6,7 @@ import EntityEditPage from "@/pages/entity-edit-page";
 import HomePage from "@/pages/home-page";
 import LoginPage from "@/pages/login-page";
 import NewEntityPage from "@/pages/new-entity-page";
+import { routePaths } from "@/shared/config/route-paths";
 
 export default function App() {
   return (
@@ -13,12 +14,12 @@ export default function App() {
       <AppHeader />
       <div className="flex-1">
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/entities/new" element={<NewEntityPage />} />
-          <Route path="/entities/:entityId" element={<EntityDetailPage />} />
-          <Route path="/entities/:entityId/edit" element={<EntityEditPage />} />
-          <Route path="/" element={<HomePage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path={routePaths.login} element={<LoginPage />} />
+          <Route path={routePaths.newEntity} element={<NewEntityPage />} />
+          <Route path={routePaths.entityDetailPattern} element={<EntityDetailPage />} />
+          <Route path={routePaths.entityEditPattern} element={<EntityEditPage />} />
+          <Route path={routePaths.home} element={<HomePage />} />
+          <Route path="*" element={<Navigate to={routePaths.home} replace />} />
         </Routes>
       </div>
       <AppFooter />

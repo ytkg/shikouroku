@@ -1,4 +1,5 @@
 import { requestJson } from "@/shared/api/http.client";
+import { apiPaths } from "@/shared/config/api-paths";
 
 export type LoginInput = {
   username: string;
@@ -10,14 +11,14 @@ type AuthResponse = {
 };
 
 export async function login(input: LoginInput): Promise<void> {
-  await requestJson<AuthResponse>("/api/login", {
+  await requestJson<AuthResponse>(apiPaths.login, {
     method: "POST",
     body: input
   });
 }
 
 export async function logout(): Promise<void> {
-  await requestJson<AuthResponse>("/api/logout", {
+  await requestJson<AuthResponse>(apiPaths.logout, {
     method: "POST"
   });
 }

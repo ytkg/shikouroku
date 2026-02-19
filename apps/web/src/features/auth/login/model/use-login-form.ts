@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "@/features/auth/api/auth.client";
 import { ApiError } from "@/shared/api/api-error";
+import { routePaths } from "@/shared/config/route-paths";
 
 type LoginFormResult = {
   username: string;
@@ -25,7 +26,7 @@ export function useLoginForm(): LoginFormResult {
     setLoading(true);
     try {
       await login({ username, password });
-      navigate("/", { replace: true });
+      navigate(routePaths.home, { replace: true });
     } catch (e) {
       if (e instanceof ApiError) {
         setError(e.message);
