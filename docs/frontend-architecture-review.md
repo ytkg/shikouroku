@@ -49,6 +49,7 @@
   - 共通エラーメッセージを `shared/config/error-messages` に集約し、feature間の文言揺れを抑制
   - `entity-types.ts` を `entity.types.ts` へ統一し、型定義モジュールのサフィックス規約を整合
   - src配下のファイル/ディレクトリ命名（kebab-case・`.types.ts`）を検証するアーキテクチャテストを追加
+  - `shared/lib/url` にパスセグメントエンコード関数を追加し、既エンコードIDの二重エンコードを防止
 
 ## 1. Findings（重大度順）
 

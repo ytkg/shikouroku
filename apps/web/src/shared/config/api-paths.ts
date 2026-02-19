@@ -1,3 +1,5 @@
+import { encodePathSegment } from "@/shared/lib/url";
+
 export const apiPaths = {
   login: "/api/login",
   logout: "/api/logout",
@@ -11,5 +13,5 @@ export function getTagPath(tagId: number): string {
 }
 
 export function getEntityPath(entityId: string): string {
-  return `${apiPaths.entities}/${encodeURIComponent(entityId)}`;
+  return `${apiPaths.entities}/${encodePathSegment(entityId)}`;
 }

@@ -20,6 +20,10 @@ describe("api-paths", () => {
     expect(getEntityPath("id with/slash")).toBe("/api/entities/id%20with%2Fslash");
   });
 
+  it("entityIdが既にエンコード済みでも二重エンコードしない", () => {
+    expect(getEntityPath("id%20with%2Fslash")).toBe("/api/entities/id%20with%2Fslash");
+  });
+
   it("entityKey は entity path と一致する", () => {
     expect(entityKey("id-1")).toBe("/api/entities/id-1");
   });

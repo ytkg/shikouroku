@@ -1,3 +1,5 @@
+import { encodePathSegment } from "@/shared/lib/url";
+
 export const routePaths = {
   home: "/",
   login: "/login",
@@ -7,9 +9,9 @@ export const routePaths = {
 } as const;
 
 export function getEntityDetailPath(entityId: string): string {
-  return `/entities/${encodeURIComponent(entityId)}`;
+  return `/entities/${encodePathSegment(entityId)}`;
 }
 
 export function getEntityEditPath(entityId: string): string {
-  return `/entities/${encodeURIComponent(entityId)}/edit`;
+  return `/entities/${encodePathSegment(entityId)}/edit`;
 }

@@ -23,4 +23,9 @@ describe("route-paths", () => {
     expect(getEntityDetailPath("id with/slash")).toBe("/entities/id%20with%2Fslash");
     expect(getEntityEditPath("id with/slash")).toBe("/entities/id%20with%2Fslash/edit");
   });
+
+  it("entityIdが既にエンコード済みでも二重エンコードしない", () => {
+    expect(getEntityDetailPath("id%20with%2Fslash")).toBe("/entities/id%20with%2Fslash");
+    expect(getEntityEditPath("id%20with%2Fslash")).toBe("/entities/id%20with%2Fslash/edit");
+  });
 });
