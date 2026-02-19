@@ -55,6 +55,7 @@
   - `default export` 禁止をASTテストでも検証し、lint設定逸脱時の回帰検知を追加
   - アーキテクチャテストのAST解析結果をキャッシュし、重複走査コストを削減
   - `pages/index.ts` が `pages/*/page.tsx` を漏れなく再エクスポートしているかを検証するテストを追加
+  - `widgets/index.ts` が `widgets/*/ui/app-*.tsx` を再エクスポートしているかを検証するテストを追加
 
 ## 1. Findings（重大度順）
 
