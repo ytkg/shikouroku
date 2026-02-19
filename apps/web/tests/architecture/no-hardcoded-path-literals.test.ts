@@ -8,6 +8,10 @@ import {
 const allowedFiles = new Set(["shared/config/api-paths.ts", "shared/config/route-paths.ts"]);
 
 function isForbiddenPathLiteral(value: string): boolean {
+  if (value === "*") {
+    return true;
+  }
+
   if (value.startsWith("/api/")) {
     return true;
   }

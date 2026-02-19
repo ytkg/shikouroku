@@ -101,6 +101,10 @@ export default [
         {
           selector: "Literal[value='/entities/new']",
           message: "ルートパスは `@/shared/config/route-paths` を利用してください。"
+        },
+        {
+          selector: "Literal[value='*']",
+          message: "ルートパスは `@/shared/config/route-paths` を利用してください。"
         }
       ],
       "unicorn/filename-case": [

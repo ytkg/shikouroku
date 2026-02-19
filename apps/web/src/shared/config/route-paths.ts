@@ -4,6 +4,7 @@ export const routePaths = {
   home: "/",
   login: "/login",
   newEntity: "/entities/new",
+  notFound: "*",
   entityDetailPattern: "/entities/:entityId",
   entityEditPattern: "/entities/:entityId/edit"
 } as const;

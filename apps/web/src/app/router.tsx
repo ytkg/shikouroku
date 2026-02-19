@@ -20,7 +20,7 @@ export function AppRouter() {
           <Route path={routePaths.entityDetailPattern} element={<EntityDetailPage />} />
           <Route path={routePaths.entityEditPattern} element={<EntityEditPage />} />
           <Route path={routePaths.home} element={<HomePage />} />
-          <Route path="*" element={<Navigate to={routePaths.home} replace />} />
+          <Route path={routePaths.notFound} element={<Navigate to={routePaths.home} replace />} />
         </Routes>
       </div>
       <AppFooter />

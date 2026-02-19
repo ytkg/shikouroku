@@ -10,6 +10,7 @@ describe("route-paths", () => {
     expect(routePaths.home).toBe("/");
     expect(routePaths.login).toBe("/login");
     expect(routePaths.newEntity).toBe("/entities/new");
+    expect(routePaths.notFound).toBe("*");
     expect(routePaths.entityDetailPattern).toBe("/entities/:entityId");
     expect(routePaths.entityEditPattern).toBe("/entities/:entityId/edit");
   });
