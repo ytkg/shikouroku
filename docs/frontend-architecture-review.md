@@ -63,6 +63,7 @@
   - `shared/config/http-status` を追加し、`401/404/502` のマジックナンバーを定数化
   - 主要HTTPステータス直書きを禁止するアーキテクチャテストを追加
   - ルーティングのキャッチオール `*` を `routePaths.notFound` へ集約し、直書き禁止ルールへ追加
+  - `response.json()` 呼び出しを `shared/api` 境界内に限定するアーキテクチャテストを追加
 
 ## 1. Findings（重大度順）
 
