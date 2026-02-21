@@ -75,6 +75,7 @@
   - `entities/index.ts` の再エクスポート元を `./auth` / `./entity` のみに固定するテストを追加
   - `entities/auth` / `entities/entity` に中間 `index.ts` を追加し、スライス公開APIの deep re-export を除去
   - `entities/*/index.ts` で deep relative re-export を禁止するテストを追加
+  - `features/*/index.ts` でも deep relative re-export を禁止する汎用テストを追加
 
 ## 1. Findings（重大度順）
 
