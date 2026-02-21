@@ -1,8 +1,10 @@
-import type { Kind, Tag } from "@/entities/entity";
+import type { Entity, Kind, Tag } from "@/entities/entity";
 import { Button } from "@/shared/ui/button";
 import { Checkbox, Select, Textarea } from "@/shared/ui/form-controls";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+
+type RelatedCandidate = Pick<Entity, "id" | "name" | "kind">;
 
 type EntityFormFieldsProps = {
   kinds: Kind[];
@@ -18,6 +20,9 @@ type EntityFormFieldsProps = {
   onWishlistChange: (checked: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onOpenTagDialog: () => void;
+  relatedCandidates?: RelatedCandidate[];
+  selectedRelatedEntityIds?: string[];
+  onToggleRelatedEntity?: (entityId: string, checked: boolean) => void;
   kindRequired?: boolean;
 };
 
@@ -35,8 +40,18 @@ export function EntityFormFields({
   onWishlistChange,
   onToggleTag,
   onOpenTagDialog,
+  relatedCandidates,
+  selectedRelatedEntityIds,
+  onToggleRelatedEntity,
   kindRequired = true
 }: EntityFormFieldsProps) {
+  const hasRelatedEditor =
+    relatedCandidates !== undefined &&
+    selectedRelatedEntityIds !== undefined &&
+    onToggleRelatedEntity !== undefined;
+  const relatedCandidatesSafe = relatedCandidates ?? [];
+  const selectedRelatedEntityIdsSafe = selectedRelatedEntityIds ?? [];
+
   return (
     <>
       <div className="space-y-2">
@@ -89,6 +104,27 @@ export function EntityFormFields({
           </div>
         )}
       </div>
+      {hasRelatedEditor && (
+        <div className="space-y-2">
+          <Label>関連嗜好</Label>
+          <p className="text-xs text-muted-foreground">選択した嗜好と相互に関連付けされます。</p>
+          {relatedCandidatesSafe.length === 0 ? (
+            <p className="text-sm text-muted-foreground">追加できる候補がありません。</p>
+          ) : (
+            <div className="max-h-52 space-y-2 overflow-auto rounded-md border p-2">
+              {relatedCandidatesSafe.map((candidate) => (
+                <label key={candidate.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-sm">
+                  <Checkbox
+                    checked={selectedRelatedEntityIdsSafe.includes(candidate.id)}
+                    onChange={(event) => onToggleRelatedEntity?.(candidate.id, event.target.checked)}
+                  />
+                  {candidate.name}（{candidate.kind.label}）
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <label className="flex items-center gap-2 text-sm">
         <Checkbox
           checked={isWishlist}

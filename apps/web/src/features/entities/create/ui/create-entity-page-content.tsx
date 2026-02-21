@@ -44,11 +44,14 @@ export function CreateEntityPageContent() {
               description={form.description}
               isWishlist={form.isWishlist}
               selectedTagIds={form.selectedTagIds}
+              relatedCandidates={form.relatedCandidates}
+              selectedRelatedEntityIds={form.selectedRelatedEntityIds}
               onKindIdChange={form.setKindId}
               onNameChange={form.setName}
               onDescriptionChange={form.setDescription}
               onWishlistChange={form.setIsWishlist}
               onToggleTag={form.onToggleTag}
+              onToggleRelatedEntity={form.onToggleRelatedEntity}
               onOpenTagDialog={() => form.setTagDialogOpen(true)}
             />
             <div className="flex justify-end">

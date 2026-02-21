@@ -26,6 +26,16 @@ ON CONFLICT(id) DO UPDATE SET
   is_wishlist = excluded.is_wishlist,
   updated_at = datetime('now');
 
+DELETE FROM entity_relations
+WHERE entity_id_low IN ('seed-kyoto-kissa', 'seed-camp-chair', 'seed-morning-sauna')
+   OR entity_id_high IN ('seed-kyoto-kissa', 'seed-camp-chair', 'seed-morning-sauna');
+
+INSERT INTO entity_relations (entity_id_low, entity_id_high, created_at) VALUES
+  ('seed-camp-chair', 'seed-kyoto-kissa', datetime('now')),
+  ('seed-kyoto-kissa', 'seed-morning-sauna', datetime('now'))
+ON CONFLICT(entity_id_low, entity_id_high) DO UPDATE SET
+  created_at = excluded.created_at;
+
 DELETE FROM entity_tags
 WHERE entity_id IN ('seed-kyoto-kissa', 'seed-camp-chair', 'seed-morning-sauna');
 

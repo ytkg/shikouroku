@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
 import type { Entity, Tag } from "@/entities/entity";
-import { useEntityMutations, useKindsQuery, useTagsQuery } from "@/entities/entity";
+import {
+  useEntitiesQuery,
+  useEntityMutations,
+  useKindsQuery,
+  useTagsQuery
+} from "@/entities/entity";
 import {
   addTagId,
   removeTagId,
   toggleTagId
 } from "../../shared/model/tag-selection";
+import { toggleRelatedEntityId } from "../../shared/model/related-selection";
 import { errorMessages } from "@/shared/config/error-messages";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
@@ -21,6 +27,8 @@ type CreateEntityResult = {
   description: string;
   isWishlist: boolean;
   selectedTagIds: number[];
+  relatedCandidates: Entity[];
+  selectedRelatedEntityIds: string[];
   tagDialogOpen: boolean;
   submitLoading: boolean;
   loading: boolean;
@@ -32,6 +40,7 @@ type CreateEntityResult = {
   setIsWishlist: (value: boolean) => void;
   setTagDialogOpen: (open: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
+  onToggleRelatedEntity: (entityId: string, checked: boolean) => void;
   onTagCreated: (tag: Tag) => void;
   onTagDeleted: (tagId: number) => void;
   submit: () => Promise<void>;
@@ -52,13 +61,19 @@ export function useCreateEntityForm(): CreateEntityResult {
   const [description, setDescription] = useState("");
   const [isWishlist, setIsWishlist] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [selectedRelatedEntityIds, setSelectedRelatedEntityIds] = useState<string[]>([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<Entity | null>(null);
   const { data: kinds = [], error: kindsError, isLoading: kindsLoading } = useKindsQuery();
   const { data: tags = [], error: tagsError, isLoading: tagsLoading } = useTagsQuery();
-  const { createEntity } = useEntityMutations();
+  const {
+    data: relatedCandidates = [],
+    error: entitiesError,
+    isLoading: entitiesLoading
+  } = useEntitiesQuery();
+  const { createEntity, createEntityRelation } = useEntityMutations();
 
   useEffect(() => {
     if (kinds.length === 0 || kindId.length > 0) {
@@ -69,13 +84,13 @@ export function useCreateEntityForm(): CreateEntityResult {
 
   useEffect(() => {
     const nextError = resolveQueryError({
-      queryError: kindsError ?? tagsError,
+      queryError: kindsError ?? tagsError ?? entitiesError,
       ensureAuthorized
     });
     if (nextError !== KEEP_CURRENT_ERROR) {
       setError(nextError);
     }
-  }, [kindsError, tagsError, ensureAuthorized]);
+  }, [kindsError, tagsError, entitiesError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
     setSelectedTagIds((current) => toggleTagId(current, tagId, checked));
@@ -87,6 +102,10 @@ export function useCreateEntityForm(): CreateEntityResult {
 
   const onTagDeleted = (tagId: number) => {
     setSelectedTagIds((current) => removeTagId(current, tagId));
+  };
+
+  const onToggleRelatedEntity = (entityId: string, checked: boolean) => {
+    setSelectedRelatedEntityIds((current) => toggleRelatedEntityId(current, entityId, checked));
   };
 
   const submit = async () => {
@@ -107,11 +126,17 @@ export function useCreateEntityForm(): CreateEntityResult {
         isWishlist,
         tagIds: selectedTagIds
       });
+
+      for (const relatedEntityId of selectedRelatedEntityIds) {
+        await createEntityRelation(entity.id, { relatedEntityId });
+      }
+
       setSubmitResult(entity);
       setName("");
       setDescription("");
       setIsWishlist(false);
       setSelectedTagIds([]);
+      setSelectedRelatedEntityIds([]);
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return;
@@ -131,9 +156,11 @@ export function useCreateEntityForm(): CreateEntityResult {
     description,
     isWishlist,
     selectedTagIds,
+    relatedCandidates,
+    selectedRelatedEntityIds,
     tagDialogOpen,
     submitLoading,
-    loading: kindsLoading || tagsLoading,
+    loading: kindsLoading || tagsLoading || entitiesLoading,
     error,
     submitResult,
     setKindId,
@@ -142,6 +169,7 @@ export function useCreateEntityForm(): CreateEntityResult {
     setIsWishlist,
     setTagDialogOpen,
     onToggleTag,
+    onToggleRelatedEntity,
     onTagCreated,
     onTagDeleted,
     submit
