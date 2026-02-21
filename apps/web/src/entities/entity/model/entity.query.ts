@@ -5,7 +5,14 @@ import {
   fetchKinds,
   fetchTags
 } from "../api/entities.client";
-import { ENTITIES_KEY, entityKey, KINDS_KEY, TAGS_KEY } from "./entity.swr-keys";
+import { fetchRelatedEntities } from "../api/related.client";
+import {
+  ENTITIES_KEY,
+  entityKey,
+  KINDS_KEY,
+  relatedEntitiesKey,
+  TAGS_KEY
+} from "./entity.swr-keys";
 
 export function useEntitiesQuery() {
   return useSWR(ENTITIES_KEY, fetchEntities);
@@ -13,6 +20,12 @@ export function useEntitiesQuery() {
 
 export function useEntityQuery(entityId: string | undefined) {
   return useSWR(entityId ? entityKey(entityId) : null, () => fetchEntityById(entityId ?? ""));
+}
+
+export function useRelatedEntitiesQuery(entityId: string | undefined) {
+  return useSWR(entityId ? relatedEntitiesKey(entityId) : null, () =>
+    fetchRelatedEntities(entityId ?? "")
+  );
 }
 
 export function useKindsQuery() {

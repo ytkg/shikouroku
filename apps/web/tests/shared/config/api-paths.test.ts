@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { entityKey, isEntityDetailKey } from "@/entities/entity";
-import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
+import {
+  entityKey,
+  isEntityDetailKey,
+  isEntityRelatedListKey,
+  relatedEntitiesKey
+} from "@/entities/entity";
+import {
+  apiPaths,
+  getEntityPath,
+  getEntityRelatedPath,
+  getEntityRelationPath,
+  getTagPath
+} from "@/shared/config/api-paths";
 
 describe("api-paths", () => {
   it("固定APIパス定数が期待値を持つ", () => {
@@ -14,6 +25,8 @@ describe("api-paths", () => {
   it("動的APIパスを生成できる", () => {
     expect(getTagPath(10)).toBe("/api/tags/10");
     expect(getEntityPath("entity-1")).toBe("/api/entities/entity-1");
+    expect(getEntityRelatedPath("entity-1")).toBe("/api/entities/entity-1/related");
+    expect(getEntityRelationPath("entity-1", "entity-2")).toBe("/api/entities/entity-1/related/entity-2");
   });
 
   it("entityIdの特殊文字をURLエンコードする", () => {
@@ -22,10 +35,15 @@ describe("api-paths", () => {
 
   it("entityIdが既にエンコード済みでも二重エンコードしない", () => {
     expect(getEntityPath("id%20with%2Fslash")).toBe("/api/entities/id%20with%2Fslash");
+    expect(getEntityRelatedPath("id%20with%2Fslash")).toBe("/api/entities/id%20with%2Fslash/related");
+    expect(getEntityRelationPath("id%20with%2Fslash", "target%2Fid")).toBe(
+      "/api/entities/id%20with%2Fslash/related/target%2Fid"
+    );
   });
 
   it("entityKey は entity path と一致する", () => {
     expect(entityKey("id-1")).toBe("/api/entities/id-1");
+    expect(relatedEntitiesKey("id-1")).toBe("/api/entities/id-1/related");
   });
 
   it("isEntityDetailKey は entity detail key だけを許可する", () => {
@@ -36,5 +54,13 @@ describe("api-paths", () => {
     expect(isEntityDetailKey("/api/entities/id-1/sub")).toBe(false);
     expect(isEntityDetailKey("/api/tags/1")).toBe(false);
     expect(isEntityDetailKey(undefined)).toBe(false);
+  });
+
+  it("isEntityRelatedListKey は related list key だけを許可する", () => {
+    expect(isEntityRelatedListKey("/api/entities/id-1/related")).toBe(true);
+    expect(isEntityRelatedListKey("/api/entities/id-1")).toBe(false);
+    expect(isEntityRelatedListKey("/api/entities/id-1/related/id-2")).toBe(false);
+    expect(isEntityRelatedListKey("/api/tags/1")).toBe(false);
+    expect(isEntityRelatedListKey(undefined)).toBe(false);
   });
 });

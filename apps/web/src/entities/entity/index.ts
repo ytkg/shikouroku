@@ -5,11 +5,22 @@ export {
   TAGS_KEY,
   entityKey,
   isEntityDetailKey,
+  isEntityRelatedListKey,
+  relatedEntitiesKey,
   useEntitiesQuery,
   useEntityMutations,
   useEntityQuery,
   useKindsQuery,
+  useRelatedEntitiesQuery,
   useTagMutations,
   useTagsQuery
 } from "./model";
-export { fetchEntities, fetchEntityById, fetchKinds, fetchTags } from "./api";
+export {
+  createEntityRelation,
+  deleteEntityRelation,
+  fetchEntities,
+  fetchEntityById,
+  fetchKinds,
+  fetchRelatedEntities,
+  fetchTags
+} from "./api";

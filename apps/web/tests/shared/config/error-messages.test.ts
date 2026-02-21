@@ -8,5 +8,6 @@ describe("error-messages", () => {
     expect(errorMessages.invalidEntityId).toBe("嗜好 ID が不正です");
     expect(errorMessages.kindRequired).toBe("種別を選択してください");
     expect(errorMessages.tagNameRequired).toBe("タグ名を入力してください");
+    expect(errorMessages.relatedEntityRequired).toBe("関連先を選択してください");
   });
 });

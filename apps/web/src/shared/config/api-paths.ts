@@ -15,3 +15,11 @@ export function getTagPath(tagId: number): string {
 export function getEntityPath(entityId: string): string {
   return `${apiPaths.entities}/${encodePathSegment(entityId)}`;
 }
+
+export function getEntityRelatedPath(entityId: string): string {
+  return `${getEntityPath(entityId)}/related`;
+}
+
+export function getEntityRelationPath(entityId: string, relatedEntityId: string): string {
+  return `${getEntityRelatedPath(entityId)}/${encodePathSegment(relatedEntityId)}`;
+}

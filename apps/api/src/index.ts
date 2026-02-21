@@ -1,7 +1,12 @@
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { AppEnv } from "./app-env";
-import { entityBodySchema, loginBodySchema, tagBodySchema } from "./domain/schemas";
+import {
+  entityBodySchema,
+  loginBodySchema,
+  relatedEntityBodySchema,
+  tagBodySchema
+} from "./domain/schemas";
 import {
   clearAccessTokenCookie,
   clearRefreshTokenCookie,
@@ -20,6 +25,11 @@ import {
   listEntitiesUseCase,
   updateEntityUseCase
 } from "./usecases/entities-usecase";
+import {
+  createEntityRelationUseCase,
+  deleteEntityRelationUseCase,
+  listRelatedEntitiesUseCase
+} from "./usecases/entity-relations-usecase";
 import { listKindsUseCase } from "./usecases/kinds-usecase";
 import { createTagUseCase, deleteTagUseCase, listTagsUseCase } from "./usecases/tags-usecase";
 
@@ -189,6 +199,42 @@ app.get("/api/entities/:id", async (c) => {
   }
 
   return c.json({ ok: true, entity: result.data.entity });
+});
+
+app.get("/api/entities/:id/related", async (c) => {
+  const id = c.req.param("id");
+  const result = await listRelatedEntitiesUseCase(c.env.DB, id);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  return c.json({ ok: true, related: result.data.related });
+});
+
+app.post("/api/entities/:id/related", async (c) => {
+  const id = c.req.param("id");
+  const parsedBody = await parseJsonBody(c, relatedEntityBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
+  const result = await createEntityRelationUseCase(c.env.DB, id, parsedBody.data.relatedEntityId);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  return c.json({ ok: true }, 201);
+});
+
+app.delete("/api/entities/:id/related/:relatedEntityId", async (c) => {
+  const id = c.req.param("id");
+  const relatedEntityId = c.req.param("relatedEntityId");
+  const result = await deleteEntityRelationUseCase(c.env.DB, id, relatedEntityId);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  return c.json({ ok: true });
 });
 
 app.post("/api/entities", async (c) => {

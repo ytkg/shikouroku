@@ -89,14 +89,14 @@
 - `DELETE /api/entities/:id/related/:relatedEntityId`
 - 正常: `200` で `{ ok: true }`
 
-### 5.4 エラー（提案）
+### 5.4 エラー（V1実装）
 
 - `400`: 自己関連（`id === relatedEntityId`）など不正入力
 - `404`: どちらかの嗜好が存在しない
 - `409`: 既に同じ関連が存在
 - `401`: 未認証
 
-## 6. データモデル（提案）
+## 6. データモデル（V1実装）
 
 新規テーブル `entity_relations` を追加する。
 
@@ -147,6 +147,10 @@ CREATE INDEX IF NOT EXISTS idx_entity_relations_high ON entity_relations(entity_
 
 現時点で未決論点なし。
 
-## 11. 次の進め方
+## 11. 実装状況（2026-02-21）
 
-- DB migration -> API -> フロントUI -> テスト追加の順で実装する。
+- 完了: `entity_relations` テーブルとインデックスを migration に追加。
+- 完了: 関連取得/追加/解除 API（`GET/POST/DELETE /api/entities/:id/related*`）を追加。
+- 完了: 詳細画面に関連嗜好セクション、追加ダイアログ、解除操作を追加。
+- 完了: 関連APIレスポンスのパーサー/クライアントとSWR query/mutationを追加。
+- 完了: 関連機能のユニットテスト（API path, parser, client）を追加。

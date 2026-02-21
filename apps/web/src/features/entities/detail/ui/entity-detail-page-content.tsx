@@ -1,6 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
-import { getEntityEditPath, routePaths } from "@/shared/config/route-paths";
+import { RelatedEntityDialog } from "./related-entity-dialog";
+import {
+  getEntityDetailPath,
+  getEntityEditPath,
+  routePaths
+} from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import {
   Card,
@@ -66,6 +71,53 @@ export function EntityDetailPageContent() {
                   <p className="text-xs text-muted-foreground">ID</p>
                   <p className="break-all text-xs">{page.entity.id}</p>
                 </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">関連嗜好</p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => page.setRelatedDialogOpen(true)}
+                    >
+                      関連を追加
+                    </Button>
+                  </div>
+                  {page.relatedLoading ? (
+                    <p className="text-sm">読み込み中...</p>
+                  ) : page.relatedEntities.length === 0 ? (
+                    <p className="text-sm">（関連なし）</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {page.relatedEntities.map((relatedEntity) => (
+                        <div
+                          key={relatedEntity.id}
+                          className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
+                        >
+                          <button
+                            type="button"
+                            className="text-left text-sm hover:underline"
+                            onClick={() => navigate(getEntityDetailPath(relatedEntity.id))}
+                          >
+                            {relatedEntity.name}（{relatedEntity.kind.label}）
+                          </button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              void page.removeRelated(relatedEntity.id);
+                            }}
+                            disabled={page.removingRelatedEntityId !== null}
+                          >
+                            {page.removingRelatedEntityId === relatedEntity.id ? "解除中..." : "解除"}
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {page.relatedError && <p className="text-sm text-destructive">{page.relatedError}</p>}
+                </div>
               </>
             )
           )}
@@ -77,6 +129,16 @@ export function EntityDetailPageContent() {
       <Button variant="outline" onClick={() => navigate(routePaths.home)}>
         一覧へ戻る
       </Button>
+      <RelatedEntityDialog
+        open={page.relatedDialogOpen}
+        candidates={page.relatedCandidates}
+        selectedRelatedEntityId={page.relatedCandidateId}
+        saving={page.relatedSaving}
+        error={page.relatedError}
+        onOpenChange={page.setRelatedDialogOpen}
+        onSelectedRelatedEntityIdChange={page.setRelatedCandidateId}
+        onSubmit={page.addRelated}
+      />
     </main>
   );
 }

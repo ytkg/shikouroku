@@ -69,6 +69,28 @@ export async function findEntityWithKindById(db: D1Database, id: string): Promis
   return entity ?? null;
 }
 
+export async function fetchEntitiesWithKindsByIds(
+  db: D1Database,
+  ids: string[]
+): Promise<EntityWithKindRow[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+
+  const placeholders = ids.map(() => "?").join(", ");
+  const result = await db
+    .prepare(
+      `SELECT e.id, e.kind_id, k.label AS kind_label, e.name, e.description, e.is_wishlist, e.created_at, e.updated_at
+       FROM entities e
+       INNER JOIN kinds k ON k.id = e.kind_id
+       WHERE e.id IN (${placeholders})`
+    )
+    .bind(...ids)
+    .all<EntityWithKindRow>();
+
+  return result.results ?? [];
+}
+
 export async function insertEntity(db: D1Database, input: InsertEntityInput): Promise<boolean> {
   const inserted = await db
     .prepare("INSERT INTO entities (id, kind_id, name, description, is_wishlist) VALUES (?, ?, ?, ?, ?)")

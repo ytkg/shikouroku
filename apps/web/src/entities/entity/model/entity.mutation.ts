@@ -6,7 +6,16 @@ import {
   type CreateEntityInput,
   type UpdateEntityInput
 } from "../api/entities.client";
-import { ENTITIES_KEY, entityKey } from "./entity.swr-keys";
+import {
+  createEntityRelation as createEntityRelationRequest,
+  deleteEntityRelation as deleteEntityRelationRequest,
+  type CreateEntityRelationInput
+} from "../api/related.client";
+import {
+  ENTITIES_KEY,
+  entityKey,
+  relatedEntitiesKey
+} from "./entity.swr-keys";
 import type { Entity } from "./entity.types";
 
 export function useEntityMutations() {
@@ -36,5 +45,32 @@ export function useEntityMutations() {
     [mutate]
   );
 
-  return { createEntity, updateEntity };
+  const createEntityRelation = useCallback(
+    async (entityId: string, input: CreateEntityRelationInput): Promise<void> => {
+      await createEntityRelationRequest(entityId, input);
+      await Promise.all([
+        mutate(relatedEntitiesKey(entityId)),
+        mutate(relatedEntitiesKey(input.relatedEntityId))
+      ]);
+    },
+    [mutate]
+  );
+
+  const deleteEntityRelation = useCallback(
+    async (entityId: string, relatedEntityId: string): Promise<void> => {
+      await deleteEntityRelationRequest(entityId, relatedEntityId);
+      await Promise.all([
+        mutate(relatedEntitiesKey(entityId)),
+        mutate(relatedEntitiesKey(relatedEntityId))
+      ]);
+    },
+    [mutate]
+  );
+
+  return {
+    createEntity,
+    updateEntity,
+    createEntityRelation,
+    deleteEntityRelation
+  };
 }
