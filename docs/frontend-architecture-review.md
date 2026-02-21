@@ -70,6 +70,7 @@
   - `features/auth` も `login` / `model` の公開index経由へ統一し、ルート公開APIの deep export を排除
   - `features/auth/index.ts` の公開モジュール境界を検証するテストを追加
   - `public-api-indexes` テストを拡張し、`entities/pages/widgets` のルート `index.ts` 存在を検証
+  - `@/entities` / `@/features` のルート参照を禁止するアーキテクチャテストを追加し、依存粒度をスライス単位へ固定
 
 ## 1. Findings（重大度順）
 
