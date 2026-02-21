@@ -72,6 +72,7 @@
   - `public-api-indexes` テストを拡張し、`entities/pages/widgets` のルート `index.ts` 存在を検証
   - `@/entities` / `@/features` のルート参照を禁止するアーキテクチャテストを追加し、依存粒度をスライス単位へ固定
   - `pages/*/page.tsx` を薄いラッパーとして固定し、依存先を `features/shared` のみに制限するテストを追加
+  - `entities/index.ts` の再エクスポート元を `./auth` / `./entity` のみに固定するテストを追加
 
 ## 1. Findings（重大度順）
 
