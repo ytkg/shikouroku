@@ -27,6 +27,7 @@
 - 対象画面は `嗜好詳細` を中心とする。
 - 一覧画面の仕様（タブ/フィルタ）は変更しない。
 - 認証要件は既存APIと同様（`/api/login` 以外は認証必須）。
+- 関連追加候補の取得は、既存 `GET /api/entities`（最大50件）を利用する。
 
 ## 4. 画面仕様（提案）
 
@@ -128,6 +129,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_relations_high ON entity_relations(entity_
 - `entities/entity/model` に関連嗜好用の query/mutation を追加。
 - `features/entities/detail` で関連嗜好の表示・追加・解除UIを扱う。
 - 既存の `resolveQueryError` / 認証ガードを再利用する。
+- 候補選択ダイアログの初期データは `GET /api/entities` の結果を利用し、検索APIはV1対象外とする。
 
 ## 9. 受け入れ条件（ドラフト）
 
@@ -139,26 +141,22 @@ CREATE INDEX IF NOT EXISTS idx_entity_relations_high ON entity_relations(entity_
 
 ## 10. 壁打ちしたい論点（要決定）
 
-1. 追加UIの候補取得方法
-- `GET /api/entities`（最大50件）を使う暫定で十分か。
-- 専用検索API（ページング付き）が必要か。
-
-2. 関連候補の絞り込み
+1. 関連候補の絞り込み
 - 種別跨ぎを許可するか（例のとおり許可が自然）。
 - デフォルトで同種別優先にするか。
 
-3. 詳細画面での表示項目
+2. 詳細画面での表示項目
 - `name + kind` のみで良いか。
 - `description` や `tags` も表示するか。
 
-4. 並び順
+3. 並び順
 - 作成日時順 / 名前順 / 種別順 のどれにするか。
 
-5. 上限
+4. 上限
 - 1嗜好あたりの関連数上限を設けるか。
 
 ## 11. 次の進め方
 
-- まず「要決定」5点を確定。
+- まず「要決定」4点を確定。
 - 確定後、このドキュメントを `v1` として固定。
 - その後に DB migration -> API -> フロントUI -> テスト追加の順で実装する。
