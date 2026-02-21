@@ -1,162 +1,164 @@
-# 嗜好関連機能 仕様ドラフト（壁打ち用）
+# 嗜好関連（関連嗜好）機能 仕様ドラフト（壁打ち用）
 
-対象: `apps/web` / `apps/api` の「嗜好（Entity）」機能  
-目的: 機能開発前に、現行仕様を整理しつつ未決事項を明確化する
+対象: `apps/web` / `apps/api`
 
-## 1. スコープ
+この文書でいう「嗜好関連」機能は、
+**ある嗜好に対して、関連する別の嗜好を紐づけて相互表示する機能**を指す。
 
-- 対象機能
-  - 嗜好一覧
-  - 嗜好詳細
-  - 嗜好新規作成
-  - 嗜好編集
-  - タグ追加/削除（ダイアログ）
-- 関連マスタ
-  - 種別（Kind）
-  - タグ（Tag）
-- 認証
-  - 未認証時のログイン遷移（401）
+例:
+- 嗜好A: `タナニボ`（ラーメン）
+- 嗜好B: `たなか青空笑店`（ラーメン屋）
+- AにBを関連付けると、BにもAが関連として表示される（無向）。
 
-## 2. データ定義
+## 1. 目的
 
-### 2.1 嗜好（Entity）
+- 嗜好単体ではなく、嗜好同士のつながりを記録・参照できるようにする。
+- 「商品 ↔ 店」「料理 ↔ 店」「作品 ↔ 作者」など、跨る文脈を1ステップで辿れるようにする。
 
-- `id: string`（UUID）
-- `kind: { id: number; label: string }`
-- `name: string`
-- `description: string | null`
-- `isWishlist: boolean`
-- `tags: { id: number; name: string }[]`
-- `createdAt?: string`
-- `updatedAt?: string`
+## 2. ユースケース
 
-### 2.2 種別（Kind）
+1. 詳細画面で、その嗜好に関連する嗜好一覧を見たい。
+2. 詳細画面から、別の嗜好を関連として追加したい。
+3. 誤って付けた関連を解除したい。
+4. 追加した関連が相手側の詳細にも表示されてほしい（無向の担保）。
 
-- `id: number`
-- `label: string`
+## 3. V1スコープ（提案）
 
-### 2.3 タグ（Tag）
+- 対象画面は `嗜好詳細` を中心とする。
+- 一覧画面の仕様（タブ/フィルタ）は変更しない。
+- 認証要件は既存APIと同様（`/api/login` 以外は認証必須）。
 
-- `id: number`
-- `name: string`
+## 4. 画面仕様（提案）
 
-## 3. 画面仕様（現行）
+### 4.1 詳細画面: 関連嗜好セクション
 
-### 3.1 一覧（`/`）
+- 見出し: `関連嗜好`
+- 表示内容（最小）
+  - 嗜好名
+  - 種別ラベル
+  - （任意）気になるバッジ
+- 各関連嗜好はクリックで詳細に遷移できる。
+- 0件時は空状態メッセージを表示。
 
-- タブ
-  - `すべて`
-  - `種別タブ（kind:{id}）`
-  - `気になる`
-- 表示ルール（現行ロジック）
-  - `すべて`: `isWishlist = false` のみ表示
-  - `種別タブ`: `isWishlist = false` かつ該当 `kind.id` のみ表示
-  - `気になる`: `isWishlist = true` のみ表示
-- カードクリックで詳細へ遷移
+### 4.2 追加操作（詳細画面内）
 
-### 3.2 新規作成（`/entities/new`）
+- `関連を追加` ボタンでダイアログを開く。
+- 候補から1件選んで追加する。
+- 追加成功後、現在詳細の関連一覧に即時反映。
 
-- 入力
-  - 種別（必須）
-  - 名前（必須）
-  - メモ（任意）
-  - タグ（任意・複数選択）
-  - 気になる（boolean）
-- 登録成功時
-  - 画面下に登録結果JSONを表示
-  - フォーム項目をリセット（種別は維持）
+### 4.3 解除操作（詳細画面内）
 
-### 3.3 詳細（`/entities/:entityId`）
+- 各関連嗜好に `解除` 操作を表示。
+- 解除成功後、一覧から即時消える。
 
-- 表示
-  - 名前、種別、メモ、タグ、ID
-- 操作
-  - 編集画面へ遷移
-  - 一覧へ戻る
+## 5. API仕様ドラフト
 
-### 3.4 編集（`/entities/:entityId/edit`）
+### 5.1 取得
 
-- 新規と同等の項目を表示
-- 保存成功時に詳細へ遷移
+- `GET /api/entities/:id/related`
+- レスポンス例
 
-### 3.5 タグ編集ダイアログ
+```json
+{
+  "ok": true,
+  "related": [
+    {
+      "id": "...",
+      "kind": { "id": 1, "label": "ラーメン屋" },
+      "name": "たなか青空笑店",
+      "description": null,
+      "is_wishlist": 0,
+      "tags": []
+    }
+  ]
+}
+```
 
-- 機能
-  - タグ追加
-  - タグ削除（確認ダイアログあり）
-- 追加成功時は選択タグへ自動追加
-- 削除成功時は選択タグから自動除外
+### 5.2 追加
 
-## 4. API仕様（現行）
+- `POST /api/entities/:id/related`
+- body: `{ "relatedEntityId": "..." }`
+- 正常: `201` で `{ ok: true }`
 
-### 4.1 取得系
+### 5.3 解除
 
-- `GET /api/kinds` -> `{ ok: true, kinds: Kind[] }`
-- `GET /api/tags` -> `{ ok: true, tags: Tag[] }`
-- `GET /api/entities` -> `{ ok: true, entities: Entity[] }`（最大50件）
-- `GET /api/entities/:id` -> `{ ok: true, entity: Entity }`
+- `DELETE /api/entities/:id/related/:relatedEntityId`
+- 正常: `200` で `{ ok: true }`
 
-### 4.2 更新系
+### 5.4 エラー（提案）
 
-- `POST /api/tags` body: `{ name }` -> `{ ok: true, tag }`
-- `DELETE /api/tags/:id` -> `{ ok: true }`
-- `POST /api/entities` body: `EntityBody` -> `{ ok: true, entity }`
-- `PATCH /api/entities/:id` body: `EntityBody` -> `{ ok: true, entity }`
+- `400`: 自己関連（`id === relatedEntityId`）など不正入力
+- `404`: どちらかの嗜好が存在しない
+- `409`: 既に同じ関連が存在
+- `401`: 未認証
 
-### 4.3 `EntityBody`
+## 6. データモデル（提案）
 
-- `kindId: number`（必須・正整数）
-- `name: string`（必須・trim後1文字以上）
-- `description?: string`（trim、未指定は空文字）
-- `isWishlist?: boolean`（未指定時 `false`）
-- `tagIds?: number[]`（正整数配列、未指定時 `[]`）
+新規テーブル `entity_relations` を追加する。
 
-## 5. 業務ルール（現行）
+```sql
+CREATE TABLE IF NOT EXISTS entity_relations (
+  entity_id_low TEXT NOT NULL,
+  entity_id_high TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (entity_id_low, entity_id_high),
+  CHECK (entity_id_low <> entity_id_high),
+  FOREIGN KEY (entity_id_low) REFERENCES entities(id) ON DELETE CASCADE,
+  FOREIGN KEY (entity_id_high) REFERENCES entities(id) ON DELETE CASCADE
+);
 
-- `name` は `kindId + name` の組み合わせで重複不可（409）
-- `tagIds` は重複排除して保存
-- `tagIds` は全件存在チェック（1件でも不正なら400）
-- `description` は空文字なら `null` として保存
-- `isWishlist` はDB上 `0/1` で保持
-- 一覧は `created_at DESC`、上限50件
+CREATE INDEX IF NOT EXISTS idx_entity_relations_low ON entity_relations(entity_id_low);
+CREATE INDEX IF NOT EXISTS idx_entity_relations_high ON entity_relations(entity_id_high);
+```
 
-## 6. エラー/認可
+保存時は `(a, b)` を文字列比較で正規化し、
+`(min(a,b), max(a,b))` で保持する（無向を一意に担保）。
 
-- 401: フロントでログイン画面へ遷移
-- 404（Entity未存在）: `データが見つかりませんでした`
-- ID不正: `嗜好 ID が不正です`
-- 種別未選択: `種別を選択してください`
-- タグ名空: `タグ名を入力してください`
+## 7. 業務ルール（提案）
 
-## 7. 受け入れ条件（暫定）
+- 関連は無向。
+- 自己関連は禁止。
+- 重複関連は禁止。
+- 追加時は両IDの存在チェックを行う。
+- 候補表示では「自分自身」「すでに関連済み」を除外する。
 
-- 一覧/詳細/新規/編集/タグ編集の主要導線がすべて動作する
-- APIエラー時に画面が破綻せず、エラー表示またはログイン遷移になる
-- 新規/編集で保存後、一覧・詳細の表示が最新状態に更新される
-- 仕様化した業務ルール（重複、存在チェック、必須）を満たす
+## 8. 実装方針（フロント）
 
-## 8. 壁打ちしたい論点（要決定）
+- `entities/entity/api` に関連嗜好APIクライアントを追加。
+- `entities/entity/model` に関連嗜好用の query/mutation を追加。
+- `features/entities/detail` で関連嗜好の表示・追加・解除UIを扱う。
+- 既存の `resolveQueryError` / 認証ガードを再利用する。
 
-1. `すべて` タブは `isWishlist=true` を含めるべきか  
-現行は除外。仕様として意図通りか確認したい。
+## 9. 受け入れ条件（ドラフト）
 
-2. 一覧50件上限の扱い  
-継続運用するか、ページング/無限スクロールを導入するか。
+1. AでBを関連追加すると、A詳細とB詳細の双方に相手が表示される。
+2. AでBを解除すると、A詳細とB詳細の双方から消える。
+3. 同じ関連を二重追加できない（409）。
+4. 自己関連は追加できない（400）。
+5. 未認証時は既存仕様どおりログインへ遷移する。
 
-3. 重複判定の仕様  
-`kindId + name` の大文字小文字・前後空白・全角半角をどこまで同一視するか。
+## 10. 壁打ちしたい論点（要決定）
 
-4. 文字数制限  
-`name` / `description` / `tag.name` の最大長を設けるか。
+1. 追加UIの候補取得方法
+- `GET /api/entities`（最大50件）を使う暫定で十分か。
+- 専用検索API（ページング付き）が必要か。
 
-5. タグ削除の制約  
-嗜好に紐づくタグでも削除可能（関連は全解除）。これを仕様として維持するか。
+2. 関連候補の絞り込み
+- 種別跨ぎを許可するか（例のとおり許可が自然）。
+- デフォルトで同種別優先にするか。
 
-6. 作成成功後の挙動  
-現行はフォームに留まり「登録結果JSON」を表示。詳細画面へ遷移に変えるか。
+3. 詳細画面での表示項目
+- `name + kind` のみで良いか。
+- `description` や `tags` も表示するか。
 
-## 9. 次の進め方
+4. 並び順
+- 作成日時順 / 名前順 / 種別順 のどれにするか。
 
-- 上記「要決定」6点を確定
-- 確定後、この文書を `v1` に更新
-- `受け入れ条件` をE2E/統合テスト観点へ展開して実装開始
+5. 上限
+- 1嗜好あたりの関連数上限を設けるか。
+
+## 11. 次の進め方
+
+- まず「要決定」5点を確定。
+- 確定後、このドキュメントを `v1` として固定。
+- その後に DB migration -> API -> フロントUI -> テスト追加の順で実装する。
