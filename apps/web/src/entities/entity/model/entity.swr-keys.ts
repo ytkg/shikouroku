@@ -1,5 +1,6 @@
 import {
   apiPaths,
+  getEntityImagesPath,
   getEntityPath,
   getEntityRelatedPath
 } from "@/shared/config/api-paths";
@@ -14,6 +15,10 @@ export function entityKey(entityId: string): string {
 
 export function relatedEntitiesKey(entityId: string): string {
   return getEntityRelatedPath(entityId);
+}
+
+export function entityImagesKey(entityId: string): string {
+  return getEntityImagesPath(entityId);
 }
 
 export function isEntityDetailKey(key: unknown): key is string {
@@ -36,4 +41,12 @@ export function isEntityRelatedListKey(key: unknown): key is string {
   }
 
   return key.endsWith("/related") && key.startsWith(`${apiPaths.entities}/`);
+}
+
+export function isEntityImagesListKey(key: unknown): key is string {
+  if (typeof key !== "string") {
+    return false;
+  }
+
+  return key.endsWith("/images") && key.startsWith(`${apiPaths.entities}/`);
 }

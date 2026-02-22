@@ -21,10 +21,15 @@ export const relatedEntityBodySchema = z.object({
   relatedEntityId: z.string().trim().min(1)
 });
 
+export const entityImageOrderBodySchema = z.object({
+  orderedImageIds: z.array(z.string().trim().min(1))
+});
+
 export type LoginBody = z.infer<typeof loginBodySchema>;
 export type TagBody = z.infer<typeof tagBodySchema>;
 export type EntityBody = z.infer<typeof entityBodySchema>;
 export type RelatedEntityBody = z.infer<typeof relatedEntityBodySchema>;
+export type EntityImageOrderBody = z.infer<typeof entityImageOrderBodySchema>;
 
 export function validationMessage(error: z.ZodError): string {
   const field = error.issues[0]?.path[0];
@@ -32,6 +37,7 @@ export function validationMessage(error: z.ZodError): string {
   if (field === "name") return "name is required";
   if (field === "tagIds") return "tagIds is invalid";
   if (field === "relatedEntityId") return "relatedEntityId is required";
+  if (field === "orderedImageIds") return "orderedImageIds is invalid";
   if (field === "username") return "username is required";
   if (field === "password") return "password is required";
   return "invalid request body";

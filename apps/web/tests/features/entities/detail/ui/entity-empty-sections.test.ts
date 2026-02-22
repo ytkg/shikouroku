@@ -14,12 +14,14 @@ const entityFormFieldsPath = path.resolve(
 );
 
 describe("entity empty sections", () => {
-  it("詳細画面はタグ/関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {
+  it("詳細画面はタグ/画像/関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {
     const source = fs.readFileSync(detailPagePath, "utf-8");
 
     expect(source).not.toContain("（タグなし）");
+    expect(source).not.toContain("（画像なし）");
     expect(source).not.toContain("（関連なし）");
     expect(source).toContain("page.entity.tags.length > 0 &&");
+    expect(source).toContain("(page.imagesLoading || page.images.length > 0) &&");
     expect(source).toContain("(page.relatedLoading || page.relatedEntities.length > 0) &&");
   });
 

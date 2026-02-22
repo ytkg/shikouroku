@@ -13,7 +13,18 @@ import {
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+
+function toFileSizeLabel(size: number): string {
+  if (size >= 1024 * 1024) {
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  }
+  if (size >= 1024) {
+    return `${Math.round(size / 1024)} KB`;
+  }
+  return `${size} B`;
+}
 
 export function CreateEntityPageContent() {
   const navigate = useNavigate();
@@ -54,6 +65,60 @@ export function CreateEntityPageContent() {
               onToggleTag={form.onToggleTag}
               onOpenTagDialog={() => form.setTagDialogOpen(true)}
               onOpenRelatedDialog={() => form.setRelatedDialogOpen(true)}
+              beforeRelatedContent={
+                <div className="space-y-2">
+                  <Label htmlFor="entity-images">画像</Label>
+                  <Input
+                    id="entity-images"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={(event) => {
+                      form.onSelectImageFiles(event.target.files);
+                      event.target.value = "";
+                    }}
+                  />
+                  {form.selectedImageFiles.length > 0 ? (
+                    <div className="space-y-2">
+                      {form.selectedImageFiles.map((file, index) => (
+                        <div key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm">
+                          <p className="truncate">
+                            {file.name} ({toFileSizeLabel(file.size)})
+                          </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => form.onRemoveSelectedImage(index)}
+                          >
+                            削除
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">画像はまだ選択されていません。</p>
+                  )}
+                  {form.failedImageFiles.length > 0 && (
+                    <div className="rounded-md border border-destructive/40 px-3 py-2 text-sm">
+                      <p className="text-destructive">
+                        {form.failedImageFiles.length}件の画像アップロードに失敗しました。
+                      </p>
+                      <div className="mt-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => void form.retryFailedImageUploads()}
+                          disabled={form.retryingFailedImages}
+                        >
+                          {form.retryingFailedImages ? "再試行中..." : "失敗分を再試行"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              }
             />
             <div className="flex justify-end">
               <Button type="submit" disabled={form.submitLoading}>

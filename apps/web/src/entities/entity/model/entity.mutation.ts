@@ -7,6 +7,12 @@ import {
   type UpdateEntityInput
 } from "../api/entities.client";
 import {
+  deleteEntityImage as deleteEntityImageRequest,
+  reorderEntityImages as reorderEntityImagesRequest,
+  uploadEntityImage as uploadEntityImageRequest,
+  type ReorderEntityImagesInput
+} from "../api/images.client";
+import {
   createEntityRelation as createEntityRelationRequest,
   deleteEntityRelation as deleteEntityRelationRequest,
   type CreateEntityRelationInput
@@ -14,9 +20,10 @@ import {
 import {
   ENTITIES_KEY,
   entityKey,
+  entityImagesKey,
   relatedEntitiesKey
 } from "./entity.swr-keys";
-import type { Entity } from "./entity.types";
+import type { Entity, EntityImage } from "./entity.types";
 
 export function useEntityMutations() {
   const { mutate } = useSWRConfig();
@@ -67,10 +74,38 @@ export function useEntityMutations() {
     [mutate]
   );
 
+  const uploadEntityImage = useCallback(
+    async (entityId: string, file: File): Promise<EntityImage> => {
+      const image = await uploadEntityImageRequest(entityId, file);
+      await mutate(entityImagesKey(entityId));
+      return image;
+    },
+    [mutate]
+  );
+
+  const deleteEntityImage = useCallback(
+    async (entityId: string, imageId: string): Promise<void> => {
+      await deleteEntityImageRequest(entityId, imageId);
+      await mutate(entityImagesKey(entityId));
+    },
+    [mutate]
+  );
+
+  const reorderEntityImages = useCallback(
+    async (entityId: string, input: ReorderEntityImagesInput): Promise<void> => {
+      await reorderEntityImagesRequest(entityId, input);
+      await mutate(entityImagesKey(entityId));
+    },
+    [mutate]
+  );
+
   return {
     createEntity,
     updateEntity,
     createEntityRelation,
-    deleteEntityRelation
+    deleteEntityRelation,
+    uploadEntityImage,
+    deleteEntityImage,
+    reorderEntityImages
   };
 }

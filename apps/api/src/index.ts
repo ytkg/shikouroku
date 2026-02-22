@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { AppEnv } from "./app-env";
 import {
+  entityImageOrderBodySchema,
   entityBodySchema,
   loginBodySchema,
   relatedEntityBodySchema,
@@ -25,6 +26,13 @@ import {
   listEntitiesUseCase,
   updateEntityUseCase
 } from "./usecases/entities-usecase";
+import {
+  deleteEntityImageUseCase,
+  getEntityImageFileUseCase,
+  listEntityImagesUseCase,
+  reorderEntityImagesUseCase,
+  uploadEntityImageUseCase
+} from "./usecases/entity-images-usecase";
 import {
   createEntityRelationUseCase,
   deleteEntityRelationUseCase,
@@ -235,6 +243,80 @@ app.delete("/api/entities/:id/related/:relatedEntityId", async (c) => {
   }
 
   return c.json({ ok: true });
+});
+
+app.get("/api/entities/:id/images", async (c) => {
+  const id = c.req.param("id");
+  const result = await listEntityImagesUseCase(c.env.DB, id);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  return c.json({ ok: true, images: result.data.images });
+});
+
+app.post("/api/entities/:id/images", async (c) => {
+  const id = c.req.param("id");
+
+  let formData: FormData;
+  try {
+    formData = await c.req.raw.formData();
+  } catch {
+    return c.json({ ok: false, message: "invalid multipart body" }, 400);
+  }
+
+  const file = formData.get("file");
+  if (!file || typeof file === "string") {
+    return c.json({ ok: false, message: "file is required" }, 400);
+  }
+
+  const result = await uploadEntityImageUseCase(c.env.DB, c.env.ENTITY_IMAGES, id, file);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  return c.json({ ok: true, image: result.data.image }, 201);
+});
+
+app.patch("/api/entities/:id/images/order", async (c) => {
+  const id = c.req.param("id");
+  const parsedBody = await parseJsonBody(c, entityImageOrderBodySchema);
+  if (!parsedBody.ok) {
+    return parsedBody.response;
+  }
+
+  const result = await reorderEntityImagesUseCase(c.env.DB, id, parsedBody.data.orderedImageIds);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  return c.json({ ok: true });
+});
+
+app.delete("/api/entities/:id/images/:imageId", async (c) => {
+  const id = c.req.param("id");
+  const imageId = c.req.param("imageId");
+  const result = await deleteEntityImageUseCase(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  return c.json({ ok: true });
+});
+
+app.get("/api/entities/:id/images/:imageId/file", async (c) => {
+  const id = c.req.param("id");
+  const imageId = c.req.param("imageId");
+  const result = await getEntityImageFileUseCase(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
+  if (!result.ok) {
+    return c.json({ ok: false, message: result.message }, toContentfulStatusCode(result.status));
+  }
+
+  const response = new Response(result.data.file.body);
+  response.headers.set("Content-Type", result.data.image.mime_type);
+  response.headers.set("Content-Length", String(result.data.image.file_size));
+  response.headers.set("Cache-Control", "private, max-age=300");
+  return response;
 });
 
 app.post("/api/entities", async (c) => {

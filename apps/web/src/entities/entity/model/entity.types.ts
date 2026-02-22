@@ -18,3 +18,14 @@ export type Entity = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+export type EntityImage = {
+  id: string;
+  entityId: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  sortOrder: number;
+  url: string;
+  createdAt: string;
+};

@@ -23,3 +23,19 @@ export function getEntityRelatedPath(entityId: string): string {
 export function getEntityRelationPath(entityId: string, relatedEntityId: string): string {
   return `${getEntityRelatedPath(entityId)}/${encodePathSegment(relatedEntityId)}`;
 }
+
+export function getEntityImagesPath(entityId: string): string {
+  return `${getEntityPath(entityId)}/images`;
+}
+
+export function getEntityImagePath(entityId: string, imageId: string): string {
+  return `${getEntityImagesPath(entityId)}/${encodePathSegment(imageId)}`;
+}
+
+export function getEntityImageFilePath(entityId: string, imageId: string): string {
+  return `${getEntityImagePath(entityId, imageId)}/file`;
+}
+
+export function getEntityImageOrderPath(entityId: string): string {
+  return `${getEntityImagesPath(entityId)}/order`;
+}

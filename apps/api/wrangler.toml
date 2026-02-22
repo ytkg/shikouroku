@@ -13,3 +13,8 @@ database_name = "shikouroku-prod"
 database_id = "5f56ed47-5bd4-4ee7-a273-72ffe4f4c558"
 preview_database_id = "8b83ba42-1327-4929-a399-dd9cdaa0d007"
 migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "ENTITY_IMAGES"
+bucket_name = "shikouroku-entity-images-prod"
+preview_bucket_name = "shikouroku-entity-images-dev"

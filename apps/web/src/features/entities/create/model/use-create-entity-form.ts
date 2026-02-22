@@ -29,9 +29,12 @@ type CreateEntityResult = {
   selectedTagIds: number[];
   relatedCandidates: Entity[];
   selectedRelatedEntityIds: string[];
+  selectedImageFiles: File[];
+  failedImageFiles: File[];
   tagDialogOpen: boolean;
   relatedDialogOpen: boolean;
   submitLoading: boolean;
+  retryingFailedImages: boolean;
   loading: boolean;
   error: string | null;
   submitResult: Entity | null;
@@ -43,6 +46,9 @@ type CreateEntityResult = {
   setRelatedDialogOpen: (open: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onToggleRelatedEntity: (entityId: string, checked: boolean) => void;
+  onSelectImageFiles: (files: FileList | null) => void;
+  onRemoveSelectedImage: (index: number) => void;
+  retryFailedImageUploads: () => Promise<void>;
   onTagCreated: (tag: Tag) => void;
   onTagDeleted: (tagId: number) => void;
   submit: () => Promise<void>;
@@ -64,9 +70,13 @@ export function useCreateEntityForm(): CreateEntityResult {
   const [isWishlist, setIsWishlist] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [selectedRelatedEntityIds, setSelectedRelatedEntityIds] = useState<string[]>([]);
+  const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
+  const [failedImageFiles, setFailedImageFiles] = useState<File[]>([]);
+  const [imageRetryEntityId, setImageRetryEntityId] = useState<string | null>(null);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [relatedDialogOpen, setRelatedDialogOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [retryingFailedImages, setRetryingFailedImages] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<Entity | null>(null);
   const { data: kinds = [], error: kindsError, isLoading: kindsLoading } = useKindsQuery();
@@ -76,7 +86,7 @@ export function useCreateEntityForm(): CreateEntityResult {
     error: entitiesError,
     isLoading: entitiesLoading
   } = useEntitiesQuery();
-  const { createEntity, createEntityRelation } = useEntityMutations();
+  const { createEntity, createEntityRelation, uploadEntityImage } = useEntityMutations();
 
   useEffect(() => {
     if (kinds.length === 0 || kindId.length > 0) {
@@ -111,6 +121,36 @@ export function useCreateEntityForm(): CreateEntityResult {
     setSelectedRelatedEntityIds((current) => toggleRelatedEntityId(current, entityId, checked));
   };
 
+  const onSelectImageFiles = (files: FileList | null) => {
+    if (!files || files.length === 0) {
+      return;
+    }
+    setSelectedImageFiles((current) => [...current, ...Array.from(files)]);
+  };
+
+  const onRemoveSelectedImage = (index: number) => {
+    setSelectedImageFiles((current) => current.filter((_, currentIndex) => currentIndex !== index));
+    setFailedImageFiles((current) => current.filter((_, currentIndex) => currentIndex !== index));
+  };
+
+  const uploadImages = async (entityId: string, files: File[]): Promise<File[]> => {
+    const failed: File[] = [];
+
+    for (const [index, file] of files.entries()) {
+      try {
+        await uploadEntityImage(entityId, file);
+      } catch (e) {
+        if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+          failed.push(...files.slice(index));
+          break;
+        }
+        failed.push(file);
+      }
+    }
+
+    return failed;
+  };
+
   const submit = async () => {
     const parsedKindId = toKindId(kindId);
     if (parsedKindId === null) {
@@ -134,6 +174,14 @@ export function useCreateEntityForm(): CreateEntityResult {
         await createEntityRelation(entity.id, { relatedEntityId });
       }
 
+      const failedUploads = await uploadImages(entity.id, selectedImageFiles);
+      setImageRetryEntityId(entity.id);
+      setFailedImageFiles(failedUploads);
+      setSelectedImageFiles(failedUploads);
+      if (failedUploads.length > 0) {
+        setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+      }
+
       setSubmitResult(entity);
       setName("");
       setDescription("");
@@ -150,6 +198,27 @@ export function useCreateEntityForm(): CreateEntityResult {
     }
   };
 
+  const retryFailedImageUploads = async () => {
+    if (!imageRetryEntityId || failedImageFiles.length === 0) {
+      return;
+    }
+
+    setRetryingFailedImages(true);
+    try {
+      const failedUploads = await uploadImages(imageRetryEntityId, failedImageFiles);
+      setFailedImageFiles(failedUploads);
+      setSelectedImageFiles(failedUploads);
+
+      if (failedUploads.length === 0) {
+        setError(null);
+      } else {
+        setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+      }
+    } finally {
+      setRetryingFailedImages(false);
+    }
+  };
+
   return {
     ensureAuthorized,
     kinds,
@@ -161,9 +230,12 @@ export function useCreateEntityForm(): CreateEntityResult {
     selectedTagIds,
     relatedCandidates,
     selectedRelatedEntityIds,
+    selectedImageFiles,
+    failedImageFiles,
     tagDialogOpen,
     relatedDialogOpen,
     submitLoading,
+    retryingFailedImages,
     loading: kindsLoading || tagsLoading || entitiesLoading,
     error,
     submitResult,
@@ -175,6 +247,9 @@ export function useCreateEntityForm(): CreateEntityResult {
     setRelatedDialogOpen,
     onToggleTag,
     onToggleRelatedEntity,
+    onSelectImageFiles,
+    onRemoveSelectedImage,
+    retryFailedImageUploads,
     onTagCreated,
     onTagDeleted,
     submit

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Entity, Kind, Tag } from "@/entities/entity";
 import { Button } from "@/shared/ui/button";
 import { Checkbox, Select, Textarea } from "@/shared/ui/form-controls";
@@ -20,6 +21,7 @@ type EntityFormFieldsProps = {
   onWishlistChange: (checked: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onOpenTagDialog: () => void;
+  beforeRelatedContent?: ReactNode;
   relatedCandidates?: RelatedCandidate[];
   selectedRelatedEntityIds?: string[];
   onOpenRelatedDialog?: () => void;
@@ -40,6 +42,7 @@ export function EntityFormFields({
   onWishlistChange,
   onToggleTag,
   onOpenTagDialog,
+  beforeRelatedContent,
   relatedCandidates,
   selectedRelatedEntityIds,
   onOpenRelatedDialog,
@@ -110,6 +113,7 @@ export function EntityFormFields({
           </div>
         )}
       </div>
+      {beforeRelatedContent}
       {hasRelatedEditor && (
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">

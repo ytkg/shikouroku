@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuthGuard } from "@/features/auth";
-import type { Entity, Kind, Tag } from "@/entities/entity";
+import type { Entity, EntityImage, Kind, Tag } from "@/entities/entity";
 import {
   useEntitiesQuery,
   useEntityMutations,
+  useEntityImagesQuery,
   useEntityQuery,
   useKindsQuery,
   useRelatedEntitiesQuery,
@@ -36,9 +37,14 @@ type EditEntityResult = {
   selectedTagIds: number[];
   relatedCandidates: Entity[];
   selectedRelatedEntityIds: string[];
+  images: EntityImage[];
+  failedImageFiles: File[];
   tagDialogOpen: boolean;
   relatedDialogOpen: boolean;
   saving: boolean;
+  uploadingImages: boolean;
+  reorderingImages: boolean;
+  deletingImageIds: string[];
   loading: boolean;
   error: string | null;
   setKindId: (value: string) => void;
@@ -49,6 +55,11 @@ type EditEntityResult = {
   setRelatedDialogOpen: (open: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onToggleRelatedEntity: (entityId: string, checked: boolean) => void;
+  onSelectImageFiles: (files: FileList | null) => Promise<void>;
+  retryFailedImageUploads: () => Promise<void>;
+  deleteImage: (imageId: string) => Promise<void>;
+  moveImageUp: (imageId: string) => Promise<void>;
+  moveImageDown: (imageId: string) => Promise<void>;
   onTagCreated: (tag: Tag) => void;
   onTagDeleted: (tagId: number) => void;
   save: () => Promise<boolean>;
@@ -77,7 +88,19 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     error: relatedError,
     isLoading: relatedLoading
   } = useRelatedEntitiesQuery(entityId);
-  const { updateEntity, createEntityRelation, deleteEntityRelation } = useEntityMutations();
+  const {
+    data: images = [],
+    error: imagesError,
+    isLoading: imagesLoading
+  } = useEntityImagesQuery(entityId);
+  const {
+    updateEntity,
+    createEntityRelation,
+    deleteEntityRelation,
+    uploadEntityImage,
+    deleteEntityImage,
+    reorderEntityImages
+  } = useEntityMutations();
   const [error, setError] = useState<string | null>(null);
   const [kindId, setKindId] = useState("");
   const [name, setName] = useState("");
@@ -89,6 +112,10 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
   const [relatedDialogOpen, setRelatedDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [reorderingImages, setReorderingImages] = useState(false);
+  const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
+  const [failedImageFiles, setFailedImageFiles] = useState<File[]>([]);
   const initializedEntityIdRef = useRef<string | null>(null);
 
   const relatedCandidates = useMemo(() => {
@@ -117,6 +144,8 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     initializedEntityIdRef.current = null;
     setSelectedRelatedEntityIds([]);
     setSavedRelatedEntityIds([]);
+    setFailedImageFiles([]);
+    setDeletingImageIds([]);
   }, [entityId]);
 
   useEffect(() => {
@@ -146,14 +175,14 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     }
 
     const nextError = resolveQueryError({
-      queryError: entityError ?? kindsError ?? tagsError ?? entitiesError ?? relatedError,
+      queryError: entityError ?? kindsError ?? tagsError ?? entitiesError ?? relatedError ?? imagesError,
       ensureAuthorized,
       notFoundMessage: errorMessages.entityNotFound
     });
     if (nextError !== KEEP_CURRENT_ERROR) {
       setError(nextError);
     }
-  }, [entityId, entityError, kindsError, tagsError, entitiesError, relatedError, ensureAuthorized]);
+  }, [entityId, entityError, kindsError, tagsError, entitiesError, relatedError, imagesError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
     setSelectedTagIds((current) => toggleTagId(current, tagId, checked));
@@ -171,6 +200,126 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setSelectedRelatedEntityIds((current) =>
       toggleRelatedEntityId(current, relatedEntityId, checked)
     );
+  };
+
+  const uploadImages = async (targetEntityId: string, files: File[]): Promise<File[]> => {
+    const failed: File[] = [];
+
+    for (const [index, file] of files.entries()) {
+      try {
+        await uploadEntityImage(targetEntityId, file);
+      } catch (e) {
+        if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+          failed.push(...files.slice(index));
+          break;
+        }
+        failed.push(file);
+      }
+    }
+
+    return failed;
+  };
+
+  const onSelectImageFiles = async (files: FileList | null): Promise<void> => {
+    if (!entityId || !files || files.length === 0) {
+      return;
+    }
+
+    setUploadingImages(true);
+    setError(null);
+    try {
+      const failedUploads = await uploadImages(entityId, Array.from(files));
+      setFailedImageFiles((current) => [...current, ...failedUploads]);
+      if (failedUploads.length > 0) {
+        setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+      }
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const retryFailedImageUploads = async (): Promise<void> => {
+    if (!entityId || failedImageFiles.length === 0) {
+      return;
+    }
+
+    setUploadingImages(true);
+    try {
+      const failedUploads = await uploadImages(entityId, failedImageFiles);
+      setFailedImageFiles(failedUploads);
+      if (failedUploads.length === 0) {
+        setError(null);
+      } else {
+        setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+      }
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const deleteImage = async (imageId: string): Promise<void> => {
+    if (!entityId) {
+      return;
+    }
+
+    setDeletingImageIds((current) => [...current, imageId]);
+    setError(null);
+    try {
+      await deleteEntityImage(entityId, imageId);
+    } catch (e) {
+      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+        return;
+      }
+      setError(toErrorMessage(e));
+    } finally {
+      setDeletingImageIds((current) => current.filter((id) => id !== imageId));
+    }
+  };
+
+  const reorderByDelta = async (imageId: string, delta: -1 | 1): Promise<void> => {
+    if (!entityId || reorderingImages) {
+      return;
+    }
+
+    const fromIndex = images.findIndex((image) => image.id === imageId);
+    if (fromIndex < 0) {
+      return;
+    }
+
+    const toIndex = fromIndex + delta;
+    if (toIndex < 0 || toIndex >= images.length) {
+      return;
+    }
+
+    const reordered = [...images];
+    const [moved] = reordered.splice(fromIndex, 1);
+    if (!moved) {
+      return;
+    }
+    reordered.splice(toIndex, 0, moved);
+
+    setReorderingImages(true);
+    setError(null);
+    try {
+      await reorderEntityImages(entityId, {
+        orderedImageIds: reordered.map((image) => image.id)
+      });
+    } catch (e) {
+      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+        return;
+      }
+      setError(toErrorMessage(e));
+    } finally {
+      setReorderingImages(false);
+    }
+  };
+
+  const moveImageUp = async (imageId: string): Promise<void> => {
+    await reorderByDelta(imageId, -1);
+  };
+
+  const moveImageDown = async (imageId: string): Promise<void> => {
+    await reorderByDelta(imageId, 1);
   };
 
   const save = async (): Promise<boolean> => {
@@ -251,12 +400,17 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     selectedTagIds,
     relatedCandidates,
     selectedRelatedEntityIds,
+    images,
+    failedImageFiles,
     tagDialogOpen,
     relatedDialogOpen,
     saving,
+    uploadingImages,
+    reorderingImages,
+    deletingImageIds,
     loading:
       Boolean(entityId) &&
-      (entityLoading || entitiesLoading || kindsLoading || tagsLoading || relatedLoading),
+      (entityLoading || entitiesLoading || kindsLoading || tagsLoading || relatedLoading || imagesLoading),
     error,
     setKindId,
     setName,
@@ -266,6 +420,11 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setRelatedDialogOpen,
     onToggleTag,
     onToggleRelatedEntity,
+    onSelectImageFiles,
+    retryFailedImageUploads,
+    deleteImage,
+    moveImageUp,
+    moveImageDown,
     onTagCreated,
     onTagDeleted,
     save

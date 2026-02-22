@@ -29,3 +29,14 @@ export type EntityTagRow = {
 };
 
 export type EntityWithTagsRow = EntityRow & { tags: TagRow[] };
+
+export type EntityImageRow = {
+  id: string;
+  entity_id: string;
+  object_key: string;
+  file_name: string;
+  mime_type: string;
+  file_size: number;
+  sort_order: number;
+  created_at: string;
+};
