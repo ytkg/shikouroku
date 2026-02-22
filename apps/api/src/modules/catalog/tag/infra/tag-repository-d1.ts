@@ -1,0 +1,45 @@
+import type { TagRecord } from "../../../../domain/models";
+
+export async function listTagsFromD1(db: D1Database): Promise<TagRecord[]> {
+  const result = await db.prepare("SELECT id, name FROM tags ORDER BY name ASC, id ASC").all<TagRecord>();
+  return result.results ?? [];
+}
+
+export async function findTagByNameFromD1(db: D1Database, name: string): Promise<TagRecord | null> {
+  const tag = await db.prepare("SELECT id, name FROM tags WHERE name = ? LIMIT 1").bind(name).first<TagRecord>();
+  return tag ?? null;
+}
+
+export async function insertTagToD1(db: D1Database, name: string): Promise<TagRecord | null> {
+  const inserted = await db.prepare("INSERT INTO tags (name) VALUES (?)").bind(name).run();
+  if (!inserted.success) {
+    return null;
+  }
+
+  const id = Number(inserted.meta.last_row_id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return null;
+  }
+
+  return { id, name };
+}
+
+export async function deleteTagWithRelationsFromD1(
+  db: D1Database,
+  id: number
+): Promise<"deleted" | "not_found" | "error"> {
+  try {
+    const results = await db.batch([
+      db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id),
+      db.prepare("DELETE FROM tags WHERE id = ?").bind(id)
+    ]);
+    if (!results.every((result) => result.success)) {
+      return "error";
+    }
+
+    const tagDeleted = results[1];
+    return Number(tagDeleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
+  } catch {
+    return "error";
+  }
+}

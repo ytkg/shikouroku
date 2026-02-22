@@ -38,6 +38,16 @@
     - `apps/api/src/routes/api/shared.ts`
   - 全体アプリに対するAPIエラー契約テストを追加。
     - `apps/api/tests/contract/app/api-error-shape.contract.test.ts`
+- 実施済み（Phase 2の一部反映）:
+  - `tag` スライスを `modules/catalog/tag` へ段階移行。
+    - `apps/api/src/modules/catalog/tag/application/*`
+    - `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
+    - `apps/api/src/routes/api/tag-routes.ts`
+  - 旧 `usecases/repositories` との互換を維持する委譲レイヤを追加。
+    - `apps/api/src/usecases/tags-usecase.ts`
+    - `apps/api/src/repositories/tag-repository.ts`
+  - `tag` モジュールのユニットテストを追加。
+    - `apps/api/tests/unit/modules/catalog/tag/application/tag-commands.test.ts`
 - 実施済み（Phase 3の先行反映）:
   - 複数SQL更新の一部を `db.batch` 化し、部分成功による不整合リスクを低減。
     - `apps/api/src/repositories/entity-repository.ts`（`replaceEntityTags`）
@@ -94,7 +104,7 @@
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
   - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行を導入）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
-  - `High-2`（層混線/命名不整合）: **改善中**（schema依存削減 + `*Record`/`*Dto` 命名へ統一）
+  - `High-2`（層混線/命名不整合）: **改善中**（schema依存削減 + 命名統一 + tagスライスのmodules移行）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
   - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テスト + API CIを追加、統合テストは未実装）
