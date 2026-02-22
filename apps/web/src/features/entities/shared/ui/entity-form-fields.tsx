@@ -121,11 +121,11 @@ export function EntityFormFields({
           {selectedRelatedEntityIdsSafe.length === 0 ? (
             <p className="text-sm text-muted-foreground">（関連なし）</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {selectedRelatedEntityIdsSafe.map((entityId) => (
-                <span key={entityId} className="rounded-full border px-2 py-0.5 text-xs">
-                  {relatedLabelById.get(entityId) ?? entityId}
-                </span>
+                <div key={entityId} className="rounded-md border px-3 py-2">
+                  <p className="text-sm">{relatedLabelById.get(entityId) ?? entityId}</p>
+                </div>
               ))}
             </div>
           )}
