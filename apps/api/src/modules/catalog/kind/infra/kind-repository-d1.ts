@@ -1,4 +1,4 @@
-import type { KindRecord } from "../../../../domain/models";
+import type { KindRecord } from "../../../../shared/db/records";
 
 export async function listKindsFromD1(db: D1Database): Promise<KindRecord[]> {
   const result = await db.prepare("SELECT id, label FROM kinds ORDER BY id ASC").all<KindRecord>();

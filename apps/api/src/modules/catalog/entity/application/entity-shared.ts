@@ -4,7 +4,7 @@ import type {
   EntityWithTagsRecord,
   KindRecord,
   TagRecord
-} from "../../../../domain/models";
+} from "../../../../shared/db/records";
 import { countExistingTagsByIdsFromD1 } from "../../tag/infra/tag-repository-d1";
 
 export type UpsertEntityCommand = {

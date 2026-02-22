@@ -6,6 +6,7 @@ const SRC_DIR = path.resolve(__dirname, "../../src");
 
 const FILE_NAME_PATTERN = /^[a-z0-9-]+\.(ts|tsx)$/;
 const DIR_NAME_PATTERN = /^[a-z0-9-]+$/;
+const PROHIBITED_GENERIC_FILES = new Set(["models.ts", "schemas.ts", "utils.ts"]);
 
 function collectFiles(rootDir: string): string[] {
   const entries = fs.readdirSync(rootDir, { withFileTypes: true });
@@ -50,5 +51,14 @@ describe("api file naming conventions", () => {
       .filter((relativePath) => !FILE_NAME_PATTERN.test(path.basename(relativePath)));
 
     expect(invalidFiles).toEqual([]);
+  });
+
+  it("does not use generic file names that hide responsibilities", () => {
+    const files = collectFiles(SRC_DIR);
+    const genericFiles = files
+      .map((filePath) => path.relative(SRC_DIR, filePath))
+      .filter((relativePath) => PROHIBITED_GENERIC_FILES.has(path.basename(relativePath)));
+
+    expect(genericFiles).toEqual([]);
   });
 });

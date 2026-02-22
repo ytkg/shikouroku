@@ -1,4 +1,4 @@
-import type { EntityImageRecord } from "../../../../domain/models";
+import type { EntityImageRecord } from "../../../../shared/db/records";
 
 export const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 export const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);

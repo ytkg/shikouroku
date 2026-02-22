@@ -1,4 +1,4 @@
-import type { EntityWithKindRecord, EntityWithTagsRecord, KindRecord, TagRecord } from "../../../../domain/models";
+import type { EntityWithKindRecord, EntityWithTagsRecord, KindRecord, TagRecord } from "../../../../shared/db/records";
 import {
   fetchEntitiesWithKindsByIdsFromD1,
   fetchTagsByEntityIdsFromD1,

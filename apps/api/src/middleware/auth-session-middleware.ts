@@ -8,8 +8,8 @@ import {
   getRefreshTokenFromCookie,
   makeAccessTokenCookie,
   makeRefreshTokenCookie
-} from "../lib/cookies";
-import { isStaticAssetPath } from "../lib/path";
+} from "../shared/http/auth-cookies";
+import { isStaticAssetPath } from "../shared/http/asset-path";
 import { refreshTokenCommand } from "../modules/auth/application/refresh-token-command";
 import { verifyTokenQuery } from "../modules/auth/application/verify-token-query";
 import { jsonError } from "../shared/http/api-response";

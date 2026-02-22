@@ -18,14 +18,14 @@
 - [x] Phase 3: `UnitOfWork` ヘルパー導入（D1 `batch` の共通化）
 - [ ] Phase 3: 整合性境界の完全統一（複数リソース跨りの最終統合）
 - [x] Phase 4: アーキテクチャテストによる依存境界の固定
-- [ ] Phase 4: `domain` / `lib` の最終整理（責務再配置と縮退）
+- [x] Phase 4: `domain` / `lib` の最終整理（責務再配置と縮退）
 - [x] 品質: 統合テスト（`tests/integration`）の追加
 
 - 実施済み（Phase 0 / 1）:
   - `requestId` 付与とエラーレスポンス契約の統一を反映。
     - `apps/api/src/shared/http/request-id.ts`
     - `apps/api/src/shared/http/api-response.ts`
-    - `apps/api/src/lib/http.ts`
+    - `apps/api/src/shared/http/parse-json-body.ts`
     - `apps/api/src/index.ts`
   - APIルーター分割（auth/kind/tag/entity/maintenance）を反映。
     - `apps/api/src/routes/api/*.ts`
@@ -54,6 +54,18 @@
     - 削除: `apps/api/src/usecases/{auth,entities,entity-images,entity-relations,image-cleanup,kinds,tags}-usecase.ts`
     - 削除: `apps/api/src/repositories/*.ts`
     - 移設: `apps/api/src/shared/application/result.ts`（共通Result型）
+  - `domain` 配下の永続化レコード型を `shared/db` へ移設。
+    - 削除: `apps/api/src/domain/models.ts`
+    - 追加: `apps/api/src/shared/db/records.ts`
+
+- 実施済み（Phase 4: `domain` / `lib` 最終整理）:
+  - HTTPヘルパーを `lib` から `shared/http` へ移設し、`lib` を縮退。
+    - 削除: `apps/api/src/lib/cookies.ts`
+    - 削除: `apps/api/src/lib/path.ts`
+    - 追加: `apps/api/src/shared/http/auth-cookies.ts`
+    - 追加: `apps/api/src/shared/http/asset-path.ts`
+  - 回帰ガードとして legacy-layer architecture test を強化。
+    - 更新: `apps/api/tests/architecture/legacy-layer-removal.test.ts`
 
 - 実施済み（Phase 3: 整合性と運用品質）:
   - `db.batch` による複数更新の整合性改善を modules infra に反映。
@@ -80,7 +92,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`31 files / 82 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`33 files / 93 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
@@ -162,7 +174,7 @@
 - 根拠:
   - `apps/api/src/domain/schemas.ts:34`
   - `apps/api/src/domain/schemas.ts:36`
-  - `apps/api/src/lib/http.ts:24`
+  - `apps/api/src/shared/http/parse-json-body.ts:25`
 - 問題:
   - フィールド追加時に `validationMessage` の更新漏れが起きやすい。
   - スキーマ定義とメッセージ定義が分離し、追従コストが高い。
@@ -366,7 +378,7 @@ apps/api/src
 - [ ] **Phase 4: ルール固定**
   - [x] 命名規約・依存規約を architecture testで強制する。
   - [x] `tests/integration` を追加し、主要フローの貫通テストを導入する。
-  - [ ] `domain` / `lib` の最終整理と廃止範囲の確定。
+  - [x] `domain` / `lib` の最終整理と廃止範囲の確定。
 
 ## 7. 命名変更の具体例
 

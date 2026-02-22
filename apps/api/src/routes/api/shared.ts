@@ -4,7 +4,7 @@ import {
   clearRefreshTokenCookie,
   makeAccessTokenCookie,
   makeRefreshTokenCookie
-} from "../../lib/cookies";
+} from "../../shared/http/auth-cookies";
 import { errorCodeFromStatus, jsonError } from "../../shared/http/api-response";
 
 export function setAuthCookies(response: Response, accessToken: string, refreshToken: string): void {

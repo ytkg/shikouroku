@@ -1,4 +1,4 @@
-import type { EntityImageRecord } from "../../../../domain/models";
+import type { EntityImageRecord } from "../../../../shared/db/records";
 import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
 
 export type InsertEntityImageInput = {

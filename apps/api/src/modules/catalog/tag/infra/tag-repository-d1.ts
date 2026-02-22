@@ -1,4 +1,4 @@
-import type { TagRecord } from "../../../../domain/models";
+import type { TagRecord } from "../../../../shared/db/records";
 import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
 
 export async function listTagsFromD1(db: D1Database): Promise<TagRecord[]> {
