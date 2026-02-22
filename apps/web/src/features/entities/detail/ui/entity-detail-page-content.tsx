@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import {
   getEntityDetailPath,
+  getEntityEditPath,
   routePaths
 } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
@@ -9,6 +10,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
@@ -17,6 +19,7 @@ export function EntityDetailPageContent() {
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
   const page = useEntityDetailPage(entityId);
+  const editPath = entityId ? getEntityEditPath(entityId) : routePaths.home;
 
   if (entityId && page.isLoading) {
     return <main className="w-full bg-background pt-20" />;
@@ -93,6 +96,9 @@ export function EntityDetailPageContent() {
             )
           )}
         </CardContent>
+        <CardFooter className="flex justify-end gap-2">
+          <Button onClick={() => navigate(editPath)}>編集</Button>
+        </CardFooter>
       </Card>
       <Button variant="outline" onClick={() => navigate(routePaths.home)}>
         一覧へ戻る
