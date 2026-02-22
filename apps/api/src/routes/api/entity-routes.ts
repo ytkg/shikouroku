@@ -22,6 +22,7 @@ import { createEntityRelationCommand } from "../../modules/catalog/relation/appl
 import { deleteEntityRelationCommand } from "../../modules/catalog/relation/application/delete-entity-relation-command";
 import { listRelatedEntitiesQuery } from "../../modules/catalog/relation/application/list-related-entities-query";
 import { createD1RelationRepository } from "../../modules/catalog/relation/infra/relation-repository-d1";
+import { createD1ImageCleanupTaskRepository } from "../../modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
 import { jsonError, jsonOk } from "../../shared/http/api-response";
 import { useCaseError } from "./shared";
 
@@ -133,7 +134,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id/images", async (c) => {
     const id = c.req.param("id");
-    const result = await listEntityImagesQuery(c.env.DB, id);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const result = await listEntityImagesQuery(c.env.DB, entityReadRepository, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -156,7 +158,16 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return jsonError(c, 400, "IMAGE_FILE_REQUIRED", "file is required");
     }
 
-    const result = await uploadEntityImageCommand(c.env.DB, c.env.ENTITY_IMAGES, id, file);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const imageCleanupTaskRepository = createD1ImageCleanupTaskRepository(c.env.DB);
+    const result = await uploadEntityImageCommand(
+      c.env.DB,
+      c.env.ENTITY_IMAGES,
+      entityReadRepository,
+      imageCleanupTaskRepository,
+      id,
+      file
+    );
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -171,7 +182,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await reorderEntityImagesCommand(c.env.DB, id, parsedBody.data.orderedImageIds);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const result = await reorderEntityImagesCommand(c.env.DB, entityReadRepository, id, parsedBody.data.orderedImageIds);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -182,7 +194,16 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.delete("/entities/:id/images/:imageId", async (c) => {
     const id = c.req.param("id");
     const imageId = c.req.param("imageId");
-    const result = await deleteEntityImageCommand(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const imageCleanupTaskRepository = createD1ImageCleanupTaskRepository(c.env.DB);
+    const result = await deleteEntityImageCommand(
+      c.env.DB,
+      c.env.ENTITY_IMAGES,
+      entityReadRepository,
+      imageCleanupTaskRepository,
+      id,
+      imageId
+    );
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -193,7 +214,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.get("/entities/:id/images/:imageId/file", async (c) => {
     const id = c.req.param("id");
     const imageId = c.req.param("imageId");
-    const result = await getEntityImageFileQuery(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const result = await getEntityImageFileQuery(c.env.DB, c.env.ENTITY_IMAGES, entityReadRepository, id, imageId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }

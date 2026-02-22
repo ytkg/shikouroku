@@ -1,9 +1,9 @@
-import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
+import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
 import {
   insertEntityImageInD1,
   nextEntityImageSortOrderFromD1
 } from "../infra/image-repository-d1";
-import { enqueueImageCleanupTaskToD1 } from "../../../maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
+import type { ImageCleanupTaskRepository } from "../../../maintenance/image-cleanup/ports/image-cleanup-task-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
   ALLOWED_IMAGE_MIME_TYPES,
@@ -19,10 +19,12 @@ import {
 export async function uploadEntityImageCommand(
   db: D1Database,
   imageBucket: R2Bucket,
+  entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  imageCleanupTaskRepository: Pick<ImageCleanupTaskRepository, "enqueueTask">,
   entityId: string,
   file: UploadImageFile
 ): Promise<UseCaseResult<{ image: EntityImageResponseDto }>> {
-  const entity = await findEntityByIdFromD1(db, entityId);
+  const entity = await entityReadRepository.findEntityById(entityId);
   if (!entity) {
     return fail(404, "entity not found");
   }
@@ -77,7 +79,7 @@ export async function uploadEntityImageCommand(
     try {
       await imageBucket.delete(objectKey);
     } catch (error) {
-      await enqueueImageCleanupTaskToD1(db, objectKey, "metadata_insert_failed", toErrorMessage(error));
+      await imageCleanupTaskRepository.enqueueTask(objectKey, "metadata_insert_failed", toErrorMessage(error));
     }
     return fail(500, "failed to save image metadata");
   }

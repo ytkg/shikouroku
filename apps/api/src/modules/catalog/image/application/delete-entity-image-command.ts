@@ -1,20 +1,22 @@
-import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
+import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
 import {
   collapseEntityImageSortOrderAfterDeleteInD1,
   deleteEntityImageInD1,
   findEntityImageByIdFromD1
 } from "../infra/image-repository-d1";
-import { enqueueImageCleanupTaskToD1 } from "../../../maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
+import type { ImageCleanupTaskRepository } from "../../../maintenance/image-cleanup/ports/image-cleanup-task-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import { toErrorMessage } from "./image-shared";
 
 export async function deleteEntityImageCommand(
   db: D1Database,
   imageBucket: R2Bucket,
+  entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  imageCleanupTaskRepository: Pick<ImageCleanupTaskRepository, "enqueueTask">,
   entityId: string,
   imageId: string
 ): Promise<UseCaseResult<Record<string, never>>> {
-  const entity = await findEntityByIdFromD1(db, entityId);
+  const entity = await entityReadRepository.findEntityById(entityId);
   if (!entity) {
     return fail(404, "entity not found");
   }
@@ -40,8 +42,7 @@ export async function deleteEntityImageCommand(
   try {
     await imageBucket.delete(image.object_key);
   } catch (error) {
-    const queued = await enqueueImageCleanupTaskToD1(
-      db,
+    const queued = await imageCleanupTaskRepository.enqueueTask(
       image.object_key,
       "entity_image_delete_failed",
       toErrorMessage(error)

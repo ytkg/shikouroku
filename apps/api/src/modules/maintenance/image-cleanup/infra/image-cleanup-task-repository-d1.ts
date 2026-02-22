@@ -1,3 +1,5 @@
+import type { ImageCleanupTaskRepository } from "../ports/image-cleanup-task-repository";
+
 export type ImageCleanupTaskRecord = {
   id: number;
   object_key: string;
@@ -75,4 +77,10 @@ export async function countImageCleanupTasksInD1(db: D1Database): Promise<number
     .first<{ count: number | string }>();
 
   return Number(row?.count ?? 0);
+}
+
+export function createD1ImageCleanupTaskRepository(db: D1Database): ImageCleanupTaskRepository {
+  return {
+    enqueueTask: (objectKey, reason, lastError) => enqueueImageCleanupTaskToD1(db, objectKey, reason, lastError)
+  };
 }

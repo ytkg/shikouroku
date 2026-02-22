@@ -1,11 +1,12 @@
 import type { EntityImageRecord } from "../../../../shared/db/records";
-import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
+import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
 import { findEntityImageByIdFromD1 } from "../infra/image-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function getEntityImageFileQuery(
   db: D1Database,
   imageBucket: R2Bucket,
+  entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
   entityId: string,
   imageId: string
 ): Promise<
@@ -14,7 +15,7 @@ export async function getEntityImageFileQuery(
     file: R2ObjectBody;
   }>
 > {
-  const entity = await findEntityByIdFromD1(db, entityId);
+  const entity = await entityReadRepository.findEntityById(entityId);
   if (!entity) {
     return fail(404, "entity not found");
   }
