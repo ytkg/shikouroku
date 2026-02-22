@@ -2,7 +2,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import {
   getEntityDetailPath,
-  getEntityEditPath,
   routePaths
 } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
@@ -10,7 +9,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
@@ -19,7 +17,6 @@ export function EntityDetailPageContent() {
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
   const page = useEntityDetailPage(entityId);
-  const editPath = entityId ? getEntityEditPath(entityId) : routePaths.home;
 
   if (entityId && page.isLoading) {
     return <main className="w-full bg-background pt-20" />;
@@ -79,10 +76,7 @@ export function EntityDetailPageContent() {
                   ) : (
                     <div className="space-y-2">
                       {page.relatedEntities.map((relatedEntity) => (
-                        <div
-                          key={relatedEntity.id}
-                          className="flex items-center justify-between gap-3 rounded-md border px-3 py-2"
-                        >
+                        <div key={relatedEntity.id} className="rounded-md border px-3 py-2">
                           <button
                             type="button"
                             className="text-left text-sm hover:underline"
@@ -90,30 +84,15 @@ export function EntityDetailPageContent() {
                           >
                             {relatedEntity.name}（{relatedEntity.kind.label}）
                           </button>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              void page.removeRelated(relatedEntity.id);
-                            }}
-                            disabled={page.removingRelatedEntityId !== null}
-                          >
-                            {page.removingRelatedEntityId === relatedEntity.id ? "解除中..." : "解除"}
-                          </Button>
                         </div>
                       ))}
                     </div>
                   )}
-                  {page.relatedError && <p className="text-sm text-destructive">{page.relatedError}</p>}
                 </div>
               </>
             )
           )}
         </CardContent>
-        <CardFooter className="flex justify-end gap-2">
-          <Button onClick={() => navigate(editPath)}>編集</Button>
-        </CardFooter>
       </Card>
       <Button variant="outline" onClick={() => navigate(routePaths.home)}>
         一覧へ戻る

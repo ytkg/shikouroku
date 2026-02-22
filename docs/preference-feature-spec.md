@@ -19,7 +19,7 @@
 
 1. 詳細画面で、その嗜好に関連する嗜好一覧を見たい。
 2. 新規登録画面・編集画面から、別の嗜好を関連として追加したい。
-3. 誤って付けた関連を解除したい。
+3. 編集画面で、誤って付けた関連を解除したい。
 4. 追加した関連が相手側の詳細にも表示されてほしい（無向の担保）。
 
 ## 3. V1スコープ
@@ -42,16 +42,17 @@
   - 種別ラベル
 - 各関連嗜好はクリックで詳細に遷移できる。
 - 0件時は空状態メッセージを表示。
+- 詳細画面は表示専用とし、関連の追加・解除は行わない。
 
 ### 4.2 追加操作（新規登録/編集画面）
 
 - 詳細画面からは関連嗜好を追加できない。
 - 新規登録画面・編集画面で関連嗜好を選択して保存する。
 
-### 4.3 解除操作（詳細画面内）
+### 4.3 解除操作（編集画面）
 
-- 各関連嗜好に `解除` 操作を表示。
-- 解除成功後、一覧から即時消える。
+- 編集画面の関連嗜好選択から対象のチェックを外して保存する。
+- 保存成功後、関連一覧から解除される。
 
 ### 4.4 新規登録画面: 関連嗜好選択
 
@@ -140,8 +141,8 @@ CREATE INDEX IF NOT EXISTS idx_entity_relations_high ON entity_relations(entity_
 
 - `entities/entity/api` に関連嗜好APIクライアントを追加。
 - `entities/entity/model` に関連嗜好用の query/mutation を追加。
-- `features/entities/detail` で関連嗜好の表示・解除UIを扱う。
-- 関連嗜好の追加は `features/entities/create` と `features/entities/edit` で扱う。
+- `features/entities/detail` は関連嗜好の表示のみ扱う。
+- 関連嗜好の追加・解除は `features/entities/create` と `features/entities/edit` で扱う。
 - 既存の `resolveQueryError` / 認証ガードを再利用する。
 - 候補選択ダイアログの初期データは `GET /api/entities` の結果を利用し、検索APIはV1対象外とする。
 
@@ -161,7 +162,7 @@ CREATE INDEX IF NOT EXISTS idx_entity_relations_high ON entity_relations(entity_
 
 - 完了: `entity_relations` テーブルとインデックスを migration に追加。
 - 完了: 関連取得/追加/解除 API（`GET/POST/DELETE /api/entities/:id/related*`）を追加。
-- 完了: 詳細画面に関連嗜好セクションと解除操作を追加（追加操作は提供しない）。
+- 完了: 詳細画面に関連嗜好セクションを追加（表示専用）。
 - 完了: 新規登録画面/編集画面で関連嗜好を選択・保存できるようにした。
 - 完了: 関連APIレスポンスのパーサー/クライアントとSWR query/mutationを追加。
 - 完了: 関連機能のユニットテスト（API path, parser, client）を追加。
