@@ -79,6 +79,7 @@
     - `apps/api/tests/architecture/file-naming-conventions.test.ts`
     - `apps/api/tests/architecture/route-response-contract.test.ts`
     - `apps/api/tests/architecture/usecase-schema-coupling.test.ts`
+    - `apps/api/tests/architecture/route-usecase-boundary.test.ts`
   - `entities-usecase` の `domain/schemas` 依存を除去し、HTTP入力型から分離。
     - `apps/api/src/usecases/entities-usecase.ts`
   - 永続化モデル命名を `*Row` から `*Record` に統一。
