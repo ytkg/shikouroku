@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Entity } from "@/entities/entity";
 import {
+  defaultEntityTab,
   getKindTabs,
   getVisibleEntities,
+  parseEntityTab,
   toKindTab
 } from "@/features/entities/list/model/entity-list";
 
@@ -34,7 +36,19 @@ describe("entity-list model", () => {
   ];
 
   it("toKindTab が kind タブ値を生成する", () => {
-    expect(toKindTab(12)).toBe("kind:12");
+    expect(toKindTab(12)).toBe("kind-12");
+  });
+
+  it("parseEntityTab は有効値を受け入れ、不正値を既定値へフォールバックする", () => {
+    expect(parseEntityTab("all")).toBe("all");
+    expect(parseEntityTab("wishlist")).toBe("wishlist");
+    expect(parseEntityTab("kind-5")).toBe("kind-5");
+    expect(parseEntityTab("kind:5")).toBe(defaultEntityTab);
+    expect(parseEntityTab("kind-0")).toBe(defaultEntityTab);
+    expect(parseEntityTab("kind:-1")).toBe(defaultEntityTab);
+    expect(parseEntityTab("kind-abc")).toBe(defaultEntityTab);
+    expect(parseEntityTab("unknown")).toBe(defaultEntityTab);
+    expect(parseEntityTab(null)).toBe(defaultEntityTab);
   });
 
   it("getKindTabs は wishlist を除外し kind id 昇順で返す", () => {
@@ -55,7 +69,7 @@ describe("entity-list model", () => {
   });
 
   it("kind タブは対象 kind のみ返す", () => {
-    const visible = getVisibleEntities(entities, "kind:2");
+    const visible = getVisibleEntities(entities, "kind-2");
     expect(visible.map((entity) => entity.id)).toEqual(["a", "d"]);
   });
 });

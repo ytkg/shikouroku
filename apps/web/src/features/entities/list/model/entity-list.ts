@@ -1,14 +1,35 @@
 import type { Entity } from "@/entities/entity";
 
-export type EntityTab = "all" | "wishlist" | `kind:${number}`;
+const kindTabPrefix = "kind-";
+
+export type EntityTab = "all" | "wishlist" | `kind-${number}`;
+export const entityTabQueryKey = "tab";
+export const defaultEntityTab: EntityTab = "all";
 
 type KindTab = {
   id: number;
   label: string;
 };
 
-export function toKindTab(kindId: number): `kind:${number}` {
-  return `kind:${kindId}`;
+export function toKindTab(kindId: number): `kind-${number}` {
+  return `kind-${kindId}`;
+}
+
+export function parseEntityTab(value: string | null | undefined): EntityTab {
+  if (value === "all" || value === "wishlist") {
+    return value;
+  }
+
+  if (!value || !value.startsWith(kindTabPrefix)) {
+    return defaultEntityTab;
+  }
+
+  const kindId = Number(value.slice(kindTabPrefix.length));
+  if (!Number.isInteger(kindId) || kindId <= 0) {
+    return defaultEntityTab;
+  }
+
+  return toKindTab(kindId);
 }
 
 export function getVisibleEntities(entities: Entity[], selectedTab: EntityTab): Entity[] {
@@ -21,7 +42,7 @@ export function getVisibleEntities(entities: Entity[], selectedTab: EntityTab): 
     return nonWishlistEntities;
   }
 
-  const kindId = Number(selectedTab.slice("kind:".length));
+  const kindId = Number(selectedTab.slice(kindTabPrefix.length));
   return nonWishlistEntities.filter((entity) => entity.kind.id === kindId);
 }
 
