@@ -31,14 +31,24 @@ export type EntityBody = z.infer<typeof entityBodySchema>;
 export type RelatedEntityBody = z.infer<typeof relatedEntityBodySchema>;
 export type EntityImageOrderBody = z.infer<typeof entityImageOrderBodySchema>;
 
+const VALIDATION_MESSAGE_MAP: Record<string, string> = {
+  kindId: "kindId is required",
+  name: "name is required",
+  tagIds: "tagIds is invalid",
+  relatedEntityId: "relatedEntityId is required",
+  orderedImageIds: "orderedImageIds is invalid",
+  username: "username is required",
+  password: "password is required"
+};
+
 export function validationMessage(error: z.ZodError): string {
   const field = error.issues[0]?.path[0];
-  if (field === "kindId") return "kindId is required";
-  if (field === "name") return "name is required";
-  if (field === "tagIds") return "tagIds is invalid";
-  if (field === "relatedEntityId") return "relatedEntityId is required";
-  if (field === "orderedImageIds") return "orderedImageIds is invalid";
-  if (field === "username") return "username is required";
-  if (field === "password") return "password is required";
+  if (typeof field === "string") {
+    const message = VALIDATION_MESSAGE_MAP[field];
+    if (message) {
+      return message;
+    }
+  }
+
   return "invalid request body";
 }
