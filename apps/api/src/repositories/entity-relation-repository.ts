@@ -1,26 +1,11 @@
-type RelatedEntityIdRow = {
-  related_id: string;
-};
-
-function normalizeEntityPair(entityIdA: string, entityIdB: string): [string, string] {
-  return entityIdA < entityIdB ? [entityIdA, entityIdB] : [entityIdB, entityIdA];
-}
+import {
+  createRelationInD1,
+  deleteRelationInD1,
+  listRelatedEntityIdsFromD1
+} from "../modules/catalog/relation/infra/relation-repository-d1";
 
 export async function listRelatedEntityIds(db: D1Database, entityId: string): Promise<string[]> {
-  const result = await db
-    .prepare(
-      `SELECT CASE
-          WHEN entity_id_low = ? THEN entity_id_high
-          ELSE entity_id_low
-        END AS related_id
-       FROM entity_relations
-       WHERE entity_id_low = ? OR entity_id_high = ?
-       ORDER BY created_at DESC`
-    )
-    .bind(entityId, entityId, entityId)
-    .all<RelatedEntityIdRow>();
-
-  return (result.results ?? []).map((row) => row.related_id);
+  return listRelatedEntityIdsFromD1(db, entityId);
 }
 
 export async function createEntityRelation(
@@ -28,19 +13,7 @@ export async function createEntityRelation(
   entityIdA: string,
   entityIdB: string
 ): Promise<"created" | "conflict" | "error"> {
-  const [entityIdLow, entityIdHigh] = normalizeEntityPair(entityIdA, entityIdB);
-  const created = await db
-    .prepare(
-      "INSERT OR IGNORE INTO entity_relations (entity_id_low, entity_id_high) VALUES (?, ?)"
-    )
-    .bind(entityIdLow, entityIdHigh)
-    .run();
-
-  if (!created.success) {
-    return "error";
-  }
-
-  return Number(created.meta.changes ?? 0) > 0 ? "created" : "conflict";
+  return createRelationInD1(db, entityIdA, entityIdB);
 }
 
 export async function deleteEntityRelation(
@@ -48,17 +21,5 @@ export async function deleteEntityRelation(
   entityIdA: string,
   entityIdB: string
 ): Promise<"deleted" | "not_found" | "error"> {
-  const [entityIdLow, entityIdHigh] = normalizeEntityPair(entityIdA, entityIdB);
-  const deleted = await db
-    .prepare(
-      "DELETE FROM entity_relations WHERE entity_id_low = ? AND entity_id_high = ?"
-    )
-    .bind(entityIdLow, entityIdHigh)
-    .run();
-
-  if (!deleted.success) {
-    return "error";
-  }
-
-  return Number(deleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
+  return deleteRelationInD1(db, entityIdA, entityIdB);
 }

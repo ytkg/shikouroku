@@ -6,6 +6,9 @@ import {
   relatedEntityBodySchema
 } from "../../domain/schemas";
 import { parseJsonBody } from "../../lib/http";
+import { createEntityRelationCommand } from "../../modules/catalog/relation/application/create-entity-relation-command";
+import { deleteEntityRelationCommand } from "../../modules/catalog/relation/application/delete-entity-relation-command";
+import { listRelatedEntitiesQuery } from "../../modules/catalog/relation/application/list-related-entities-query";
 import { jsonError, jsonOk } from "../../shared/http/api-response";
 import {
   createEntityUseCase,
@@ -20,11 +23,6 @@ import {
   reorderEntityImagesUseCase,
   uploadEntityImageUseCase
 } from "../../usecases/entity-images-usecase";
-import {
-  createEntityRelationUseCase,
-  deleteEntityRelationUseCase,
-  listRelatedEntitiesUseCase
-} from "../../usecases/entity-relations-usecase";
 import { useCaseError } from "./shared";
 
 export function createEntityRoutes(): Hono<AppEnv> {
@@ -84,7 +82,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id/related", async (c) => {
     const id = c.req.param("id");
-    const result = await listRelatedEntitiesUseCase(c.env.DB, id);
+    const result = await listRelatedEntitiesQuery(c.env.DB, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -99,7 +97,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await createEntityRelationUseCase(c.env.DB, id, parsedBody.data.relatedEntityId);
+    const result = await createEntityRelationCommand(c.env.DB, id, parsedBody.data.relatedEntityId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -110,7 +108,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.delete("/entities/:id/related/:relatedEntityId", async (c) => {
     const id = c.req.param("id");
     const relatedEntityId = c.req.param("relatedEntityId");
-    const result = await deleteEntityRelationUseCase(c.env.DB, id, relatedEntityId);
+    const result = await deleteEntityRelationCommand(c.env.DB, id, relatedEntityId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
