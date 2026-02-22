@@ -1,5 +1,6 @@
 import type { TagRecord } from "../../../../shared/db/records";
 import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
+import type { DeleteTagResult, TagRepository } from "../ports/tag-repository";
 
 export async function listTagsFromD1(db: D1Database): Promise<TagRecord[]> {
   const result = await db.prepare("SELECT id, name FROM tags ORDER BY name ASC, id ASC").all<TagRecord>();
@@ -28,7 +29,7 @@ export async function insertTagToD1(db: D1Database, name: string): Promise<TagRe
 export async function deleteTagWithRelationsFromD1(
   db: D1Database,
   id: number
-): Promise<"deleted" | "not_found" | "error"> {
+): Promise<DeleteTagResult> {
   const results = await runD1UnitOfWork(db, [
     db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id),
     db.prepare("DELETE FROM tags WHERE id = ?").bind(id)
@@ -53,4 +54,14 @@ export async function countExistingTagsByIdsFromD1(db: D1Database, tagIds: numbe
     .all<{ id: number }>();
 
   return (result.results ?? []).length;
+}
+
+export function createD1TagRepository(db: D1Database): TagRepository {
+  return {
+    listTags: () => listTagsFromD1(db),
+    findTagByName: (name) => findTagByNameFromD1(db, name),
+    insertTag: (name) => insertTagToD1(db, name),
+    deleteTagWithRelations: (id) => deleteTagWithRelationsFromD1(db, id),
+    countExistingTagsByIds: (tagIds) => countExistingTagsByIdsFromD1(db, tagIds)
+  };
 }

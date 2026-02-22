@@ -1,11 +1,11 @@
-import { deleteTagWithRelationsFromD1 } from "../infra/tag-repository-d1";
+import type { TagRepository } from "../ports/tag-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function deleteTagCommand(
-  db: D1Database,
+  tagRepository: TagRepository,
   id: number
 ): Promise<UseCaseResult<Record<string, never>>> {
-  const deleted = await deleteTagWithRelationsFromD1(db, id);
+  const deleted = await tagRepository.deleteTagWithRelations(id);
   if (deleted === "not_found") {
     return fail(404, "tag not found");
   }

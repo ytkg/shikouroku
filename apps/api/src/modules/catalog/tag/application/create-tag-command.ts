@@ -1,16 +1,16 @@
-import { findTagByNameFromD1, insertTagToD1 } from "../infra/tag-repository-d1";
+import type { TagRepository } from "../ports/tag-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function createTagCommand(
-  db: D1Database,
+  tagRepository: TagRepository,
   name: string
 ): Promise<UseCaseResult<{ tag: { id: number; name: string } }>> {
-  const existing = await findTagByNameFromD1(db, name);
+  const existing = await tagRepository.findTagByName(name);
   if (existing) {
     return fail(409, "tag already exists");
   }
 
-  const insertedTag = await insertTagToD1(db, name);
+  const insertedTag = await tagRepository.insertTag(name);
   if (!insertedTag) {
     return fail(500, "failed to insert tag");
   }

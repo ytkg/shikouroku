@@ -5,6 +5,7 @@ import { parseJsonBody } from "../../shared/http/parse-json-body";
 import { createTagCommand } from "../../modules/catalog/tag/application/create-tag-command";
 import { deleteTagCommand } from "../../modules/catalog/tag/application/delete-tag-command";
 import { listTagsQuery } from "../../modules/catalog/tag/application/list-tags-query";
+import { createD1TagRepository } from "../../modules/catalog/tag/infra/tag-repository-d1";
 import { jsonError, jsonOk } from "../../shared/http/api-response";
 import { useCaseError } from "./shared";
 
@@ -12,7 +13,8 @@ export function createTagRoutes(): Hono<AppEnv> {
   const tags = new Hono<AppEnv>();
 
   tags.get("/tags", async (c) => {
-    const result = await listTagsQuery(c.env.DB);
+    const tagRepository = createD1TagRepository(c.env.DB);
+    const result = await listTagsQuery(tagRepository);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -26,7 +28,8 @@ export function createTagRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await createTagCommand(c.env.DB, parsedBody.data.name);
+    const tagRepository = createD1TagRepository(c.env.DB);
+    const result = await createTagCommand(tagRepository, parsedBody.data.name);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -41,7 +44,8 @@ export function createTagRoutes(): Hono<AppEnv> {
       return jsonError(c, 400, "INVALID_TAG_ID", "tag id is invalid");
     }
 
-    const result = await deleteTagCommand(c.env.DB, id);
+    const tagRepository = createD1TagRepository(c.env.DB);
+    const result = await deleteTagCommand(tagRepository, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }

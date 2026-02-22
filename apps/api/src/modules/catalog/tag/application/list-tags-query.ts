@@ -1,9 +1,9 @@
-import { listTagsFromD1 } from "../infra/tag-repository-d1";
+import type { TagRepository } from "../ports/tag-repository";
 import { success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function listTagsQuery(
-  db: D1Database
+  tagRepository: TagRepository
 ): Promise<UseCaseResult<{ tags: { id: number; name: string }[] }>> {
-  const tags = await listTagsFromD1(db);
+  const tags = await tagRepository.listTags();
   return success({ tags });
 }
