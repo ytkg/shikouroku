@@ -118,9 +118,6 @@ export function EntityFormFields({
               関連を編集
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            関連嗜好の追加・解除はダイアログから行います。
-          </p>
           {selectedRelatedEntityIdsSafe.length === 0 ? (
             <p className="text-sm text-muted-foreground">（関連なし）</p>
           ) : (
