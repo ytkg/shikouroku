@@ -44,7 +44,7 @@ export function EditEntityPageContent() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-4 pt-20">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>嗜好 編集</CardTitle>

@@ -14,7 +14,7 @@ export function EntityListPageContent() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-4 pt-20">
       <section className="w-full space-y-3">
         {page.error && <p className="text-sm text-destructive">{page.error}</p>}
         <div className="flex flex-wrap gap-2">

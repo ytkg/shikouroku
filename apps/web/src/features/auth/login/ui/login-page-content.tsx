@@ -15,7 +15,7 @@ export function LoginPageContent() {
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-md items-center px-4 pb-10 pt-24">
+    <main className="mx-auto flex w-full max-w-md items-center px-4 pb-4 pt-20">
       <Card className="w-full">
         <CardHeader>
           <CardTitle>ログイン</CardTitle>
