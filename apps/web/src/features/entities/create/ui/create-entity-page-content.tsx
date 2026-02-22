@@ -2,6 +2,7 @@ import { type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCreateEntityForm } from "../model/use-create-entity-form";
 import { TagEditDialog } from "../../manage-tags";
+import { RelatedEntityEditDialog } from "../../manage-related";
 import { EntityFormFields } from "../../shared/ui/entity-form-fields";
 import { routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
@@ -51,8 +52,8 @@ export function CreateEntityPageContent() {
               onDescriptionChange={form.setDescription}
               onWishlistChange={form.setIsWishlist}
               onToggleTag={form.onToggleTag}
-              onToggleRelatedEntity={form.onToggleRelatedEntity}
               onOpenTagDialog={() => form.setTagDialogOpen(true)}
+              onOpenRelatedDialog={() => form.setRelatedDialogOpen(true)}
             />
             <div className="flex justify-end">
               <Button type="submit" disabled={form.submitLoading}>
@@ -79,6 +80,13 @@ export function CreateEntityPageContent() {
         onCreated={form.onTagCreated}
         onDeleted={form.onTagDeleted}
         ensureAuthorized={form.ensureAuthorized}
+      />
+      <RelatedEntityEditDialog
+        open={form.relatedDialogOpen}
+        onOpenChange={form.setRelatedDialogOpen}
+        candidates={form.relatedCandidates}
+        selectedRelatedEntityIds={form.selectedRelatedEntityIds}
+        onToggleRelatedEntity={form.onToggleRelatedEntity}
       />
     </main>
   );

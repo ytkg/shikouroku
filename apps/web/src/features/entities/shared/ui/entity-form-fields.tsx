@@ -22,7 +22,7 @@ type EntityFormFieldsProps = {
   onOpenTagDialog: () => void;
   relatedCandidates?: RelatedCandidate[];
   selectedRelatedEntityIds?: string[];
-  onToggleRelatedEntity?: (entityId: string, checked: boolean) => void;
+  onOpenRelatedDialog?: () => void;
   kindRequired?: boolean;
 };
 
@@ -42,15 +42,21 @@ export function EntityFormFields({
   onOpenTagDialog,
   relatedCandidates,
   selectedRelatedEntityIds,
-  onToggleRelatedEntity,
+  onOpenRelatedDialog,
   kindRequired = true
 }: EntityFormFieldsProps) {
   const hasRelatedEditor =
     relatedCandidates !== undefined &&
     selectedRelatedEntityIds !== undefined &&
-    onToggleRelatedEntity !== undefined;
+    onOpenRelatedDialog !== undefined;
   const relatedCandidatesSafe = relatedCandidates ?? [];
   const selectedRelatedEntityIdsSafe = selectedRelatedEntityIds ?? [];
+  const relatedLabelById = new Map(
+    relatedCandidatesSafe.map((candidate) => [
+      candidate.id,
+      `${candidate.name}（${candidate.kind.label}）`
+    ])
+  );
 
   return (
     <>
@@ -106,20 +112,23 @@ export function EntityFormFields({
       </div>
       {hasRelatedEditor && (
         <div className="space-y-2">
-          <Label>関連嗜好</Label>
-          <p className="text-xs text-muted-foreground">選択した嗜好と相互に関連付けされます。</p>
-          {relatedCandidatesSafe.length === 0 ? (
-            <p className="text-sm text-muted-foreground">追加できる候補がありません。</p>
+          <div className="flex items-center justify-between gap-2">
+            <Label>関連嗜好</Label>
+            <Button type="button" size="sm" variant="outline" onClick={onOpenRelatedDialog}>
+              関連を編集
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            関連嗜好の追加・解除はダイアログから行います。
+          </p>
+          {selectedRelatedEntityIdsSafe.length === 0 ? (
+            <p className="text-sm text-muted-foreground">（関連なし）</p>
           ) : (
-            <div className="max-h-52 space-y-2 overflow-auto rounded-md border p-2">
-              {relatedCandidatesSafe.map((candidate) => (
-                <label key={candidate.id} className="flex items-center gap-2 rounded-md px-2 py-1 text-sm">
-                  <Checkbox
-                    checked={selectedRelatedEntityIdsSafe.includes(candidate.id)}
-                    onChange={(event) => onToggleRelatedEntity?.(candidate.id, event.target.checked)}
-                  />
-                  {candidate.name}（{candidate.kind.label}）
-                </label>
+            <div className="flex flex-wrap gap-2">
+              {selectedRelatedEntityIdsSafe.map((entityId) => (
+                <span key={entityId} className="rounded-full border px-2 py-0.5 text-xs">
+                  {relatedLabelById.get(entityId) ?? entityId}
+                </span>
               ))}
             </div>
           )}

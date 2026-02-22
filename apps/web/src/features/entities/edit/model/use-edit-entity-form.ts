@@ -37,6 +37,7 @@ type EditEntityResult = {
   relatedCandidates: Entity[];
   selectedRelatedEntityIds: string[];
   tagDialogOpen: boolean;
+  relatedDialogOpen: boolean;
   saving: boolean;
   loading: boolean;
   error: string | null;
@@ -45,6 +46,7 @@ type EditEntityResult = {
   setDescription: (value: string) => void;
   setIsWishlist: (value: boolean) => void;
   setTagDialogOpen: (open: boolean) => void;
+  setRelatedDialogOpen: (open: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onToggleRelatedEntity: (entityId: string, checked: boolean) => void;
   onTagCreated: (tag: Tag) => void;
@@ -85,6 +87,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   const [selectedRelatedEntityIds, setSelectedRelatedEntityIds] = useState<string[]>([]);
   const [savedRelatedEntityIds, setSavedRelatedEntityIds] = useState<string[]>([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [relatedDialogOpen, setRelatedDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const initializedEntityIdRef = useRef<string | null>(null);
 
@@ -249,6 +252,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     relatedCandidates,
     selectedRelatedEntityIds,
     tagDialogOpen,
+    relatedDialogOpen,
     saving,
     loading:
       Boolean(entityId) &&
@@ -259,6 +263,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setDescription,
     setIsWishlist,
     setTagDialogOpen,
+    setRelatedDialogOpen,
     onToggleTag,
     onToggleRelatedEntity,
     onTagCreated,

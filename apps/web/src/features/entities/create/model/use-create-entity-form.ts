@@ -30,6 +30,7 @@ type CreateEntityResult = {
   relatedCandidates: Entity[];
   selectedRelatedEntityIds: string[];
   tagDialogOpen: boolean;
+  relatedDialogOpen: boolean;
   submitLoading: boolean;
   loading: boolean;
   error: string | null;
@@ -39,6 +40,7 @@ type CreateEntityResult = {
   setDescription: (value: string) => void;
   setIsWishlist: (value: boolean) => void;
   setTagDialogOpen: (open: boolean) => void;
+  setRelatedDialogOpen: (open: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onToggleRelatedEntity: (entityId: string, checked: boolean) => void;
   onTagCreated: (tag: Tag) => void;
@@ -63,6 +65,7 @@ export function useCreateEntityForm(): CreateEntityResult {
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [selectedRelatedEntityIds, setSelectedRelatedEntityIds] = useState<string[]>([]);
   const [tagDialogOpen, setTagDialogOpen] = useState(false);
+  const [relatedDialogOpen, setRelatedDialogOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitResult, setSubmitResult] = useState<Entity | null>(null);
@@ -159,6 +162,7 @@ export function useCreateEntityForm(): CreateEntityResult {
     relatedCandidates,
     selectedRelatedEntityIds,
     tagDialogOpen,
+    relatedDialogOpen,
     submitLoading,
     loading: kindsLoading || tagsLoading || entitiesLoading,
     error,
@@ -168,6 +172,7 @@ export function useCreateEntityForm(): CreateEntityResult {
     setDescription,
     setIsWishlist,
     setTagDialogOpen,
+    setRelatedDialogOpen,
     onToggleTag,
     onToggleRelatedEntity,
     onTagCreated,
