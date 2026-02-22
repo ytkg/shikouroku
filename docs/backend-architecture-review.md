@@ -81,9 +81,12 @@
     - `apps/api/tests/architecture/image-route-module-migration.test.ts`
   - `entity` スライスを `modules/catalog/entity` へ段階移行。
     - `apps/api/src/modules/catalog/entity/application/*`
+    - `apps/api/src/modules/catalog/entity/infra/entity-repository-d1.ts`
     - `apps/api/src/routes/api/entity-routes.ts`
   - 旧 `entities-usecase` との互換を維持する委譲レイヤを追加。
     - `apps/api/src/usecases/entities-usecase.ts`
+  - 旧 `entity-repository` との互換を維持する委譲レイヤを追加。
+    - `apps/api/src/repositories/entity-repository.ts`
   - `entity` モジュールのユニット/アーキテクチャテストを追加。
     - `apps/api/tests/unit/modules/catalog/entity/application/entity-commands.test.ts`
     - `apps/api/tests/architecture/entity-route-core-module-migration.test.ts`
