@@ -44,12 +44,17 @@
     - `apps/api/src/domain/schemas.ts`
   - バリデーションメッセージのユニットテストを追加。
     - `apps/api/tests/unit/domain/schemas.test.ts`
+- 実施済み（運用品質の先行反映）:
+  - API向け品質スクリプトを追加。
+    - `package.json`（`quality:api`）
+  - API向けCIワークフローを追加。
+    - `.github/workflows/api-quality.yml`
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化。D1/R2跨りは継続対応）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
-  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テストを追加、統合テストは未実装）
+  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テスト + API CIを追加、統合テストは未実装）
 
 ## 1. Findings（重大度順）
 

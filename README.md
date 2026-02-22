@@ -102,13 +102,17 @@ npm run lint
 npm run test
 npm run test:api
 npm run typecheck
+npm run quality:api
 ```
 
 - `lint`: `apps/web/eslint.config.js` の依存境界・命名規約を検証
 - `test`: `apps/web/tests` のユニットテスト（Vitest）を実行
 - `test:api`: `apps/api/tests` の契約/ユニットテスト（Vitest）を実行
 - `typecheck`: ワークスペース全体の型チェックを実行
-- CI: `.github/workflows/web-quality.yml` で `lint` / `test` / `typecheck` を実行
+- `quality:api`: APIの `check + test` を連続実行
+- CI:
+  - `.github/workflows/web-quality.yml` で `lint` / `test` / `typecheck` を実行
+  - `.github/workflows/api-quality.yml` で `quality:api` を実行
 
 ## D1 セットアップ
 
