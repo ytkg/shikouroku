@@ -6,6 +6,11 @@ import {
   relatedEntityBodySchema
 } from "../../domain/schemas";
 import { parseJsonBody } from "../../lib/http";
+import { deleteEntityImageCommand } from "../../modules/catalog/image/application/delete-entity-image-command";
+import { getEntityImageFileQuery } from "../../modules/catalog/image/application/get-entity-image-file-query";
+import { listEntityImagesQuery } from "../../modules/catalog/image/application/list-entity-images-query";
+import { reorderEntityImagesCommand } from "../../modules/catalog/image/application/reorder-entity-images-command";
+import { uploadEntityImageCommand } from "../../modules/catalog/image/application/upload-entity-image-command";
 import { createEntityRelationCommand } from "../../modules/catalog/relation/application/create-entity-relation-command";
 import { deleteEntityRelationCommand } from "../../modules/catalog/relation/application/delete-entity-relation-command";
 import { listRelatedEntitiesQuery } from "../../modules/catalog/relation/application/list-related-entities-query";
@@ -16,13 +21,6 @@ import {
   listEntitiesUseCase,
   updateEntityUseCase
 } from "../../usecases/entities-usecase";
-import {
-  deleteEntityImageUseCase,
-  getEntityImageFileUseCase,
-  listEntityImagesUseCase,
-  reorderEntityImagesUseCase,
-  uploadEntityImageUseCase
-} from "../../usecases/entity-images-usecase";
 import { useCaseError } from "./shared";
 
 export function createEntityRoutes(): Hono<AppEnv> {
@@ -118,7 +116,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id/images", async (c) => {
     const id = c.req.param("id");
-    const result = await listEntityImagesUseCase(c.env.DB, id);
+    const result = await listEntityImagesQuery(c.env.DB, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -141,7 +139,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return jsonError(c, 400, "IMAGE_FILE_REQUIRED", "file is required");
     }
 
-    const result = await uploadEntityImageUseCase(c.env.DB, c.env.ENTITY_IMAGES, id, file);
+    const result = await uploadEntityImageCommand(c.env.DB, c.env.ENTITY_IMAGES, id, file);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -156,7 +154,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await reorderEntityImagesUseCase(c.env.DB, id, parsedBody.data.orderedImageIds);
+    const result = await reorderEntityImagesCommand(c.env.DB, id, parsedBody.data.orderedImageIds);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -167,7 +165,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.delete("/entities/:id/images/:imageId", async (c) => {
     const id = c.req.param("id");
     const imageId = c.req.param("imageId");
-    const result = await deleteEntityImageUseCase(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
+    const result = await deleteEntityImageCommand(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -178,7 +176,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.get("/entities/:id/images/:imageId/file", async (c) => {
     const id = c.req.param("id");
     const imageId = c.req.param("imageId");
-    const result = await getEntityImageFileUseCase(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
+    const result = await getEntityImageFileQuery(c.env.DB, c.env.ENTITY_IMAGES, id, imageId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
