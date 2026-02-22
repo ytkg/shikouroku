@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import type { AppEnv } from "../app-env";
-import type { AuthTokenPair } from "../lib/auth-client";
+import type { AuthTokenPair } from "../modules/auth/infra/auth-gateway-http";
 import {
   clearAccessTokenCookie,
   clearRefreshTokenCookie,

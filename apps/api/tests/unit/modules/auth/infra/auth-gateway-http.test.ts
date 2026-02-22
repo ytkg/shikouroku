@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
-  loginAgainstAuthServer,
-  refreshAgainstAuthServer,
-  verifyAuthToken
-} from "../../../src/lib/auth-client";
+  loginWithAuthGateway,
+  refreshWithAuthGateway,
+  verifyTokenWithAuthGateway
+} from "../../../../../src/modules/auth/infra/auth-gateway-http";
 
-describe("auth-client", () => {
+describe("auth-gateway-http", () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -18,7 +18,7 @@ describe("auth-client", () => {
       })
     );
 
-    const result = await loginAgainstAuthServer("https://auth.example.test/", "alice", "secret");
+    const result = await loginWithAuthGateway("https://auth.example.test/", "alice", "secret");
 
     expect(fetchSpy).toHaveBeenCalledWith(
       "https://auth.example.test/login",
@@ -40,7 +40,7 @@ describe("auth-client", () => {
       })
     );
 
-    const result = await refreshAgainstAuthServer("https://auth.example.test", "refresh-token");
+    const result = await refreshWithAuthGateway("https://auth.example.test", "refresh-token");
 
     expect(result).toBeNull();
   });
@@ -50,7 +50,7 @@ describe("auth-client", () => {
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(null, { status: 200 }));
 
-    const verified = await verifyAuthToken("https://auth.example.test", "token-123");
+    const verified = await verifyTokenWithAuthGateway("https://auth.example.test", "token-123");
 
     expect(verified).toBe(true);
     expect(fetchSpy).toHaveBeenCalledWith("https://auth.example.test/verify", {

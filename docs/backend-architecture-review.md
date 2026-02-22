@@ -141,7 +141,7 @@
 ### Medium-2: 外部認証APIのエンドポイントがハードコードされ、環境切替が困難
 
 - 根拠:
-  - `apps/api/src/lib/auth-client.ts:1`
+  - `apps/api/src/modules/auth/infra/auth-gateway-http.ts:1`
 - 問題:
   - ステージング・障害迂回・テストダブル差し替えが難しい。
 
@@ -353,8 +353,8 @@ apps/api/src
 - `apps/api/src/domain/schemas.ts`  
   -> 各モジュールの `*.schema.ts` に分割
 
-- `apps/api/src/lib/auth-client.ts`  
-  -> `apps/api/src/modules/auth/infra/auth-gateway.http.ts`（URLは `shared/config/env.ts` から注入）
+- `apps/api/src/lib/auth-client.ts`（撤去済み）  
+  -> `apps/api/src/modules/auth/infra/auth-gateway-http.ts`
 
 ## 8. 期待効果
 
