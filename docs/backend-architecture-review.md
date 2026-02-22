@@ -72,10 +72,14 @@
   - アーキテクチャテストを追加し、命名規約とレスポンス契約逸脱を検知。
     - `apps/api/tests/architecture/file-naming-conventions.test.ts`
     - `apps/api/tests/architecture/route-response-contract.test.ts`
+    - `apps/api/tests/architecture/usecase-schema-coupling.test.ts`
+  - `entities-usecase` の `domain/schemas` 依存を除去し、HTTP入力型から分離。
+    - `apps/api/src/usecases/entities-usecase.ts`
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
   - `Critical-2`（D1/R2跨り整合性）: **一部解消**（補償キュー + 手動実行APIを導入。自動実行ワーカーは未実装）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
+  - `High-2`（層混線/命名不整合）: **一部解消**（usecase の schema 依存を削減）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
   - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テスト + API CIを追加、統合テストは未実装）

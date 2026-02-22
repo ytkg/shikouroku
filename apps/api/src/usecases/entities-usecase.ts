@@ -1,4 +1,3 @@
-import type { EntityBody } from "../domain/schemas";
 import type {
   EntityWithKindAndFirstImageRow,
   EntityWithKindRow,
@@ -20,6 +19,14 @@ import {
 } from "../repositories/entity-repository";
 import { countExistingTagsByIds } from "../repositories/tag-repository";
 import { fail, success, type UseCaseResult } from "./result";
+
+export type UpsertEntityCommand = {
+  kindId: number;
+  name: string;
+  description: string;
+  isWishlist: boolean;
+  tagIds: number[];
+};
 
 type EntityResponseRow = {
   id: string;
@@ -144,7 +151,7 @@ export async function getEntityUseCase(
 
 export async function createEntityUseCase(
   db: D1Database,
-  body: EntityBody
+  body: UpsertEntityCommand
 ): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
   const normalizedTagIds = uniqTagIds(body.tagIds);
 
@@ -195,7 +202,7 @@ export async function createEntityUseCase(
 export async function updateEntityUseCase(
   db: D1Database,
   id: string,
-  body: EntityBody
+  body: UpsertEntityCommand
 ): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
   const kind = await findKindById(db, body.kindId);
   if (!kind) {
