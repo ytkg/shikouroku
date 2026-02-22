@@ -46,7 +46,7 @@ type CreateEntityResult = {
   setRelatedDialogOpen: (open: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onToggleRelatedEntity: (entityId: string, checked: boolean) => void;
-  onSelectImageFiles: (files: FileList | null) => void;
+  onSelectImageFiles: (files: File[]) => void;
   onRemoveSelectedImage: (index: number) => void;
   retryFailedImageUploads: () => Promise<void>;
   onTagCreated: (tag: Tag) => void;
@@ -121,11 +121,11 @@ export function useCreateEntityForm(): CreateEntityResult {
     setSelectedRelatedEntityIds((current) => toggleRelatedEntityId(current, entityId, checked));
   };
 
-  const onSelectImageFiles = (files: FileList | null) => {
-    if (!files || files.length === 0) {
+  const onSelectImageFiles = (files: File[]) => {
+    if (files.length === 0) {
       return;
     }
-    setSelectedImageFiles((current) => [...current, ...Array.from(files)]);
+    setSelectedImageFiles((current) => [...current, ...files]);
   };
 
   const onRemoveSelectedImage = (index: number) => {

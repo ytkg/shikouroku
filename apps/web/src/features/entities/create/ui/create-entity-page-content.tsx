@@ -74,7 +74,8 @@ export function CreateEntityPageContent() {
                     accept="image/jpeg,image/png,image/webp"
                     multiple
                     onChange={(event) => {
-                      form.onSelectImageFiles(event.target.files);
+                      const files = event.target.files ? Array.from(event.target.files) : [];
+                      form.onSelectImageFiles(files);
                       event.target.value = "";
                     }}
                   />
