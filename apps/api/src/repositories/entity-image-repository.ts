@@ -119,27 +119,24 @@ export async function reorderEntityImages(
   entityId: string,
   orderedImageIds: string[]
 ): Promise<boolean> {
-  const negated = await db
-    .prepare(
-      `UPDATE entity_images
-       SET sort_order = -sort_order
-       WHERE entity_id = ?`
-    )
-    .bind(entityId)
-    .run();
-  if (!negated.success) {
-    return false;
-  }
-
-  const statements = orderedImageIds.map((imageId, index) =>
+  const statements = [
     db
       .prepare(
         `UPDATE entity_images
-         SET sort_order = ?
-         WHERE entity_id = ? AND id = ?`
+         SET sort_order = -sort_order
+         WHERE entity_id = ?`
       )
-      .bind(index + 1, entityId, imageId)
-  );
+      .bind(entityId),
+    ...orderedImageIds.map((imageId, index) =>
+      db
+        .prepare(
+          `UPDATE entity_images
+           SET sort_order = ?
+           WHERE entity_id = ? AND id = ?`
+        )
+        .bind(index + 1, entityId, imageId)
+    )
+  ];
   const results = await db.batch(statements);
   return results.every((result) => result.success);
 }

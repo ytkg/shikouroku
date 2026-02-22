@@ -145,23 +145,13 @@ export async function deleteEntity(db: D1Database, id: string): Promise<void> {
 }
 
 export async function replaceEntityTags(db: D1Database, entityId: string, tagIds: number[]): Promise<boolean> {
-  const deleted = await db.prepare("DELETE FROM entity_tags WHERE entity_id = ?").bind(entityId).run();
-  if (!deleted.success) {
-    return false;
-  }
+  const statements = [
+    db.prepare("DELETE FROM entity_tags WHERE entity_id = ?").bind(entityId),
+    ...tagIds.map((tagId) => db.prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)").bind(entityId, tagId))
+  ];
+  const results = await db.batch(statements);
 
-  for (const tagId of tagIds) {
-    const inserted = await db
-      .prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)")
-      .bind(entityId, tagId)
-      .run();
-
-    if (!inserted.success) {
-      return false;
-    }
-  }
-
-  return true;
+  return results.every((result) => result.success);
 }
 
 export async function fetchTagsByEntityIds(db: D1Database, entityIds: string[]): Promise<Map<string, TagRow[]>> {

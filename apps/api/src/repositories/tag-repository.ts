@@ -34,16 +34,15 @@ export async function deleteTagAndRelations(
   id: number
 ): Promise<"deleted" | "not_found" | "error"> {
   try {
-    const relationsDeleted = await db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id).run();
-    if (!relationsDeleted.success) {
+    const results = await db.batch([
+      db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id),
+      db.prepare("DELETE FROM tags WHERE id = ?").bind(id)
+    ]);
+    if (!results.every((result) => result.success)) {
       return "error";
     }
 
-    const tagDeleted = await db.prepare("DELETE FROM tags WHERE id = ?").bind(id).run();
-    if (!tagDeleted.success) {
-      return "error";
-    }
-
+    const tagDeleted = results[1];
     return Number(tagDeleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
   } catch {
     return "error";
