@@ -115,6 +115,8 @@
     - 追加: `apps/api/tests/architecture/image-application-external-port-boundary.test.ts`
   - maintenance application の依存境界テストを追加。
     - 追加: `apps/api/tests/architecture/maintenance-application-port-boundary.test.ts`
+  - modules横断の外部`infra`依存を一括検知する architecture test を追加。
+    - 追加: `apps/api/tests/architecture/application-external-infra-boundary.test.ts`
 
 - 実施済み（Phase 3: 整合性と運用品質）:
   - `db.batch` による複数更新の整合性改善を modules infra に反映。
@@ -141,7 +143,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`40 files / 102 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`41 files / 103 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
