@@ -56,11 +56,9 @@ export function EntityDetailPageContent() {
                       : "（メモなし）"}
                   </p>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">タグ</p>
-                  {page.entity.tags.length === 0 ? (
-                    <p className="text-sm">（タグなし）</p>
-                  ) : (
+                {page.entity.tags.length > 0 && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">タグ</p>
                     <div className="flex flex-wrap gap-2">
                       {page.entity.tags.map((tag) => (
                         <span key={tag.id} className="rounded-full border px-2 py-0.5 text-xs">
@@ -68,15 +66,14 @@ export function EntityDetailPageContent() {
                         </span>
                       ))}
                     </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">関連嗜好</p>
-                  {page.relatedLoading ? (
-                    <p className="text-sm">読み込み中...</p>
-                  ) : page.relatedEntities.length === 0 ? (
-                    <p className="text-sm">（関連なし）</p>
-                  ) : (
+                  </div>
+                )}
+                {(page.relatedLoading || page.relatedEntities.length > 0) && (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">関連嗜好</p>
+                    {page.relatedLoading ? (
+                      <p className="text-sm">読み込み中...</p>
+                    ) : (
                     <div className="space-y-2">
                       {page.relatedEntities.map((relatedEntity) => (
                         <div key={relatedEntity.id} className="rounded-md border px-3 py-2">
@@ -90,8 +87,9 @@ export function EntityDetailPageContent() {
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </>
             )
           )}

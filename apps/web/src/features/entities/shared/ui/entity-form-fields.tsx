@@ -118,9 +118,7 @@ export function EntityFormFields({
               関連を編集
             </Button>
           </div>
-          {selectedRelatedEntityIdsSafe.length === 0 ? (
-            <p className="text-sm text-muted-foreground">（関連なし）</p>
-          ) : (
+          {selectedRelatedEntityIdsSafe.length > 0 && (
             <div className="space-y-2">
               {selectedRelatedEntityIdsSafe.map((entityId) => (
                 <div key={entityId} className="rounded-md border px-3 py-2">
