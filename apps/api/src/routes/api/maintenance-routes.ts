@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../../app-env";
+import { listImageCleanupTasksQuery } from "../../modules/maintenance/image-cleanup/application/list-image-cleanup-tasks-query";
+import { runImageCleanupCommand } from "../../modules/maintenance/image-cleanup/application/run-image-cleanup-command";
 import { jsonError, jsonOk } from "../../shared/http/api-response";
-import { listImageCleanupTasksUseCase, runImageCleanupTasksUseCase } from "../../usecases/image-cleanup-usecase";
 import { useCaseError } from "./shared";
 
 const DEFAULT_CLEANUP_LIMIT = 20;
@@ -29,7 +30,7 @@ export function createMaintenanceRoutes(): Hono<AppEnv> {
       return jsonError(c, 400, "INVALID_CLEANUP_LIMIT", "limit must be an integer between 1 and 100");
     }
 
-    const result = await listImageCleanupTasksUseCase(c.env.DB, limit);
+    const result = await listImageCleanupTasksQuery(c.env.DB, limit);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -48,7 +49,7 @@ export function createMaintenanceRoutes(): Hono<AppEnv> {
       return jsonError(c, 400, "INVALID_CLEANUP_LIMIT", "limit must be an integer between 1 and 100");
     }
 
-    const result = await runImageCleanupTasksUseCase(c.env.DB, c.env.ENTITY_IMAGES, limit);
+    const result = await runImageCleanupCommand(c.env.DB, c.env.ENTITY_IMAGES, limit);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }

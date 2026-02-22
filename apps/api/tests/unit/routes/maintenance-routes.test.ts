@@ -4,18 +4,23 @@ import type { AppEnv } from "../../../src/app-env";
 import { createMaintenanceRoutes } from "../../../src/routes/api/maintenance-routes";
 import { requestIdMiddleware } from "../../../src/shared/http/request-id";
 
-vi.mock("../../../src/usecases/image-cleanup-usecase", () => ({
-  listImageCleanupTasksUseCase: vi.fn(),
-  runImageCleanupTasksUseCase: vi.fn()
+vi.mock("../../../src/modules/maintenance/image-cleanup/application/list-image-cleanup-tasks-query", () => ({
+  listImageCleanupTasksQuery: vi.fn()
+}));
+
+vi.mock("../../../src/modules/maintenance/image-cleanup/application/run-image-cleanup-command", () => ({
+  runImageCleanupCommand: vi.fn()
 }));
 
 import {
-  listImageCleanupTasksUseCase,
-  runImageCleanupTasksUseCase
-} from "../../../src/usecases/image-cleanup-usecase";
+  listImageCleanupTasksQuery
+} from "../../../src/modules/maintenance/image-cleanup/application/list-image-cleanup-tasks-query";
+import {
+  runImageCleanupCommand
+} from "../../../src/modules/maintenance/image-cleanup/application/run-image-cleanup-command";
 
-const runImageCleanupTasksUseCaseMock = vi.mocked(runImageCleanupTasksUseCase);
-const listImageCleanupTasksUseCaseMock = vi.mocked(listImageCleanupTasksUseCase);
+const runImageCleanupCommandMock = vi.mocked(runImageCleanupCommand);
+const listImageCleanupTasksQueryMock = vi.mocked(listImageCleanupTasksQuery);
 
 const TEST_ENV = {
   AUTH_BASE_URL: "https://auth.example.test",
@@ -53,7 +58,7 @@ describe("maintenance routes", () => {
 
   it("lists cleanup tasks with default limit", async () => {
     const app = createApp();
-    listImageCleanupTasksUseCaseMock.mockResolvedValue({
+    listImageCleanupTasksQueryMock.mockResolvedValue({
       ok: true,
       data: {
         tasks: [
@@ -86,12 +91,12 @@ describe("maintenance routes", () => {
         total: 3
       }
     });
-    expect(listImageCleanupTasksUseCaseMock).toHaveBeenCalledWith(TEST_ENV.DB, 20);
+    expect(listImageCleanupTasksQueryMock).toHaveBeenCalledWith(TEST_ENV.DB, 20);
   });
 
   it("runs cleanup with default limit when no query is provided", async () => {
     const app = createApp();
-    runImageCleanupTasksUseCaseMock.mockResolvedValue({
+    runImageCleanupCommandMock.mockResolvedValue({
       ok: true,
       data: {
         processed: 3,
@@ -113,6 +118,6 @@ describe("maintenance routes", () => {
         remaining: 5
       }
     });
-    expect(runImageCleanupTasksUseCaseMock).toHaveBeenCalledWith(TEST_ENV.DB, TEST_ENV.ENTITY_IMAGES, 20);
+    expect(runImageCleanupCommandMock).toHaveBeenCalledWith(TEST_ENV.DB, TEST_ENV.ENTITY_IMAGES, 20);
   });
 });

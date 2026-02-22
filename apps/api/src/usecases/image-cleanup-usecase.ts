@@ -1,19 +1,7 @@
-import {
-  countImageCleanupTasks,
-  type ImageCleanupTaskRow,
-  deleteImageCleanupTask,
-  listImageCleanupTasks,
-  markImageCleanupTaskFailed
-} from "../repositories/image-cleanup-task-repository";
-import { fail, success, type UseCaseResult } from "./result";
-
-function toErrorMessage(error: unknown): string | null {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return null;
-}
+import { listImageCleanupTasksQuery } from "../modules/maintenance/image-cleanup/application/list-image-cleanup-tasks-query";
+import { runImageCleanupCommand } from "../modules/maintenance/image-cleanup/application/run-image-cleanup-command";
+import type { ImageCleanupTaskRecord } from "../modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
+import type { UseCaseResult } from "./result";
 
 export async function runImageCleanupTasksUseCase(
   db: D1Database,
@@ -27,47 +15,12 @@ export async function runImageCleanupTasksUseCase(
     remaining: number;
   }>
 > {
-  const tasks = await listImageCleanupTasks(db, limit);
-  let deleted = 0;
-  let failed = 0;
-
-  for (const task of tasks) {
-    try {
-      await imageBucket.delete(task.object_key);
-      const removed = await deleteImageCleanupTask(db, task.id);
-      if (!removed) {
-        return fail(500, "failed to finalize cleanup task");
-      }
-      deleted += 1;
-    } catch (error) {
-      const marked = await markImageCleanupTaskFailed(db, task.id, toErrorMessage(error));
-      if (!marked) {
-        return fail(500, "failed to update image cleanup task");
-      }
-      failed += 1;
-    }
-  }
-
-  const remaining = await countImageCleanupTasks(db);
-  return success({
-    processed: tasks.length,
-    deleted,
-    failed,
-    remaining
-  });
+  return runImageCleanupCommand(db, imageBucket, limit);
 }
 
 export async function listImageCleanupTasksUseCase(
   db: D1Database,
   limit: number
-): Promise<UseCaseResult<{ tasks: ImageCleanupTaskRow[]; total: number }>> {
-  const [tasks, total] = await Promise.all([
-    listImageCleanupTasks(db, limit),
-    countImageCleanupTasks(db)
-  ]);
-
-  return success({
-    tasks,
-    total
-  });
+): Promise<UseCaseResult<{ tasks: ImageCleanupTaskRecord[]; total: number }>> {
+  return listImageCleanupTasksQuery(db, limit);
 }

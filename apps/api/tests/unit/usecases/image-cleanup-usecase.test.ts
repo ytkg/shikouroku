@@ -1,54 +1,39 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../../src/repositories/image-cleanup-task-repository", () => ({
-  countImageCleanupTasks: vi.fn(),
-  deleteImageCleanupTask: vi.fn(),
-  listImageCleanupTasks: vi.fn(),
-  markImageCleanupTaskFailed: vi.fn()
+vi.mock("../../../src/modules/maintenance/image-cleanup/application/list-image-cleanup-tasks-query", () => ({
+  listImageCleanupTasksQuery: vi.fn()
 }));
 
-import {
-  countImageCleanupTasks,
-  deleteImageCleanupTask,
-  listImageCleanupTasks,
-  markImageCleanupTaskFailed
-} from "../../../src/repositories/image-cleanup-task-repository";
+vi.mock("../../../src/modules/maintenance/image-cleanup/application/run-image-cleanup-command", () => ({
+  runImageCleanupCommand: vi.fn()
+}));
+
+import { listImageCleanupTasksQuery } from "../../../src/modules/maintenance/image-cleanup/application/list-image-cleanup-tasks-query";
+import { runImageCleanupCommand } from "../../../src/modules/maintenance/image-cleanup/application/run-image-cleanup-command";
 import { listImageCleanupTasksUseCase, runImageCleanupTasksUseCase } from "../../../src/usecases/image-cleanup-usecase";
 
-const listImageCleanupTasksMock = vi.mocked(listImageCleanupTasks);
-const deleteImageCleanupTaskMock = vi.mocked(deleteImageCleanupTask);
-const markImageCleanupTaskFailedMock = vi.mocked(markImageCleanupTaskFailed);
-const countImageCleanupTasksMock = vi.mocked(countImageCleanupTasks);
+const listImageCleanupTasksQueryMock = vi.mocked(listImageCleanupTasksQuery);
+const runImageCleanupCommandMock = vi.mocked(runImageCleanupCommand);
 
-function createMockImageBucket() {
-  return {
-    delete: vi.fn(async () => undefined)
-  } as unknown as R2Bucket;
-}
-
-describe("runImageCleanupTasksUseCase", () => {
+describe("image-cleanup usecase compatibility wrapper", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("deletes cleanup tasks when R2 deletion succeeds", async () => {
+  it("delegates run usecase to module command", async () => {
     const db = {} as D1Database;
-    const imageBucket = createMockImageBucket() as unknown as { delete: ReturnType<typeof vi.fn> };
-    listImageCleanupTasksMock.mockResolvedValue([
-      {
-        id: 1,
-        object_key: "entities/e1/i1.png",
-        reason: "delete_failed",
-        last_error: null,
-        retry_count: 0,
-        created_at: "2026-01-01",
-        updated_at: "2026-01-01"
+    const imageBucket = {} as R2Bucket;
+    runImageCleanupCommandMock.mockResolvedValue({
+      ok: true,
+      data: {
+        processed: 1,
+        deleted: 1,
+        failed: 0,
+        remaining: 0
       }
-    ]);
-    deleteImageCleanupTaskMock.mockResolvedValue(true);
-    countImageCleanupTasksMock.mockResolvedValue(3);
+    });
 
-    const result = await runImageCleanupTasksUseCase(db, imageBucket as unknown as R2Bucket, 10);
+    const result = await runImageCleanupTasksUseCase(db, imageBucket, 10);
 
     expect(result).toEqual({
       ok: true,
@@ -56,103 +41,31 @@ describe("runImageCleanupTasksUseCase", () => {
         processed: 1,
         deleted: 1,
         failed: 0,
-        remaining: 3
+        remaining: 0
       }
     });
-    expect(deleteImageCleanupTaskMock).toHaveBeenCalledWith(db, 1);
-    expect(imageBucket.delete).toHaveBeenCalledWith("entities/e1/i1.png");
+    expect(runImageCleanupCommandMock).toHaveBeenCalledWith(db, imageBucket, 10);
   });
 
-  it("marks task as failed when R2 deletion fails", async () => {
+  it("delegates list usecase to module query", async () => {
     const db = {} as D1Database;
-    const imageBucket = createMockImageBucket() as unknown as { delete: ReturnType<typeof vi.fn> };
-    imageBucket.delete.mockRejectedValue(new Error("r2 timeout"));
-    listImageCleanupTasksMock.mockResolvedValue([
-      {
-        id: 10,
-        object_key: "entities/e1/i10.png",
-        reason: "delete_failed",
-        last_error: null,
-        retry_count: 0,
-        created_at: "2026-01-01",
-        updated_at: "2026-01-01"
-      }
-    ]);
-    markImageCleanupTaskFailedMock.mockResolvedValue(true);
-    countImageCleanupTasksMock.mockResolvedValue(1);
-
-    const result = await runImageCleanupTasksUseCase(db, imageBucket as unknown as R2Bucket, 10);
-
-    expect(result).toEqual({
+    listImageCleanupTasksQueryMock.mockResolvedValue({
       ok: true,
       data: {
-        processed: 1,
-        deleted: 0,
-        failed: 1,
-        remaining: 1
+        tasks: [],
+        total: 0
       }
     });
-    expect(markImageCleanupTaskFailedMock).toHaveBeenCalledWith(db, 10, "r2 timeout");
-  });
-
-  it("returns failure when task finalization fails", async () => {
-    const db = {} as D1Database;
-    const imageBucket = createMockImageBucket();
-    listImageCleanupTasksMock.mockResolvedValue([
-      {
-        id: 7,
-        object_key: "entities/e1/i7.png",
-        reason: "delete_failed",
-        last_error: null,
-        retry_count: 0,
-        created_at: "2026-01-01",
-        updated_at: "2026-01-01"
-      }
-    ]);
-    deleteImageCleanupTaskMock.mockResolvedValue(false);
-
-    const result = await runImageCleanupTasksUseCase(db, imageBucket, 10);
-
-    expect(result).toEqual({
-      ok: false,
-      status: 500,
-      message: "failed to finalize cleanup task"
-    });
-  });
-
-  it("lists cleanup tasks with total count", async () => {
-    const db = {} as D1Database;
-    listImageCleanupTasksMock.mockResolvedValue([
-      {
-        id: 1,
-        object_key: "entities/e1/i1.png",
-        reason: "delete_failed",
-        last_error: null,
-        retry_count: 0,
-        created_at: "2026-01-01",
-        updated_at: "2026-01-01"
-      }
-    ]);
-    countImageCleanupTasksMock.mockResolvedValue(9);
 
     const result = await listImageCleanupTasksUseCase(db, 20);
 
     expect(result).toEqual({
       ok: true,
       data: {
-        tasks: [
-          {
-            id: 1,
-            object_key: "entities/e1/i1.png",
-            reason: "delete_failed",
-            last_error: null,
-            retry_count: 0,
-            created_at: "2026-01-01",
-            updated_at: "2026-01-01"
-          }
-        ],
-        total: 9
+        tasks: [],
+        total: 0
       }
     });
+    expect(listImageCleanupTasksQueryMock).toHaveBeenCalledWith(db, 20);
   });
 });
