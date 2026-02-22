@@ -4,6 +4,7 @@ import { jsonError } from "../shared/http/api-response";
 import { createAuthRoutes } from "./api/auth-routes";
 import { createEntityRoutes } from "./api/entity-routes";
 import { createKindRoutes } from "./api/kind-routes";
+import { createMaintenanceRoutes } from "./api/maintenance-routes";
 import { createTagRoutes } from "./api/tag-routes";
 
 export function createApiRouter(): Hono<AppEnv> {
@@ -13,6 +14,7 @@ export function createApiRouter(): Hono<AppEnv> {
   api.route("/", createKindRoutes());
   api.route("/", createTagRoutes());
   api.route("/", createEntityRoutes());
+  api.route("/", createMaintenanceRoutes());
 
   api.all("*", (c) => {
     return jsonError(c, 404, "NOT_FOUND", "not found");

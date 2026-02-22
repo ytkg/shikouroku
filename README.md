@@ -86,6 +86,9 @@ npm --workspace @shikouroku/api run dev
 
 認証APIの接続先は `apps/api/wrangler.toml` の `[vars] AUTH_BASE_URL` で切り替え可能です。
 
+画像削除時にR2削除が失敗した場合、`image_cleanup_tasks` に補償タスクを積みます。  
+手動実行は `POST /api/maintenance/image-cleanup/run?limit=20` で可能です（認証必須）。
+
 ## ビルド
 
 ```bash
