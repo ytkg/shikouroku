@@ -10,8 +10,9 @@ import {
   makeRefreshTokenCookie
 } from "../lib/cookies";
 import { isStaticAssetPath } from "../lib/path";
+import { refreshTokenCommand } from "../modules/auth/application/refresh-token-command";
+import { verifyTokenQuery } from "../modules/auth/application/verify-token-query";
 import { jsonError } from "../shared/http/api-response";
-import { refreshUseCase, verifyTokenUseCase } from "../usecases/auth-usecase";
 
 function setAuthCookies(response: Response, accessToken: string, refreshToken: string): void {
   response.headers.append("Set-Cookie", makeAccessTokenCookie(accessToken));
@@ -27,11 +28,11 @@ export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) 
   const pathname = c.req.path;
   const accessToken = getAccessTokenFromCookie(c.req.raw);
   const refreshToken = getRefreshTokenFromCookie(c.req.raw);
-  let hasValidToken = accessToken ? await verifyTokenUseCase(c.env.AUTH_BASE_URL, accessToken) : false;
+  let hasValidToken = accessToken ? await verifyTokenQuery(c.env.AUTH_BASE_URL, accessToken) : false;
   let refreshedTokens: AuthTokenPair | null = null;
 
   if (!hasValidToken && refreshToken) {
-    const refreshed = await refreshUseCase(c.env.AUTH_BASE_URL, refreshToken);
+    const refreshed = await refreshTokenCommand(c.env.AUTH_BASE_URL, refreshToken);
     if (refreshed.ok) {
       hasValidToken = true;
       refreshedTokens = refreshed.data;

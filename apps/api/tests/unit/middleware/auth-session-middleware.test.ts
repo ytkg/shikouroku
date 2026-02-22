@@ -3,15 +3,19 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { AppEnv } from "../../../src/app-env";
 import { authSessionMiddleware } from "../../../src/middleware/auth-session-middleware";
 
-vi.mock("../../../src/usecases/auth-usecase", () => ({
-  refreshUseCase: vi.fn(),
-  verifyTokenUseCase: vi.fn()
+vi.mock("../../../src/modules/auth/application/refresh-token-command", () => ({
+  refreshTokenCommand: vi.fn()
 }));
 
-import { refreshUseCase, verifyTokenUseCase } from "../../../src/usecases/auth-usecase";
+vi.mock("../../../src/modules/auth/application/verify-token-query", () => ({
+  verifyTokenQuery: vi.fn()
+}));
 
-const refreshUseCaseMock = vi.mocked(refreshUseCase);
-const verifyTokenUseCaseMock = vi.mocked(verifyTokenUseCase);
+import { refreshTokenCommand } from "../../../src/modules/auth/application/refresh-token-command";
+import { verifyTokenQuery } from "../../../src/modules/auth/application/verify-token-query";
+
+const refreshTokenCommandMock = vi.mocked(refreshTokenCommand);
+const verifyTokenQueryMock = vi.mocked(verifyTokenQuery);
 
 const TEST_ENV = {
   AUTH_BASE_URL: "https://auth.example.test",
@@ -39,8 +43,8 @@ describe("authSessionMiddleware", () => {
 
   it("allows /api/login without auth token", async () => {
     const app = createApp();
-    verifyTokenUseCaseMock.mockResolvedValue(false);
-    refreshUseCaseMock.mockResolvedValue({ ok: false, status: 401, message: "Invalid refresh token" });
+    verifyTokenQueryMock.mockResolvedValue(false);
+    refreshTokenCommandMock.mockResolvedValue({ ok: false, status: 401, message: "Invalid refresh token" });
 
     const response = await app.request("http://localhost/api/login", { method: "POST" }, TEST_ENV);
 
@@ -50,8 +54,8 @@ describe("authSessionMiddleware", () => {
 
   it("returns 401 for protected api without valid token", async () => {
     const app = createApp();
-    verifyTokenUseCaseMock.mockResolvedValue(false);
-    refreshUseCaseMock.mockResolvedValue({ ok: false, status: 401, message: "Invalid refresh token" });
+    verifyTokenQueryMock.mockResolvedValue(false);
+    refreshTokenCommandMock.mockResolvedValue({ ok: false, status: 401, message: "Invalid refresh token" });
 
     const response = await app.request("http://localhost/api/protected", { method: "GET" }, TEST_ENV);
 
@@ -68,7 +72,7 @@ describe("authSessionMiddleware", () => {
 
   it("redirects authenticated user from /login to /", async () => {
     const app = createApp();
-    verifyTokenUseCaseMock.mockResolvedValue(true);
+    verifyTokenQueryMock.mockResolvedValue(true);
 
     const response = await app.request(
       "http://localhost/login",

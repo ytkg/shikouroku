@@ -1,36 +1,24 @@
-import {
-  loginAgainstAuthServer,
-  refreshAgainstAuthServer,
-  verifyAuthToken,
-  type AuthTokenPair
-} from "../lib/auth-client";
-import { fail, success, type UseCaseResult } from "./result";
+import { loginCommand } from "../modules/auth/application/login-command";
+import { refreshTokenCommand } from "../modules/auth/application/refresh-token-command";
+import { verifyTokenQuery } from "../modules/auth/application/verify-token-query";
+import type { AuthTokenPair } from "../modules/auth/infra/auth-gateway-http";
+import type { UseCaseResult } from "./result";
 
 export async function loginUseCase(
   authBaseUrl: string,
   username: string,
   password: string
 ): Promise<UseCaseResult<AuthTokenPair>> {
-  const tokens = await loginAgainstAuthServer(authBaseUrl, username, password);
-  if (!tokens) {
-    return fail(401, "Invalid credentials");
-  }
-
-  return success(tokens);
+  return loginCommand(authBaseUrl, username, password);
 }
 
 export async function refreshUseCase(
   authBaseUrl: string,
   refreshToken: string
 ): Promise<UseCaseResult<AuthTokenPair>> {
-  const tokens = await refreshAgainstAuthServer(authBaseUrl, refreshToken);
-  if (!tokens) {
-    return fail(401, "Invalid refresh token");
-  }
-
-  return success(tokens);
+  return refreshTokenCommand(authBaseUrl, refreshToken);
 }
 
 export async function verifyTokenUseCase(authBaseUrl: string, token: string): Promise<boolean> {
-  return verifyAuthToken(authBaseUrl, token);
+  return verifyTokenQuery(authBaseUrl, token);
 }
