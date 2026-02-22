@@ -8,6 +8,7 @@
     "dev:remote": "npm --workspace @shikouroku/web run build && wrangler dev --remote",
     "deploy": "wrangler deploy",
     "test": "vitest run",
+    "test:architecture": "vitest run tests/architecture",
     "test:unit": "vitest run tests/unit",
     "test:contract": "vitest run tests/contract",
     "check": "tsc --noEmit",

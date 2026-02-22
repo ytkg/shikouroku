@@ -108,6 +108,7 @@ npm run quality:api
 - `lint`: `apps/web/eslint.config.js` の依存境界・命名規約を検証
 - `test`: `apps/web/tests` のユニットテスト（Vitest）を実行
 - `test:api`: `apps/api/tests` の契約/ユニットテスト（Vitest）を実行
+- `npm --workspace @shikouroku/api run test:architecture`: APIアーキテクチャテストを実行
 - `typecheck`: ワークスペース全体の型チェックを実行
 - `quality:api`: APIの `check + test` を連続実行
 - CI:

@@ -64,6 +64,9 @@
     - `.github/workflows/api-quality.yml`
   - 認証ミドルウェアのユニットテストを追加。
     - `apps/api/tests/unit/middleware/auth-session-middleware.test.ts`
+  - アーキテクチャテストを追加し、命名規約とレスポンス契約逸脱を検知。
+    - `apps/api/tests/architecture/file-naming-conventions.test.ts`
+    - `apps/api/tests/architecture/route-response-contract.test.ts`
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
   - `Critical-2`（D1/R2跨り整合性）: **一部解消**（削除失敗時の補償キュー導入。自動実行ワーカーは未実装）
