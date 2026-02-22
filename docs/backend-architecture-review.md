@@ -97,6 +97,8 @@
     - `apps/api/src/middleware/auth-session-middleware.ts`
   - 旧 `auth-usecase` との互換を維持する委譲レイヤを追加。
     - `apps/api/src/usecases/auth-usecase.ts`
+  - 旧 `lib/auth-client` との互換を維持する委譲レイヤを追加。
+    - `apps/api/src/lib/auth-client.ts`
   - `auth` モジュールのユニット/アーキテクチャテストを追加。
     - `apps/api/tests/unit/modules/auth/application/auth-commands.test.ts`
     - `apps/api/tests/architecture/auth-migration-boundary.test.ts`
