@@ -5,7 +5,6 @@ import { describe, expect, it } from "vitest";
 const SRC_DIR = path.resolve(__dirname, "../../src");
 const REPOSITORIES_DIR = path.resolve(__dirname, "../../src/repositories");
 const USECASES_DIR = path.resolve(__dirname, "../../src/usecases");
-const RESULT_FILE = path.resolve(USECASES_DIR, "result.ts");
 
 function collectTsFiles(rootDir: string): string[] {
   if (!fs.existsSync(rootDir)) {
@@ -36,9 +35,9 @@ describe("legacy layer removal", () => {
     expect(repositoryFiles).toEqual([]);
   });
 
-  it("keeps only shared result helper under usecases", () => {
+  it("keeps usecases directory free from legacy wrappers", () => {
     const useCaseFiles = collectTsFiles(USECASES_DIR);
-    expect(useCaseFiles).toEqual([RESULT_FILE]);
+    expect(useCaseFiles).toEqual([]);
   });
 
   it("does not import legacy usecases or repositories from source files", () => {
@@ -46,16 +45,9 @@ describe("legacy layer removal", () => {
     const violations: string[] = [];
 
     for (const sourceFile of sourceFiles) {
-      if (sourceFile === RESULT_FILE) {
-        continue;
-      }
-
       const source = fs.readFileSync(sourceFile, "utf8");
       const importsLegacyRepository = source.includes("/repositories/") || source.includes("../repositories/");
-      const importsLegacyUseCase =
-        (source.includes("/usecases/") || source.includes("../usecases/")) &&
-        !source.includes("/usecases/result") &&
-        !source.includes("../usecases/result");
+      const importsLegacyUseCase = source.includes("/usecases/") || source.includes("../usecases/");
 
       if (importsLegacyRepository || importsLegacyUseCase) {
         violations.push(path.relative(SRC_DIR, sourceFile));

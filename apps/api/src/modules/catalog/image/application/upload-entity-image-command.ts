@@ -4,7 +4,7 @@ import {
   nextEntityImageSortOrderFromD1
 } from "../infra/image-repository-d1";
 import { enqueueImageCleanupTaskToD1 } from "../../../maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
   ALLOWED_IMAGE_MIME_TYPES,
   MAX_IMAGE_FILE_SIZE_BYTES,

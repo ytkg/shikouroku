@@ -4,7 +4,7 @@ import {
   listImageCleanupTasksFromD1,
   markImageCleanupTaskFailedInD1
 } from "../infra/image-cleanup-task-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 
 function toErrorMessage(error: unknown): string | null {
   if (error instanceof Error) {

@@ -1,5 +1,5 @@
 import { refreshWithAuthGateway, type AuthTokenPair } from "../infra/auth-gateway-http";
-import { fail, success, type UseCaseResult } from "../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../shared/application/result";
 
 export async function refreshTokenCommand(
   authBaseUrl: string,

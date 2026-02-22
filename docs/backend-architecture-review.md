@@ -48,7 +48,7 @@
   - 旧互換レイヤ（`usecases/*` と `repositories/*`）を撤去。
     - 削除: `apps/api/src/usecases/{auth,entities,entity-images,entity-relations,image-cleanup,kinds,tags}-usecase.ts`
     - 削除: `apps/api/src/repositories/*.ts`
-    - 維持: `apps/api/src/usecases/result.ts`（共通Result型）
+    - 移設: `apps/api/src/shared/application/result.ts`（共通Result型）
 
 - 実施済み（Phase 3: 整合性と運用品質）:
   - `db.batch` による複数更新の整合性改善を modules infra に反映。
@@ -78,6 +78,7 @@
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
   - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行）
+  - `High-1`（`index.ts`責務集中）: **大きく改善**（`app/create-app.ts` と `app/scheduled.ts` へ分割）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一）
   - `High-2`（層混線/命名不整合）: **大きく改善**（modules + infraへ移行し互換レイヤ撤去）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）

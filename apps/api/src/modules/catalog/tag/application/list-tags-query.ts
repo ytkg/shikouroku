@@ -1,5 +1,5 @@
 import { listTagsFromD1 } from "../infra/tag-repository-d1";
-import { success, type UseCaseResult } from "../../../../usecases/result";
+import { success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function listTagsQuery(
   db: D1Database

@@ -4,7 +4,7 @@ import {
   fetchTagsByEntityIdsFromD1,
   findEntityByIdFromD1
 } from "../../entity/infra/entity-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import { listRelatedEntityIdsFromD1 } from "../infra/relation-repository-d1";
 
 export type RelatedEntityResponseDto = {

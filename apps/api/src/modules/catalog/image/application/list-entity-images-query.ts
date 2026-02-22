@@ -1,6 +1,6 @@
 import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
 import { listEntityImagesFromD1 } from "../infra/image-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import { toEntityImageResponse, type EntityImageResponseDto } from "./image-shared";
 
 export async function listEntityImagesQuery(

@@ -6,7 +6,7 @@ import {
   insertEntityInD1,
   replaceEntityTagsInD1
 } from "../infra/entity-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
   toDescription,
   toEntityResponse,

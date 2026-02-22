@@ -1,4 +1,4 @@
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
   fetchTagsByEntityIdsFromD1,
   findEntityWithKindByIdFromD1

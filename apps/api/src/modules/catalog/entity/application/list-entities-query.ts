@@ -2,7 +2,7 @@ import {
   fetchTagsByEntityIdsFromD1,
   listEntitiesWithKindsFromD1
 } from "../infra/entity-repository-d1";
-import { success, type UseCaseResult } from "../../../../usecases/result";
+import { success, type UseCaseResult } from "../../../../shared/application/result";
 import { toEntityWithFirstImageResponse, type EntityResponseDto } from "./entity-shared";
 
 export async function listEntitiesQuery(

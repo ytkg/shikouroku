@@ -2,17 +2,17 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const USECASES_DIR = path.resolve(__dirname, "../../src/usecases");
-const FORBIDDEN_IMPORT = "../domain/schemas";
+const MODULES_DIR = path.resolve(__dirname, "../../src/modules");
+const FORBIDDEN_IMPORT = "domain/schemas";
 
-function collectUsecaseFiles(rootDir: string): string[] {
+function collectFiles(rootDir: string): string[] {
   const entries = fs.readdirSync(rootDir, { withFileTypes: true });
   const files: string[] = [];
 
   for (const entry of entries) {
     const fullPath = path.join(rootDir, entry.name);
     if (entry.isDirectory()) {
-      files.push(...collectUsecaseFiles(fullPath));
+      files.push(...collectFiles(fullPath));
       continue;
     }
 
@@ -24,15 +24,17 @@ function collectUsecaseFiles(rootDir: string): string[] {
   return files;
 }
 
-describe("usecase-schema coupling", () => {
-  it("does not import domain/schemas from usecases", () => {
-    const usecaseFiles = collectUsecaseFiles(USECASES_DIR);
+describe("application-schema coupling", () => {
+  it("does not import domain/schemas from module application layer", () => {
+    const applicationFiles = collectFiles(MODULES_DIR).filter((filePath) =>
+      filePath.includes(`${path.sep}application${path.sep}`)
+    );
     const violations: string[] = [];
 
-    for (const usecaseFile of usecaseFiles) {
-      const source = fs.readFileSync(usecaseFile, "utf8");
+    for (const applicationFile of applicationFiles) {
+      const source = fs.readFileSync(applicationFile, "utf8");
       if (source.includes(FORBIDDEN_IMPORT)) {
-        violations.push(path.relative(USECASES_DIR, usecaseFile));
+        violations.push(path.relative(MODULES_DIR, applicationFile));
       }
     }
 

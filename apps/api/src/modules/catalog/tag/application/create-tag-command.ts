@@ -1,5 +1,5 @@
 import { findTagByNameFromD1, insertTagToD1 } from "../infra/tag-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function createTagCommand(
   db: D1Database,

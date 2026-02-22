@@ -1,7 +1,7 @@
 import type { EntityImageRecord } from "../../../../domain/models";
 import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
 import { findEntityImageByIdFromD1 } from "../infra/image-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function getEntityImageFileQuery(
   db: D1Database,

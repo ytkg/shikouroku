@@ -1,5 +1,5 @@
 import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
-import { fail, success, type UseCaseResult } from "../../../../usecases/result";
+import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import { deleteRelationInD1 } from "../infra/relation-repository-d1";
 
 export async function deleteEntityRelationCommand(

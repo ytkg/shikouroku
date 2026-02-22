@@ -3,7 +3,7 @@ import {
   listImageCleanupTasksFromD1,
   type ImageCleanupTaskRecord
 } from "../infra/image-cleanup-task-repository-d1";
-import { success, type UseCaseResult } from "../../../../usecases/result";
+import { success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function listImageCleanupTasksQuery(
   db: D1Database,

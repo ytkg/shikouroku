@@ -1,5 +1,5 @@
 import { listKindsFromD1 } from "../infra/kind-repository-d1";
-import { success, type UseCaseResult } from "../../../../usecases/result";
+import { success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function listKindsQuery(
   db: D1Database
