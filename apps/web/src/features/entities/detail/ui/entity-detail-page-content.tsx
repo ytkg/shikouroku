@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import {
   getEntityDetailPath,
@@ -16,10 +16,12 @@ import {
 } from "@/shared/ui/card";
 
 export function EntityDetailPageContent() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
   const page = useEntityDetailPage(entityId);
   const editPath = entityId ? getEntityEditPath(entityId) : routePaths.home;
+  const listPath = location.search.length > 0 ? `${routePaths.home}${location.search}` : routePaths.home;
 
   if (entityId && page.isLoading) {
     return <main className="w-full bg-background pt-20" />;
@@ -74,19 +76,24 @@ export function EntityDetailPageContent() {
                     {page.relatedLoading ? (
                       <p className="text-sm">読み込み中...</p>
                     ) : (
-                    <div className="space-y-2">
-                      {page.relatedEntities.map((relatedEntity) => (
-                        <div key={relatedEntity.id} className="rounded-md border px-3 py-2">
-                          <button
-                            type="button"
-                            className="text-left text-sm hover:underline"
-                            onClick={() => navigate(getEntityDetailPath(relatedEntity.id))}
-                          >
-                            {relatedEntity.name}（{relatedEntity.kind.label}）
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                      <div className="space-y-2">
+                        {page.relatedEntities.map((relatedEntity) => (
+                          <div key={relatedEntity.id} className="rounded-md border px-3 py-2">
+                            <button
+                              type="button"
+                              className="text-left text-sm hover:underline"
+                              onClick={() =>
+                                navigate({
+                                  pathname: getEntityDetailPath(relatedEntity.id),
+                                  search: location.search
+                                })
+                              }
+                            >
+                              {relatedEntity.name}（{relatedEntity.kind.label}）
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
@@ -98,7 +105,7 @@ export function EntityDetailPageContent() {
           <Button onClick={() => navigate(editPath)}>編集</Button>
         </CardFooter>
       </Card>
-      <Button variant="outline" onClick={() => navigate(routePaths.home)}>
+      <Button variant="outline" onClick={() => navigate(listPath)}>
         一覧へ戻る
       </Button>
     </main>
