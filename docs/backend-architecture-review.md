@@ -10,7 +10,7 @@
 - [x] Phase 0: 契約テストの先行追加（`tests/contract`）
 - [x] Phase 0: 共通エラー形式と `requestId` の導入
 - [x] Phase 1: APIルートの機能別分割（auth/kind/tag/entity/maintenance）
-- [ ] Phase 1: `index.ts` の完全分割（`main.ts`, `app/create-app.ts` などへの再配置）
+- [x] Phase 1: `index.ts` の完全分割（`app/create-app.ts`, `app/scheduled.ts` へ再配置）
 - [x] Phase 2: `modules/*` への再配置（auth/catalog/maintenance）
 - [x] Phase 2: 旧互換レイヤ（`usecases/*`, `repositories/*`, `lib/auth-client.ts`）の撤去
 - [x] Phase 3: 代表的な複数更新の `db.batch` 化
@@ -31,6 +31,10 @@
   - APIテスト基盤（Vitest）と契約テストを反映。
     - `apps/api/vitest.config.ts`
     - `apps/api/tests/contract/*`
+  - アプリ配線を `create-app` と `scheduled` に分離し、`index.ts` を最小化。
+    - `apps/api/src/app/create-app.ts`
+    - `apps/api/src/app/scheduled.ts`
+    - `apps/api/src/index.ts`
 
 - 実施済み（Phase 2: modules移行 + 互換レイヤ撤去）:
   - `auth` / `catalog(entity,image,relation,kind,tag)` / `maintenance(image-cleanup)` を `modules/*` へ集約。
@@ -78,7 +82,7 @@
   - `High-2`（層混線/命名不整合）: **大きく改善**（modules + infraへ移行し互換レイヤ撤去）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
-  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット/境界テストを追加、統合テストは未実装）
+  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット/境界/統合テストを追加、E2Eは未実装）
 
 ## 1. Findings（重大度順）
 
@@ -341,8 +345,8 @@ apps/api/src
 - [x] **Phase 0: 足場**
   - [x] `tests/contract` を先行追加し、現行API契約を固定する。
   - [x] 共通エラー形式と `requestId` を先に導入する。
-- [ ] **Phase 1: 入口分割**
-  - [ ] `index.ts` を `main.ts`, `app/create-app.ts`, `app/middleware/*` に分割する。
+- [x] **Phase 1: 入口分割**
+  - [x] `index.ts` を `app/create-app.ts`, `app/scheduled.ts` に分割する。
   - [x] ルートをモジュール単位へ移す。
 - [x] **Phase 2: カタログ領域再編**
   - [x] `entities/tags/kinds/relations/images` を `modules/catalog/*` へ再配置する。
