@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { replaceEntityTagsInD1 } from "../../../src/modules/catalog/entity/infra/entity-repository-d1";
+import {
+  insertEntityWithTagsInD1,
+  replaceEntityTagsInD1,
+  updateEntityWithTagsInD1
+} from "../../../src/modules/catalog/entity/infra/entity-repository-d1";
 import { reorderEntityImagesInD1 } from "../../../src/modules/catalog/image/infra/image-repository-d1";
 import { deleteTagWithRelationsFromD1 } from "../../../src/modules/catalog/tag/infra/tag-repository-d1";
 
@@ -10,12 +14,13 @@ type MockResult = {
   };
 };
 
-function createMockDb(batchResults: MockResult[]) {
+function createMockDb(batchResults: MockResult[], firstResult: unknown = { id: "entity-1" }) {
   const prepare = vi.fn((sql: string) => ({
     bind: (...args: unknown[]) =>
       ({
         sql,
-        args
+        args,
+        first: async () => firstResult
       }) as unknown as D1PreparedStatement
   }));
 
@@ -32,6 +37,73 @@ function createMockDb(batchResults: MockResult[]) {
 }
 
 describe("repository batch safety", () => {
+  it("insertEntityWithTagsInD1 executes entity and tag inserts in a single batch", async () => {
+    const { db, batch } = createMockDb([
+      { success: true, meta: {} },
+      { success: true, meta: {} },
+      { success: true, meta: {} }
+    ]);
+
+    const result = await insertEntityWithTagsInD1(
+      db,
+      {
+        id: "entity-1",
+        kindId: 1,
+        name: "DDD",
+        description: null,
+        isWishlistFlag: 0
+      },
+      [10, 11]
+    );
+
+    expect(result).toBe(true);
+    expect(batch).toHaveBeenCalledTimes(1);
+    expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(3);
+  });
+
+  it("updateEntityWithTagsInD1 executes update and tag replacement in a single batch", async () => {
+    const { db, batch } = createMockDb([
+      { success: true, meta: {} },
+      { success: true, meta: {} },
+      { success: true, meta: {} }
+    ]);
+
+    const result = await updateEntityWithTagsInD1(
+      db,
+      {
+        id: "entity-1",
+        kindId: 1,
+        name: "DDD",
+        description: null,
+        isWishlistFlag: 0
+      },
+      [10]
+    );
+
+    expect(result).toBe("updated");
+    expect(batch).toHaveBeenCalledTimes(1);
+    expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(3);
+  });
+
+  it("updateEntityWithTagsInD1 returns not_found without batch when entity is missing", async () => {
+    const { db, batch } = createMockDb([{ success: true, meta: {} }], null);
+
+    const result = await updateEntityWithTagsInD1(
+      db,
+      {
+        id: "entity-missing",
+        kindId: 1,
+        name: "DDD",
+        description: null,
+        isWishlistFlag: 0
+      },
+      [10]
+    );
+
+    expect(result).toBe("not_found");
+    expect(batch).not.toHaveBeenCalled();
+  });
+
   it("replaceEntityTags executes delete and inserts in a single batch", async () => {
     const { db, batch } = createMockDb([
       { success: true, meta: {} },

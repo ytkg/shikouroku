@@ -1,10 +1,8 @@
 import type { KindRepository } from "../../kind/ports/kind-repository";
 import {
-  deleteEntityInD1,
   fetchEntityWithTagsFromD1,
   findEntityIdByKindAndNameFromD1,
-  insertEntityInD1,
-  replaceEntityTagsInD1
+  insertEntityWithTagsInD1
 } from "../infra/entity-repository-d1";
 import type { TagRepository } from "../../tag/ports/tag-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
@@ -42,22 +40,20 @@ export async function createEntityCommand(
   }
 
   const id = crypto.randomUUID();
-  const inserted = await insertEntityInD1(db, {
-    id,
-    kindId: body.kindId,
-    name: body.name,
-    description: toDescription(body.description),
-    isWishlistFlag: toWishlistFlag(body.isWishlist)
-  });
+  const inserted = await insertEntityWithTagsInD1(
+    db,
+    {
+      id,
+      kindId: body.kindId,
+      name: body.name,
+      description: toDescription(body.description),
+      isWishlistFlag: toWishlistFlag(body.isWishlist)
+    },
+    normalizedTagIds
+  );
 
   if (!inserted) {
-    return fail(500, "failed to insert entity");
-  }
-
-  const tagsInserted = await replaceEntityTagsInD1(db, id, normalizedTagIds);
-  if (!tagsInserted) {
-    await deleteEntityInD1(db, id);
-    return fail(500, "failed to insert entity tags");
+    return fail(500, "failed to insert entity with tags");
   }
 
   const entity = await fetchEntityWithTagsFromD1(db, id);

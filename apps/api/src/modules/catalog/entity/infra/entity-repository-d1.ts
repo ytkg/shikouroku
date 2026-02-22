@@ -129,6 +129,26 @@ export async function insertEntityInD1(db: D1Database, input: InsertEntityInput)
   return inserted.success;
 }
 
+export async function insertEntityWithTagsInD1(
+  db: D1Database,
+  input: InsertEntityInput,
+  tagIds: number[]
+): Promise<boolean> {
+  const statements = [
+    db.prepare("INSERT INTO entities (id, kind_id, name, description, is_wishlist) VALUES (?, ?, ?, ?, ?)").bind(
+      input.id,
+      input.kindId,
+      input.name,
+      input.description,
+      input.isWishlistFlag
+    ),
+    ...tagIds.map((tagId) => db.prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)").bind(input.id, tagId))
+  ];
+
+  const results = await runD1UnitOfWork(db, statements);
+  return results ? isSuccessfulD1UnitOfWork(results) : false;
+}
+
 export async function updateEntityInD1(
   db: D1Database,
   input: UpdateEntityInput
@@ -145,6 +165,34 @@ export async function updateEntityInD1(
   }
 
   return Number(updated.meta.changes ?? 0) > 0 ? "updated" : "not_found";
+}
+
+export async function updateEntityWithTagsInD1(
+  db: D1Database,
+  input: UpdateEntityInput,
+  tagIds: number[]
+): Promise<"updated" | "not_found" | "error"> {
+  const existing = await findEntityByIdFromD1(db, input.id);
+  if (!existing) {
+    return "not_found";
+  }
+
+  const statements = [
+    db
+      .prepare(
+        "UPDATE entities SET kind_id = ?, name = ?, description = ?, is_wishlist = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?"
+      )
+      .bind(input.kindId, input.name, input.description, input.isWishlistFlag, input.id),
+    db.prepare("DELETE FROM entity_tags WHERE entity_id = ?").bind(input.id),
+    ...tagIds.map((tagId) => db.prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)").bind(input.id, tagId))
+  ];
+
+  const results = await runD1UnitOfWork(db, statements);
+  if (!results || !isSuccessfulD1UnitOfWork(results)) {
+    return "error";
+  }
+
+  return "updated";
 }
 
 export async function deleteEntityInD1(db: D1Database, id: string): Promise<void> {

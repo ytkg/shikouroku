@@ -123,6 +123,11 @@
     - `apps/api/src/modules/catalog/entity/infra/entity-repository-d1.ts`
     - `apps/api/src/modules/catalog/image/infra/image-repository-d1.ts`
     - `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
+  - entity の作成/更新 + タグ差し替えを単一 `UnitOfWork` に統合。
+    - 追加: `insertEntityWithTagsInD1`
+    - 追加: `updateEntityWithTagsInD1`
+    - 更新: `apps/api/src/modules/catalog/entity/application/create-entity-command.ts`
+    - 更新: `apps/api/src/modules/catalog/entity/application/update-entity-command.ts`
   - D1 `batch` の共通実行ヘルパーを導入。
     - `apps/api/src/shared/db/unit-of-work.ts`
   - D1/R2跨り削除の補償キューと手動/cron実行を反映。
@@ -143,7 +148,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`41 files / 103 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`41 files / 106 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）

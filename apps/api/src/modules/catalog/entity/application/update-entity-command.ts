@@ -2,8 +2,7 @@ import type { KindRepository } from "../../kind/ports/kind-repository";
 import {
   fetchEntityWithTagsFromD1,
   findEntityIdByKindAndNameFromD1,
-  replaceEntityTagsInD1,
-  updateEntityInD1
+  updateEntityWithTagsInD1
 } from "../infra/entity-repository-d1";
 import type { TagRepository } from "../../tag/ports/tag-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
@@ -40,24 +39,23 @@ export async function updateEntityCommand(
     return fail(400, "tag not found");
   }
 
-  const updateResult = await updateEntityInD1(db, {
-    id,
-    kindId: body.kindId,
-    name: body.name,
-    description: toDescription(body.description),
-    isWishlistFlag: toWishlistFlag(body.isWishlist)
-  });
+  const updateResult = await updateEntityWithTagsInD1(
+    db,
+    {
+      id,
+      kindId: body.kindId,
+      name: body.name,
+      description: toDescription(body.description),
+      isWishlistFlag: toWishlistFlag(body.isWishlist)
+    },
+    normalizedTagIds
+  );
 
   if (updateResult === "not_found") {
     return fail(404, "entity not found");
   }
   if (updateResult === "error") {
     return fail(500, "failed to update entity");
-  }
-
-  const tagsUpdated = await replaceEntityTagsInD1(db, id, normalizedTagIds);
-  if (!tagsUpdated) {
-    return fail(500, "failed to update entity tags");
   }
 
   const entity = await fetchEntityWithTagsFromD1(db, id);

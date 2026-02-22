@@ -1,15 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
-  deleteEntityInD1: vi.fn(),
   fetchEntityWithTagsFromD1: vi.fn(),
   fetchTagsByEntityIdsFromD1: vi.fn(),
   findEntityIdByKindAndNameFromD1: vi.fn(),
   findEntityWithKindByIdFromD1: vi.fn(),
-  insertEntityInD1: vi.fn(),
+  insertEntityWithTagsInD1: vi.fn(),
   listEntitiesWithKindsFromD1: vi.fn(),
-  replaceEntityTagsInD1: vi.fn(),
-  updateEntityInD1: vi.fn()
+  updateEntityWithTagsInD1: vi.fn()
 }));
 
 import { createEntityCommand } from "../../../../../../src/modules/catalog/entity/application/create-entity-command";
@@ -17,28 +15,24 @@ import { getEntityQuery } from "../../../../../../src/modules/catalog/entity/app
 import { listEntitiesQuery } from "../../../../../../src/modules/catalog/entity/application/list-entities-query";
 import { updateEntityCommand } from "../../../../../../src/modules/catalog/entity/application/update-entity-command";
 import {
-  deleteEntityInD1,
   fetchEntityWithTagsFromD1,
   fetchTagsByEntityIdsFromD1,
   findEntityIdByKindAndNameFromD1,
   findEntityWithKindByIdFromD1,
-  insertEntityInD1,
+  insertEntityWithTagsInD1,
   listEntitiesWithKindsFromD1,
-  replaceEntityTagsInD1,
-  updateEntityInD1
+  updateEntityWithTagsInD1
 } from "../../../../../../src/modules/catalog/entity/infra/entity-repository-d1";
 
 const findKindByIdMock = vi.fn();
 const countExistingTagsByIdsMock = vi.fn();
-const deleteEntityInD1Mock = vi.mocked(deleteEntityInD1);
 const fetchEntityWithTagsFromD1Mock = vi.mocked(fetchEntityWithTagsFromD1);
 const fetchTagsByEntityIdsFromD1Mock = vi.mocked(fetchTagsByEntityIdsFromD1);
 const findEntityIdByKindAndNameFromD1Mock = vi.mocked(findEntityIdByKindAndNameFromD1);
 const findEntityWithKindByIdFromD1Mock = vi.mocked(findEntityWithKindByIdFromD1);
-const insertEntityInD1Mock = vi.mocked(insertEntityInD1);
+const insertEntityWithTagsInD1Mock = vi.mocked(insertEntityWithTagsInD1);
 const listEntitiesWithKindsFromD1Mock = vi.mocked(listEntitiesWithKindsFromD1);
-const replaceEntityTagsInD1Mock = vi.mocked(replaceEntityTagsInD1);
-const updateEntityInD1Mock = vi.mocked(updateEntityInD1);
+const updateEntityWithTagsInD1Mock = vi.mocked(updateEntityWithTagsInD1);
 const kindRepository = { findKindById: findKindByIdMock };
 const tagRepository = { countExistingTagsByIds: countExistingTagsByIdsMock };
 
@@ -97,14 +91,13 @@ describe("entity module application", () => {
     });
   });
 
-  it("createEntityCommand rolls back entity when tag update fails", async () => {
+  it("createEntityCommand returns failure when entity/tag batch insert fails", async () => {
     const db = {} as D1Database;
     const randomUUIDSpy = vi.spyOn(crypto, "randomUUID").mockReturnValue("entity-new");
     findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue(null);
     countExistingTagsByIdsMock.mockResolvedValue(1);
-    insertEntityInD1Mock.mockResolvedValue(true);
-    replaceEntityTagsInD1Mock.mockResolvedValue(false);
+    insertEntityWithTagsInD1Mock.mockResolvedValue(false);
 
     const result = await createEntityCommand(db, kindRepository, tagRepository, {
       kindId: 1,
@@ -117,9 +110,8 @@ describe("entity module application", () => {
     expect(result).toEqual({
       ok: false,
       status: 500,
-      message: "failed to insert entity tags"
+      message: "failed to insert entity with tags"
     });
-    expect(deleteEntityInD1Mock).toHaveBeenCalledWith(db, "entity-new");
     randomUUIDSpy.mockRestore();
   });
 
@@ -164,7 +156,7 @@ describe("entity module application", () => {
     findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue(null);
     countExistingTagsByIdsMock.mockResolvedValue(0);
-    updateEntityInD1Mock.mockResolvedValue("not_found");
+    updateEntityWithTagsInD1Mock.mockResolvedValue("not_found");
 
     const result = await updateEntityCommand({} as D1Database, kindRepository, tagRepository, "entity-1", {
       kindId: 1,
@@ -185,8 +177,7 @@ describe("entity module application", () => {
     findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
     countExistingTagsByIdsMock.mockResolvedValue(1);
-    updateEntityInD1Mock.mockResolvedValue("updated");
-    replaceEntityTagsInD1Mock.mockResolvedValue(true);
+    updateEntityWithTagsInD1Mock.mockResolvedValue("updated");
     fetchEntityWithTagsFromD1Mock.mockResolvedValue({
       id: "entity-1",
       kind_id: 1,
