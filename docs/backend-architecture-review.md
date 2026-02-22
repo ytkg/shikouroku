@@ -76,6 +76,14 @@
   - `image` モジュールのユニット/アーキテクチャテストを追加。
     - `apps/api/tests/unit/modules/catalog/image/application/image-commands.test.ts`
     - `apps/api/tests/architecture/image-route-module-migration.test.ts`
+  - `entity` スライスを `modules/catalog/entity` へ段階移行。
+    - `apps/api/src/modules/catalog/entity/application/*`
+    - `apps/api/src/routes/api/entity-routes.ts`
+  - 旧 `entities-usecase` との互換を維持する委譲レイヤを追加。
+    - `apps/api/src/usecases/entities-usecase.ts`
+  - `entity` モジュールのユニット/アーキテクチャテストを追加。
+    - `apps/api/tests/unit/modules/catalog/entity/application/entity-commands.test.ts`
+    - `apps/api/tests/architecture/entity-route-core-module-migration.test.ts`
   - `auth` スライスを `modules/auth` へ段階移行。
     - `apps/api/src/modules/auth/application/*`
     - `apps/api/src/modules/auth/infra/auth-gateway-http.ts`
@@ -152,7 +160,7 @@
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
   - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行を導入）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
-  - `High-2`（層混線/命名不整合）: **改善中**（schema依存削減 + 命名統一 + tag/kind/relation/image/auth/maintenanceのmodules移行）
+  - `High-2`（層混線/命名不整合）: **改善中**（schema依存削減 + 命名統一 + entity/tag/kind/relation/image/auth/maintenanceのmodules移行）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
   - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テスト + API CIを追加、統合テストは未実装）

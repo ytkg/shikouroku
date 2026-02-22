@@ -6,6 +6,10 @@ import {
   relatedEntityBodySchema
 } from "../../domain/schemas";
 import { parseJsonBody } from "../../lib/http";
+import { createEntityCommand } from "../../modules/catalog/entity/application/create-entity-command";
+import { getEntityQuery } from "../../modules/catalog/entity/application/get-entity-query";
+import { listEntitiesQuery } from "../../modules/catalog/entity/application/list-entities-query";
+import { updateEntityCommand } from "../../modules/catalog/entity/application/update-entity-command";
 import { deleteEntityImageCommand } from "../../modules/catalog/image/application/delete-entity-image-command";
 import { getEntityImageFileQuery } from "../../modules/catalog/image/application/get-entity-image-file-query";
 import { listEntityImagesQuery } from "../../modules/catalog/image/application/list-entity-images-query";
@@ -15,19 +19,13 @@ import { createEntityRelationCommand } from "../../modules/catalog/relation/appl
 import { deleteEntityRelationCommand } from "../../modules/catalog/relation/application/delete-entity-relation-command";
 import { listRelatedEntitiesQuery } from "../../modules/catalog/relation/application/list-related-entities-query";
 import { jsonError, jsonOk } from "../../shared/http/api-response";
-import {
-  createEntityUseCase,
-  getEntityUseCase,
-  listEntitiesUseCase,
-  updateEntityUseCase
-} from "../../usecases/entities-usecase";
 import { useCaseError } from "./shared";
 
 export function createEntityRoutes(): Hono<AppEnv> {
   const entities = new Hono<AppEnv>();
 
   entities.get("/entities", async (c) => {
-    const result = await listEntitiesUseCase(c.env.DB);
+    const result = await listEntitiesQuery(c.env.DB);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -37,7 +35,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id", async (c) => {
     const id = c.req.param("id");
-    const result = await getEntityUseCase(c.env.DB, id);
+    const result = await getEntityQuery(c.env.DB, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -51,7 +49,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await createEntityUseCase(c.env.DB, parsedBody.data);
+    const result = await createEntityCommand(c.env.DB, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -70,7 +68,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await updateEntityUseCase(c.env.DB, id, parsedBody.data);
+    const result = await updateEntityCommand(c.env.DB, id, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
