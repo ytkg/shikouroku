@@ -54,11 +54,15 @@
     - `apps/api/src/routes/api/maintenance-routes.ts`
   - クリーンアップキュー参照APIを追加（一覧）。
     - `GET /api/maintenance/image-cleanup/tasks`
+  - cron 実行で定期クリーンアップを追加。
+    - `apps/api/src/index.ts`（`scheduled` ハンドラ）
+    - `apps/api/wrangler.toml`（`[triggers].crons`）
   - クリーンアップキューのリポジトリ/ユースケーステストを追加。
     - `apps/api/tests/unit/repositories/image-cleanup-task-repository.test.ts`
     - `apps/api/tests/unit/usecases/entity-images-usecase.test.ts`
     - `apps/api/tests/unit/usecases/image-cleanup-usecase.test.ts`
     - `apps/api/tests/unit/routes/maintenance-routes.test.ts`
+    - `apps/api/tests/unit/scheduled/image-cleanup-scheduled.test.ts`
 - 実施済み（保守性改善の先行反映）:
   - `validationMessage` の if連鎖を辞書化し、更新漏れリスクを削減。
     - `apps/api/src/domain/schemas.ts`
@@ -79,7 +83,7 @@
     - `apps/api/src/usecases/entities-usecase.ts`
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
-  - `Critical-2`（D1/R2跨り整合性）: **一部解消**（補償キュー + 手動実行APIを導入。自動実行ワーカーは未実装）
+  - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行を導入）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
   - `High-2`（層混線/命名不整合）: **一部解消**（usecase の schema 依存を削減）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）

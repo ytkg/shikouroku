@@ -88,6 +88,7 @@ npm --workspace @shikouroku/api run dev
 
 画像削除時にR2削除が失敗した場合、`image_cleanup_tasks` に補償タスクを積みます。  
 キュー一覧は `GET /api/maintenance/image-cleanup/tasks?limit=20`、手動実行は `POST /api/maintenance/image-cleanup/run?limit=20` です（認証必須）。
+加えて `wrangler.toml` の cron（`*/30 * * * *`）で定期クリーンアップを実行します。
 
 ## ビルド
 

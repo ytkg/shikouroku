@@ -5,6 +5,9 @@ compatibility_date = "2025-11-01"
 [vars]
 AUTH_BASE_URL = "https://auth.takagi.dev"
 
+[triggers]
+crons = ["*/30 * * * *"]
+
 [assets]
 directory = "../web/dist"
 binding = "ASSETS"
