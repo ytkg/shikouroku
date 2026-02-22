@@ -95,6 +95,10 @@
     - 更新: `apps/api/src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1.ts`
     - 更新: `apps/api/src/modules/catalog/image/application/*.ts`
     - 更新: `apps/api/src/routes/api/entity-routes.ts`
+  - maintenance image-cleanup application の依存を `infra` 直参照から `ports` 経由へ整理。
+    - 更新: `apps/api/src/modules/maintenance/image-cleanup/application/*.ts`
+    - 更新: `apps/api/src/routes/api/maintenance-routes.ts`
+    - 更新: `apps/api/src/app/scheduled.ts`
   - 回帰ガードとして legacy-layer architecture test を強化。
     - 更新: `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - auth application の依存境界テストを追加。
@@ -109,6 +113,8 @@
     - 追加: `apps/api/tests/architecture/relation-application-port-boundary.test.ts`
   - image application の外部依存境界テストを追加。
     - 追加: `apps/api/tests/architecture/image-application-external-port-boundary.test.ts`
+  - maintenance application の依存境界テストを追加。
+    - 追加: `apps/api/tests/architecture/maintenance-application-port-boundary.test.ts`
 
 - 実施済み（Phase 3: 整合性と運用品質）:
   - `db.batch` による複数更新の整合性改善を modules infra に反映。
@@ -135,7 +141,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`39 files / 101 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`40 files / 102 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）

@@ -1,17 +1,16 @@
-import {
-  countImageCleanupTasksInD1,
-  listImageCleanupTasksFromD1,
-  type ImageCleanupTaskRecord
-} from "../infra/image-cleanup-task-repository-d1";
+import type {
+  ImageCleanupTaskRecord,
+  ImageCleanupTaskRepository
+} from "../ports/image-cleanup-task-repository";
 import { success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function listImageCleanupTasksQuery(
-  db: D1Database,
+  imageCleanupTaskRepository: Pick<ImageCleanupTaskRepository, "listTasks" | "countTasks">,
   limit: number
 ): Promise<UseCaseResult<{ tasks: ImageCleanupTaskRecord[]; total: number }>> {
   const [tasks, total] = await Promise.all([
-    listImageCleanupTasksFromD1(db, limit),
-    countImageCleanupTasksInD1(db)
+    imageCleanupTaskRepository.listTasks(limit),
+    imageCleanupTaskRepository.countTasks()
   ]);
 
   return success({

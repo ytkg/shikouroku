@@ -91,7 +91,13 @@ describe("maintenance routes", () => {
         total: 3
       }
     });
-    expect(listImageCleanupTasksQueryMock).toHaveBeenCalledWith(TEST_ENV.DB, 20);
+    expect(listImageCleanupTasksQueryMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        countTasks: expect.any(Function),
+        listTasks: expect.any(Function)
+      }),
+      20
+    );
   });
 
   it("runs cleanup with default limit when no query is provided", async () => {
@@ -118,6 +124,15 @@ describe("maintenance routes", () => {
         remaining: 5
       }
     });
-    expect(runImageCleanupCommandMock).toHaveBeenCalledWith(TEST_ENV.DB, TEST_ENV.ENTITY_IMAGES, 20);
+    expect(runImageCleanupCommandMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        countTasks: expect.any(Function),
+        deleteTask: expect.any(Function),
+        listTasks: expect.any(Function),
+        markTaskFailed: expect.any(Function)
+      }),
+      TEST_ENV.ENTITY_IMAGES,
+      20
+    );
   });
 });

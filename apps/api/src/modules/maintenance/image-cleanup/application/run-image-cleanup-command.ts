@@ -1,9 +1,4 @@
-import {
-  countImageCleanupTasksInD1,
-  deleteImageCleanupTaskFromD1,
-  listImageCleanupTasksFromD1,
-  markImageCleanupTaskFailedInD1
-} from "../infra/image-cleanup-task-repository-d1";
+import type { ImageCleanupTaskRepository } from "../ports/image-cleanup-task-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 
 function toErrorMessage(error: unknown): string | null {
@@ -15,7 +10,10 @@ function toErrorMessage(error: unknown): string | null {
 }
 
 export async function runImageCleanupCommand(
-  db: D1Database,
+  imageCleanupTaskRepository: Pick<
+    ImageCleanupTaskRepository,
+    "listTasks" | "deleteTask" | "markTaskFailed" | "countTasks"
+  >,
   imageBucket: R2Bucket,
   limit: number
 ): Promise<
@@ -26,20 +24,20 @@ export async function runImageCleanupCommand(
     remaining: number;
   }>
 > {
-  const tasks = await listImageCleanupTasksFromD1(db, limit);
+  const tasks = await imageCleanupTaskRepository.listTasks(limit);
   let deleted = 0;
   let failed = 0;
 
   for (const task of tasks) {
     try {
       await imageBucket.delete(task.object_key);
-      const removed = await deleteImageCleanupTaskFromD1(db, task.id);
+      const removed = await imageCleanupTaskRepository.deleteTask(task.id);
       if (!removed) {
         return fail(500, "failed to finalize cleanup task");
       }
       deleted += 1;
     } catch (error) {
-      const marked = await markImageCleanupTaskFailedInD1(db, task.id, toErrorMessage(error));
+      const marked = await imageCleanupTaskRepository.markTaskFailed(task.id, toErrorMessage(error));
       if (!marked) {
         return fail(500, "failed to update image cleanup task");
       }
@@ -47,7 +45,7 @@ export async function runImageCleanupCommand(
     }
   }
 
-  const remaining = await countImageCleanupTasksInD1(db);
+  const remaining = await imageCleanupTaskRepository.countTasks();
   return success({
     processed: tasks.length,
     deleted,

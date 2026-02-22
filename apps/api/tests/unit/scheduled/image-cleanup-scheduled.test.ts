@@ -41,6 +41,15 @@ describe("scheduled image cleanup", () => {
     const scheduledPromise = waitUntil.mock.calls[0]?.[0] as Promise<void>;
     await scheduledPromise;
 
-    expect(runImageCleanupCommandMock).toHaveBeenCalledWith(env.DB, env.ENTITY_IMAGES, 50);
+    expect(runImageCleanupCommandMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        countTasks: expect.any(Function),
+        deleteTask: expect.any(Function),
+        listTasks: expect.any(Function),
+        markTaskFailed: expect.any(Function)
+      }),
+      env.ENTITY_IMAGES,
+      50
+    );
   });
 });
