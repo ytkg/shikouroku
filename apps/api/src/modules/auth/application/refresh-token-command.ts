@@ -1,11 +1,11 @@
-import { refreshWithAuthGateway, type AuthTokenPair } from "../infra/auth-gateway-http";
+import type { AuthGateway, AuthTokenPair } from "../ports/auth-gateway";
 import { fail, success, type UseCaseResult } from "../../../shared/application/result";
 
 export async function refreshTokenCommand(
-  authBaseUrl: string,
+  authGateway: AuthGateway,
   refreshToken: string
 ): Promise<UseCaseResult<AuthTokenPair>> {
-  const tokens = await refreshWithAuthGateway(authBaseUrl, refreshToken);
+  const tokens = await authGateway.refresh(refreshToken);
   if (!tokens) {
     return fail(401, "Invalid refresh token");
   }

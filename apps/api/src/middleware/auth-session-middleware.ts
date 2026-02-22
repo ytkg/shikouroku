@@ -1,6 +1,7 @@
 import type { MiddlewareHandler } from "hono";
 import type { AppEnv } from "../app-env";
-import type { AuthTokenPair } from "../modules/auth/infra/auth-gateway-http";
+import type { AuthTokenPair } from "../modules/auth/ports/auth-gateway";
+import { createHttpAuthGateway } from "../modules/auth/infra/auth-gateway-http";
 import {
   clearAccessTokenCookie,
   clearRefreshTokenCookie,
@@ -26,13 +27,14 @@ function clearAuthCookies(response: Response): void {
 
 export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const pathname = c.req.path;
+  const authGateway = createHttpAuthGateway(c.env.AUTH_BASE_URL);
   const accessToken = getAccessTokenFromCookie(c.req.raw);
   const refreshToken = getRefreshTokenFromCookie(c.req.raw);
-  let hasValidToken = accessToken ? await verifyTokenQuery(c.env.AUTH_BASE_URL, accessToken) : false;
+  let hasValidToken = accessToken ? await verifyTokenQuery(authGateway, accessToken) : false;
   let refreshedTokens: AuthTokenPair | null = null;
 
   if (!hasValidToken && refreshToken) {
-    const refreshed = await refreshTokenCommand(c.env.AUTH_BASE_URL, refreshToken);
+    const refreshed = await refreshTokenCommand(authGateway, refreshToken);
     if (refreshed.ok) {
       hasValidToken = true;
       refreshedTokens = refreshed.data;

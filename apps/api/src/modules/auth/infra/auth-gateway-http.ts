@@ -1,7 +1,4 @@
-export type AuthTokenPair = {
-  accessToken: string;
-  refreshToken: string;
-};
+import type { AuthGateway, AuthTokenPair } from "../ports/auth-gateway";
 
 type AuthApiTokenResponse = {
   token?: string;
@@ -81,4 +78,12 @@ export async function verifyTokenWithAuthGateway(authBaseUrl: string, token: str
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.ok;
+}
+
+export function createHttpAuthGateway(authBaseUrl: string): AuthGateway {
+  return {
+    login: (username, password) => loginWithAuthGateway(authBaseUrl, username, password),
+    refresh: (refreshToken) => refreshWithAuthGateway(authBaseUrl, refreshToken),
+    verify: (token) => verifyTokenWithAuthGateway(authBaseUrl, token)
+  };
 }

@@ -3,6 +3,7 @@ import type { AppEnv } from "../../app-env";
 import { loginBodySchema } from "../../shared/validation/request-schemas";
 import { parseJsonBody } from "../../shared/http/parse-json-body";
 import { loginCommand } from "../../modules/auth/application/login-command";
+import { createHttpAuthGateway } from "../../modules/auth/infra/auth-gateway-http";
 import { jsonOk } from "../../shared/http/api-response";
 import { clearAuthCookies, setAuthCookies, useCaseError } from "./shared";
 
@@ -15,7 +16,8 @@ export function createAuthRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await loginCommand(c.env.AUTH_BASE_URL, parsedBody.data.username, parsedBody.data.password);
+    const authGateway = createHttpAuthGateway(c.env.AUTH_BASE_URL);
+    const result = await loginCommand(authGateway, parsedBody.data.username, parsedBody.data.password);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
