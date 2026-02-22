@@ -1,20 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  countImageCleanupTasks,
-  deleteImageCleanupTask,
-  enqueueImageCleanupTask,
-  listImageCleanupTasks,
-  markImageCleanupTaskFailed
-} from "../../../src/repositories/image-cleanup-task-repository";
+  countImageCleanupTasksInD1,
+  deleteImageCleanupTaskFromD1,
+  enqueueImageCleanupTaskToD1,
+  listImageCleanupTasksFromD1,
+  markImageCleanupTaskFailedInD1
+} from "../../../src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
 
-describe("enqueueImageCleanupTask", () => {
+describe("image-cleanup-task repository d1", () => {
   it("inserts or updates cleanup task with retry increment", async () => {
     const run = vi.fn(async () => ({ success: true }));
     const bind = vi.fn(() => ({ run }));
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await enqueueImageCleanupTask(db, "entities/e1/i1.png", "delete_failed", "r2 timeout");
+    const ok = await enqueueImageCleanupTaskToD1(db, "entities/e1/i1.png", "delete_failed", "r2 timeout");
 
     expect(ok).toBe(true);
     expect(prepare).toHaveBeenCalledTimes(1);
@@ -31,7 +31,7 @@ describe("enqueueImageCleanupTask", () => {
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await enqueueImageCleanupTask(db, "k", "reason", null);
+    const ok = await enqueueImageCleanupTaskToD1(db, "k", "reason", null);
 
     expect(ok).toBe(false);
   });
@@ -54,7 +54,7 @@ describe("enqueueImageCleanupTask", () => {
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const tasks = await listImageCleanupTasks(db, 10);
+    const tasks = await listImageCleanupTasksFromD1(db, 10);
 
     expect(tasks).toHaveLength(1);
     expect(bind).toHaveBeenCalledWith(10);
@@ -66,7 +66,7 @@ describe("enqueueImageCleanupTask", () => {
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await markImageCleanupTaskFailed(db, 99, "delete failed");
+    const ok = await markImageCleanupTaskFailedInD1(db, 99, "delete failed");
 
     expect(ok).toBe(true);
     expect(bind).toHaveBeenCalledWith("delete failed", 99);
@@ -78,7 +78,7 @@ describe("enqueueImageCleanupTask", () => {
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await deleteImageCleanupTask(db, 7);
+    const ok = await deleteImageCleanupTaskFromD1(db, 7);
 
     expect(ok).toBe(true);
     expect(bind).toHaveBeenCalledWith(7);
@@ -89,7 +89,7 @@ describe("enqueueImageCleanupTask", () => {
     const prepare = vi.fn(() => ({ first }));
     const db = { prepare } as unknown as D1Database;
 
-    const count = await countImageCleanupTasks(db);
+    const count = await countImageCleanupTasksInD1(db);
 
     expect(count).toBe(12);
   });

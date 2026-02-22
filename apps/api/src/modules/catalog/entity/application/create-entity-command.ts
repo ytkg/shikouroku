@@ -1,11 +1,11 @@
-import { findKindById } from "../../../../repositories/kind-repository";
+import { findKindByIdFromD1 } from "../../kind/infra/kind-repository-d1";
 import {
-  deleteEntity,
-  fetchEntityWithTags,
-  findEntityIdByKindAndName,
-  insertEntity,
-  replaceEntityTags
-} from "../../../../repositories/entity-repository";
+  deleteEntityInD1,
+  fetchEntityWithTagsFromD1,
+  findEntityIdByKindAndNameFromD1,
+  insertEntityInD1,
+  replaceEntityTagsInD1
+} from "../infra/entity-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../usecases/result";
 import {
   toDescription,
@@ -23,12 +23,12 @@ export async function createEntityCommand(
 ): Promise<UseCaseResult<{ entity: EntityResponseDto }>> {
   const normalizedTagIds = uniqTagIds(body.tagIds);
 
-  const kind = await findKindById(db, body.kindId);
+  const kind = await findKindByIdFromD1(db, body.kindId);
   if (!kind) {
     return fail(400, "kind not found");
   }
 
-  const duplicated = await findEntityIdByKindAndName(db, body.kindId, body.name);
+  const duplicated = await findEntityIdByKindAndNameFromD1(db, body.kindId, body.name);
   if (duplicated) {
     return fail(409, "entity already exists");
   }
@@ -39,7 +39,7 @@ export async function createEntityCommand(
   }
 
   const id = crypto.randomUUID();
-  const inserted = await insertEntity(db, {
+  const inserted = await insertEntityInD1(db, {
     id,
     kindId: body.kindId,
     name: body.name,
@@ -51,13 +51,13 @@ export async function createEntityCommand(
     return fail(500, "failed to insert entity");
   }
 
-  const tagsInserted = await replaceEntityTags(db, id, normalizedTagIds);
+  const tagsInserted = await replaceEntityTagsInD1(db, id, normalizedTagIds);
   if (!tagsInserted) {
-    await deleteEntity(db, id);
+    await deleteEntityInD1(db, id);
     return fail(500, "failed to insert entity tags");
   }
 
-  const entity = await fetchEntityWithTags(db, id);
+  const entity = await fetchEntityWithTagsFromD1(db, id);
   if (!entity) {
     return fail(404, "entity not found");
   }

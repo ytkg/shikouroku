@@ -1,10 +1,10 @@
-import { findKindById } from "../../../../repositories/kind-repository";
+import { findKindByIdFromD1 } from "../../kind/infra/kind-repository-d1";
 import {
-  fetchEntityWithTags,
-  findEntityIdByKindAndName,
-  replaceEntityTags,
-  updateEntity
-} from "../../../../repositories/entity-repository";
+  fetchEntityWithTagsFromD1,
+  findEntityIdByKindAndNameFromD1,
+  replaceEntityTagsInD1,
+  updateEntityInD1
+} from "../infra/entity-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../usecases/result";
 import {
   toDescription,
@@ -21,12 +21,12 @@ export async function updateEntityCommand(
   id: string,
   body: UpsertEntityCommand
 ): Promise<UseCaseResult<{ entity: EntityResponseDto }>> {
-  const kind = await findKindById(db, body.kindId);
+  const kind = await findKindByIdFromD1(db, body.kindId);
   if (!kind) {
     return fail(400, "kind not found");
   }
 
-  const duplicated = await findEntityIdByKindAndName(db, body.kindId, body.name);
+  const duplicated = await findEntityIdByKindAndNameFromD1(db, body.kindId, body.name);
   if (duplicated && duplicated.id !== id) {
     return fail(409, "entity already exists");
   }
@@ -37,7 +37,7 @@ export async function updateEntityCommand(
     return fail(400, "tag not found");
   }
 
-  const updateResult = await updateEntity(db, {
+  const updateResult = await updateEntityInD1(db, {
     id,
     kindId: body.kindId,
     name: body.name,
@@ -52,12 +52,12 @@ export async function updateEntityCommand(
     return fail(500, "failed to update entity");
   }
 
-  const tagsUpdated = await replaceEntityTags(db, id, normalizedTagIds);
+  const tagsUpdated = await replaceEntityTagsInD1(db, id, normalizedTagIds);
   if (!tagsUpdated) {
     return fail(500, "failed to update entity tags");
   }
 
-  const entity = await fetchEntityWithTags(db, id);
+  const entity = await fetchEntityWithTagsFromD1(db, id);
   if (!entity) {
     return fail(404, "entity not found");
   }

@@ -1,12 +1,15 @@
-import { fetchTagsByEntityIds, listEntitiesWithKinds } from "../../../../repositories/entity-repository";
+import {
+  fetchTagsByEntityIdsFromD1,
+  listEntitiesWithKindsFromD1
+} from "../infra/entity-repository-d1";
 import { success, type UseCaseResult } from "../../../../usecases/result";
 import { toEntityWithFirstImageResponse, type EntityResponseDto } from "./entity-shared";
 
 export async function listEntitiesQuery(
   db: D1Database
 ): Promise<UseCaseResult<{ entities: EntityResponseDto[] }>> {
-  const entities = await listEntitiesWithKinds(db);
-  const tagsByEntity = await fetchTagsByEntityIds(
+  const entities = await listEntitiesWithKindsFromD1(db);
+  const tagsByEntity = await fetchTagsByEntityIdsFromD1(
     db,
     entities.map((entity) => entity.id)
   );

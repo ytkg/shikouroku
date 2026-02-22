@@ -1,4 +1,4 @@
-import { findEntityById } from "../../../../repositories/entity-repository";
+import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../usecases/result";
 import { createRelationInD1 } from "../infra/relation-repository-d1";
 
@@ -12,8 +12,8 @@ export async function createEntityRelationCommand(
   }
 
   const [entity, relatedEntity] = await Promise.all([
-    findEntityById(db, entityId),
-    findEntityById(db, relatedEntityId)
+    findEntityByIdFromD1(db, entityId),
+    findEntityByIdFromD1(db, relatedEntityId)
   ]);
   if (!entity || !relatedEntity) {
     return fail(404, "entity not found");

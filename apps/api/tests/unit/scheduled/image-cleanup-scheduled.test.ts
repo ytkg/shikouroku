@@ -1,17 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../../../src/usecases/image-cleanup-usecase", () => ({
-  runImageCleanupTasksUseCase: vi.fn()
+vi.mock("../../../src/modules/maintenance/image-cleanup/application/run-image-cleanup-command", () => ({
+  runImageCleanupCommand: vi.fn()
 }));
 
 import app from "../../../src/index";
-import { runImageCleanupTasksUseCase } from "../../../src/usecases/image-cleanup-usecase";
+import { runImageCleanupCommand } from "../../../src/modules/maintenance/image-cleanup/application/run-image-cleanup-command";
 
-const runImageCleanupTasksUseCaseMock = vi.mocked(runImageCleanupTasksUseCase);
+const runImageCleanupCommandMock = vi.mocked(runImageCleanupCommand);
 
 describe("scheduled image cleanup", () => {
-  it("runs cleanup usecase on scheduled event", async () => {
-    runImageCleanupTasksUseCaseMock.mockResolvedValue({
+  it("runs cleanup command on scheduled event", async () => {
+    runImageCleanupCommandMock.mockResolvedValue({
       ok: true,
       data: {
         processed: 0,
@@ -41,6 +41,6 @@ describe("scheduled image cleanup", () => {
     const scheduledPromise = waitUntil.mock.calls[0]?.[0] as Promise<void>;
     await scheduledPromise;
 
-    expect(runImageCleanupTasksUseCaseMock).toHaveBeenCalledWith(env.DB, env.ENTITY_IMAGES, 50);
+    expect(runImageCleanupCommandMock).toHaveBeenCalledWith(env.DB, env.ENTITY_IMAGES, 50);
   });
 });

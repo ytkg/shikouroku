@@ -1,42 +1,47 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../../../../../src/repositories/entity-repository", () => ({
-  findEntityById: vi.fn()
+vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
+  findEntityByIdFromD1: vi.fn()
 }));
 
-vi.mock("../../../../../../src/repositories/entity-image-repository", () => ({
-  collapseEntityImageSortOrderAfterDelete: vi.fn(),
-  deleteEntityImage: vi.fn(),
-  findEntityImageById: vi.fn(),
-  insertEntityImage: vi.fn(),
-  listEntityImages: vi.fn(),
-  nextEntityImageSortOrder: vi.fn(),
-  reorderEntityImages: vi.fn()
+vi.mock("../../../../../../src/modules/catalog/image/infra/image-repository-d1", () => ({
+  collapseEntityImageSortOrderAfterDeleteInD1: vi.fn(),
+  deleteEntityImageInD1: vi.fn(),
+  findEntityImageByIdFromD1: vi.fn(),
+  insertEntityImageInD1: vi.fn(),
+  listEntityImagesFromD1: vi.fn(),
+  nextEntityImageSortOrderFromD1: vi.fn(),
+  reorderEntityImagesInD1: vi.fn()
 }));
 
-vi.mock("../../../../../../src/repositories/image-cleanup-task-repository", () => ({
-  enqueueImageCleanupTask: vi.fn()
-}));
+vi.mock(
+  "../../../../../../src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1",
+  () => ({
+    enqueueImageCleanupTaskToD1: vi.fn()
+  })
+);
 
-import { findEntityById } from "../../../../../../src/repositories/entity-repository";
+import { findEntityByIdFromD1 } from "../../../../../../src/modules/catalog/entity/infra/entity-repository-d1";
 import {
-  collapseEntityImageSortOrderAfterDelete,
-  deleteEntityImage,
-  findEntityImageById,
-  insertEntityImage,
-  nextEntityImageSortOrder
-} from "../../../../../../src/repositories/entity-image-repository";
-import { enqueueImageCleanupTask } from "../../../../../../src/repositories/image-cleanup-task-repository";
+  collapseEntityImageSortOrderAfterDeleteInD1,
+  deleteEntityImageInD1,
+  findEntityImageByIdFromD1,
+  insertEntityImageInD1,
+  nextEntityImageSortOrderFromD1
+} from "../../../../../../src/modules/catalog/image/infra/image-repository-d1";
 import { deleteEntityImageCommand } from "../../../../../../src/modules/catalog/image/application/delete-entity-image-command";
 import { uploadEntityImageCommand } from "../../../../../../src/modules/catalog/image/application/upload-entity-image-command";
+import { enqueueImageCleanupTaskToD1 } from "../../../../../../src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
 
-const findEntityByIdMock = vi.mocked(findEntityById);
-const findEntityImageByIdMock = vi.mocked(findEntityImageById);
-const deleteEntityImageMock = vi.mocked(deleteEntityImage);
-const collapseEntityImageSortOrderAfterDeleteMock = vi.mocked(collapseEntityImageSortOrderAfterDelete);
-const enqueueImageCleanupTaskMock = vi.mocked(enqueueImageCleanupTask);
-const nextEntityImageSortOrderMock = vi.mocked(nextEntityImageSortOrder);
-const insertEntityImageMock = vi.mocked(insertEntityImage);
+const findEntityByIdFromD1Mock = vi.mocked(findEntityByIdFromD1);
+const findEntityImageByIdFromD1Mock = vi.mocked(findEntityImageByIdFromD1);
+const deleteEntityImageInD1Mock = vi.mocked(deleteEntityImageInD1);
+const collapseEntityImageSortOrderAfterDeleteInD1Mock = vi.mocked(
+  collapseEntityImageSortOrderAfterDeleteInD1
+);
+const enqueueImageCleanupTaskToD1Mock = vi.mocked(enqueueImageCleanupTaskToD1);
+const nextEntityImageSortOrderFromD1Mock = vi.mocked(nextEntityImageSortOrderFromD1);
+const insertEntityImageInD1Mock = vi.mocked(insertEntityImageInD1);
 
 function createMockImageBucket() {
   return {
@@ -59,10 +64,10 @@ describe("image module application", () => {
     });
     (imageBucket.delete as unknown as typeof deleteMock) = deleteMock;
 
-    findEntityByIdMock.mockResolvedValue({
+    findEntityByIdFromD1Mock.mockResolvedValue({
       id: "entity-1"
     } as any);
-    findEntityImageByIdMock.mockResolvedValue({
+    findEntityImageByIdFromD1Mock.mockResolvedValue({
       id: "img-1",
       entity_id: "entity-1",
       object_key: "entities/entity-1/img-1.png",
@@ -72,14 +77,14 @@ describe("image module application", () => {
       sort_order: 1,
       created_at: "2026-01-01T00:00:00.000Z"
     });
-    deleteEntityImageMock.mockResolvedValue("deleted");
-    collapseEntityImageSortOrderAfterDeleteMock.mockResolvedValue(true);
-    enqueueImageCleanupTaskMock.mockResolvedValue(true);
+    deleteEntityImageInD1Mock.mockResolvedValue("deleted");
+    collapseEntityImageSortOrderAfterDeleteInD1Mock.mockResolvedValue(true);
+    enqueueImageCleanupTaskToD1Mock.mockResolvedValue(true);
 
     const result = await deleteEntityImageCommand(db, imageBucket, "entity-1", "img-1");
 
     expect(result.ok).toBe(true);
-    expect(enqueueImageCleanupTaskMock).toHaveBeenCalledWith(
+    expect(enqueueImageCleanupTaskToD1Mock).toHaveBeenCalledWith(
       db,
       "entities/entity-1/img-1.png",
       "entity_image_delete_failed",
@@ -95,8 +100,8 @@ describe("image module application", () => {
     });
     (imageBucket.delete as unknown as typeof deleteMock) = deleteMock;
 
-    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
-    findEntityImageByIdMock.mockResolvedValue({
+    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
+    findEntityImageByIdFromD1Mock.mockResolvedValue({
       id: "img-1",
       entity_id: "entity-1",
       object_key: "entities/entity-1/img-1.png",
@@ -106,9 +111,9 @@ describe("image module application", () => {
       sort_order: 1,
       created_at: "2026-01-01T00:00:00.000Z"
     });
-    deleteEntityImageMock.mockResolvedValue("deleted");
-    collapseEntityImageSortOrderAfterDeleteMock.mockResolvedValue(true);
-    enqueueImageCleanupTaskMock.mockResolvedValue(false);
+    deleteEntityImageInD1Mock.mockResolvedValue("deleted");
+    collapseEntityImageSortOrderAfterDeleteInD1Mock.mockResolvedValue(true);
+    enqueueImageCleanupTaskToD1Mock.mockResolvedValue(false);
 
     const result = await deleteEntityImageCommand(db, imageBucket, "entity-1", "img-1");
 
@@ -127,10 +132,10 @@ describe("image module application", () => {
     });
     (imageBucket.delete as unknown as typeof rollbackDeleteMock) = rollbackDeleteMock;
 
-    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
-    nextEntityImageSortOrderMock.mockResolvedValue(1);
-    insertEntityImageMock.mockResolvedValue(false);
-    enqueueImageCleanupTaskMock.mockResolvedValue(true);
+    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
+    nextEntityImageSortOrderFromD1Mock.mockResolvedValue(1);
+    insertEntityImageInD1Mock.mockResolvedValue(false);
+    enqueueImageCleanupTaskToD1Mock.mockResolvedValue(true);
 
     const file = {
       name: "sample.png",
@@ -146,7 +151,7 @@ describe("image module application", () => {
       status: 500,
       message: "failed to save image metadata"
     });
-    expect(enqueueImageCleanupTaskMock).toHaveBeenCalledWith(
+    expect(enqueueImageCleanupTaskToD1Mock).toHaveBeenCalledWith(
       db,
       expect.stringContaining("entities/entity-1/"),
       "metadata_insert_failed",

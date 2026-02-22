@@ -5,177 +5,67 @@
 
 ## 0. 進捗サマリー（2026-02-22）
 
-- 実施済み（Phase 0の先行反映）:
-  - `requestId` ミドルウェアを追加し、`X-Request-Id` を全レスポンスへ付与。
+- 実施済み（Phase 0 / 1）:
+  - `requestId` 付与とエラーレスポンス契約の統一を反映。
     - `apps/api/src/shared/http/request-id.ts`
-    - `apps/api/src/index.ts`
-  - エラーレスポンス形式を `error.code` / `error.message` / `requestId` に統一。
     - `apps/api/src/shared/http/api-response.ts`
     - `apps/api/src/lib/http.ts`
     - `apps/api/src/index.ts`
-  - 認証APIのベースURLを環境変数化。
-    - `apps/api/src/app-env.ts`
-    - `apps/api/src/lib/auth-client.ts`
-    - `apps/api/src/usecases/auth-usecase.ts`
-    - `apps/api/wrangler.toml`
-  - API側のテスト基盤を追加し、契約/ユニットテストを導入。
+  - APIルーター分割（auth/kind/tag/entity/maintenance）を反映。
+    - `apps/api/src/routes/api/*.ts`
+  - APIテスト基盤（Vitest）と契約テストを反映。
     - `apps/api/vitest.config.ts`
-    - `apps/api/tests/unit/shared/http/api-response.test.ts`
-    - `apps/api/tests/unit/lib/auth-client.test.ts`
-    - `apps/api/tests/contract/http/parse-json-body.contract.test.ts`
-    - `apps/api/package.json`
-    - `package.json`
-- 実施済み（Phase 1の一部反映）:
-  - `index.ts` の責務を「アプリ配線」に縮小し、認証ミドルウェアとAPIルーターを分離。
+    - `apps/api/tests/contract/*`
+
+- 実施済み（Phase 2: modules移行 + 互換レイヤ撤去）:
+  - `auth` / `catalog(entity,image,relation,kind,tag)` / `maintenance(image-cleanup)` を `modules/*` へ集約。
+    - `apps/api/src/modules/auth/*`
+    - `apps/api/src/modules/catalog/*`
+    - `apps/api/src/modules/maintenance/*`
+  - route 層は modules application のみを参照する構成へ統一。
+    - `apps/api/src/routes/api/*.ts`
+  - scheduled 実行も modules application 直呼び出しへ統一。
     - `apps/api/src/index.ts`
-    - `apps/api/src/middleware/auth-session-middleware.ts`
-    - `apps/api/src/routes/api-router.ts`
-  - APIルーターを機能別に分割し、変更単位を縮小。
-    - `apps/api/src/routes/api/auth-routes.ts`
-    - `apps/api/src/routes/api/kind-routes.ts`
-    - `apps/api/src/routes/api/tag-routes.ts`
-    - `apps/api/src/routes/api/entity-routes.ts`
-    - `apps/api/src/routes/api/shared.ts`
-  - 全体アプリに対するAPIエラー契約テストを追加。
-    - `apps/api/tests/contract/app/api-error-shape.contract.test.ts`
-- 実施済み（Phase 2の一部反映）:
-  - `tag` スライスを `modules/catalog/tag` へ段階移行。
-    - `apps/api/src/modules/catalog/tag/application/*`
-    - `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
-    - `apps/api/src/routes/api/tag-routes.ts`
-  - 旧 `usecases/repositories` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/usecases/tags-usecase.ts`
-    - `apps/api/src/repositories/tag-repository.ts`
-  - `tag` モジュールのユニットテストを追加。
-    - `apps/api/tests/unit/modules/catalog/tag/application/tag-commands.test.ts`
-  - `kind` スライスを `modules/catalog/kind` へ段階移行。
-    - `apps/api/src/modules/catalog/kind/application/list-kinds-query.ts`
-    - `apps/api/src/modules/catalog/kind/infra/kind-repository-d1.ts`
-    - `apps/api/src/routes/api/kind-routes.ts`
-  - 旧 `kinds-usecase/repository` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/usecases/kinds-usecase.ts`
-    - `apps/api/src/repositories/kind-repository.ts`
-  - `kind` モジュールのユニット/アーキテクチャテストを追加。
-    - `apps/api/tests/unit/modules/catalog/kind/application/list-kinds-query.test.ts`
-    - `apps/api/tests/architecture/kind-route-module-migration.test.ts`
-  - `relation` スライスを `modules/catalog/relation` へ段階移行。
-    - `apps/api/src/modules/catalog/relation/application/*`
-    - `apps/api/src/modules/catalog/relation/infra/relation-repository-d1.ts`
-    - `apps/api/src/routes/api/entity-routes.ts`
-  - 旧 `entity-relations-usecase/repository` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/usecases/entity-relations-usecase.ts`
-    - `apps/api/src/repositories/entity-relation-repository.ts`
-  - `relation` モジュールのユニット/アーキテクチャテストを追加。
-    - `apps/api/tests/unit/modules/catalog/relation/application/relation-commands.test.ts`
-    - `apps/api/tests/architecture/relation-route-module-migration.test.ts`
-  - `entity-images` スライスを `modules/catalog/image` へ段階移行。
-    - `apps/api/src/modules/catalog/image/application/*`
-    - `apps/api/src/modules/catalog/image/infra/image-repository-d1.ts`
-    - `apps/api/src/routes/api/entity-routes.ts`
-  - 旧 `entity-images-usecase` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/usecases/entity-images-usecase.ts`
-  - 旧 `entity-image-repository` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/repositories/entity-image-repository.ts`
-  - `image` モジュールのユニット/アーキテクチャテストを追加。
-    - `apps/api/tests/unit/modules/catalog/image/application/image-commands.test.ts`
-    - `apps/api/tests/architecture/image-route-module-migration.test.ts`
-  - `entity` スライスを `modules/catalog/entity` へ段階移行。
-    - `apps/api/src/modules/catalog/entity/application/*`
+  - 旧互換レイヤ（`usecases/*` と `repositories/*`）を撤去。
+    - 削除: `apps/api/src/usecases/{auth,entities,entity-images,entity-relations,image-cleanup,kinds,tags}-usecase.ts`
+    - 削除: `apps/api/src/repositories/*.ts`
+    - 維持: `apps/api/src/usecases/result.ts`（共通Result型）
+
+- 実施済み（Phase 3: 整合性と運用品質）:
+  - `db.batch` による複数更新の整合性改善を modules infra に反映。
     - `apps/api/src/modules/catalog/entity/infra/entity-repository-d1.ts`
-    - `apps/api/src/routes/api/entity-routes.ts`
-  - 旧 `entities-usecase` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/usecases/entities-usecase.ts`
-  - 旧 `entity-repository` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/repositories/entity-repository.ts`
-  - `entity` モジュールのユニット/アーキテクチャテストを追加。
-    - `apps/api/tests/unit/modules/catalog/entity/application/entity-commands.test.ts`
-    - `apps/api/tests/architecture/entity-route-core-module-migration.test.ts`
-  - `auth` スライスを `modules/auth` へ段階移行。
-    - `apps/api/src/modules/auth/application/*`
-    - `apps/api/src/modules/auth/infra/auth-gateway-http.ts`
-    - `apps/api/src/routes/api/auth-routes.ts`
-    - `apps/api/src/middleware/auth-session-middleware.ts`
-  - 旧 `auth-usecase` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/usecases/auth-usecase.ts`
-  - 旧 `lib/auth-client` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/lib/auth-client.ts`
-  - `auth` モジュールのユニット/アーキテクチャテストを追加。
-    - `apps/api/tests/unit/modules/auth/application/auth-commands.test.ts`
-    - `apps/api/tests/architecture/auth-migration-boundary.test.ts`
-  - `maintenance/image-cleanup` スライスを `modules/maintenance/image-cleanup` へ段階移行。
-    - `apps/api/src/modules/maintenance/image-cleanup/application/*`
-    - `apps/api/src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1.ts`
-    - `apps/api/src/routes/api/maintenance-routes.ts`
-  - 旧 `image-cleanup-usecase/repository` との互換を維持する委譲レイヤを追加。
-    - `apps/api/src/usecases/image-cleanup-usecase.ts`
-    - `apps/api/src/repositories/image-cleanup-task-repository.ts`
-  - `maintenance/image-cleanup` モジュールのユニット/アーキテクチャテストを追加。
-    - `apps/api/tests/unit/modules/maintenance/image-cleanup/application/image-cleanup-commands.test.ts`
-    - `apps/api/tests/architecture/maintenance-route-module-migration.test.ts`
-- 実施済み（Phase 3の先行反映）:
-  - 複数SQL更新の一部を `db.batch` 化し、部分成功による不整合リスクを低減。
-    - `apps/api/src/repositories/entity-repository.ts`（`replaceEntityTags`）
-    - `apps/api/src/repositories/entity-image-repository.ts`（`reorderEntityImages`）
-    - `apps/api/src/repositories/tag-repository.ts`（`deleteTagAndRelations`）
-  - 上記バッチ処理の回帰防止テストを追加。
-    - `apps/api/tests/unit/repositories/repository-batch-safety.test.ts`
-  - D1/R2跨り削除失敗に備えたクリーンアップキューを追加。
+    - `apps/api/src/modules/catalog/image/infra/image-repository-d1.ts`
+    - `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
+  - D1/R2跨り削除の補償キューと手動/cron実行を反映。
     - `apps/api/migrations/0008_create_image_cleanup_tasks.sql`
-    - `apps/api/src/repositories/image-cleanup-task-repository.ts`
-    - `apps/api/src/usecases/entity-images-usecase.ts`
-  - クリーンアップタスク実行用のメンテナンスAPIを追加（手動実行）。
-    - `apps/api/src/usecases/image-cleanup-usecase.ts`
+    - `apps/api/src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1.ts`
+    - `apps/api/src/modules/maintenance/image-cleanup/application/*`
     - `apps/api/src/routes/api/maintenance-routes.ts`
-  - クリーンアップキュー参照APIを追加（一覧）。
-    - `GET /api/maintenance/image-cleanup/tasks`
-  - cron 実行で定期クリーンアップを追加。
-    - `apps/api/src/index.ts`（`scheduled` ハンドラ）
-    - `apps/api/wrangler.toml`（`[triggers].crons`）
-  - クリーンアップキューのリポジトリ/ユースケーステストを追加。
-    - `apps/api/tests/unit/repositories/image-cleanup-task-repository.test.ts`
-    - `apps/api/tests/unit/usecases/entity-images-usecase.test.ts`
-    - `apps/api/tests/unit/usecases/image-cleanup-usecase.test.ts`
-    - `apps/api/tests/unit/routes/maintenance-routes.test.ts`
-    - `apps/api/tests/unit/scheduled/image-cleanup-scheduled.test.ts`
-- 実施済み（保守性改善の先行反映）:
-  - `validationMessage` の if連鎖を辞書化し、更新漏れリスクを削減。
-    - `apps/api/src/domain/schemas.ts`
-  - バリデーションメッセージのユニットテストを追加。
-    - `apps/api/tests/unit/domain/schemas.test.ts`
-- 実施済み（運用品質の先行反映）:
-  - API向け品質スクリプトを追加。
-    - `package.json`（`quality:api`）
-  - API向けCIワークフローを追加。
-    - `.github/workflows/api-quality.yml`
-  - 認証ミドルウェアのユニットテストを追加。
-    - `apps/api/tests/unit/middleware/auth-session-middleware.test.ts`
-  - アーキテクチャテストを追加し、命名規約とレスポンス契約逸脱を検知。
-    - `apps/api/tests/architecture/file-naming-conventions.test.ts`
-    - `apps/api/tests/architecture/route-response-contract.test.ts`
-    - `apps/api/tests/architecture/usecase-schema-coupling.test.ts`
+    - `apps/api/src/index.ts`
+
+- 実施済み（テストとガード）:
+  - modules application/infra のユニットテストを拡充。
+    - `apps/api/tests/unit/modules/**/*`
+    - `apps/api/tests/unit/repositories/*`
+  - アーキテクチャ回帰ガードを追加。
     - `apps/api/tests/architecture/route-usecase-boundary.test.ts`
-  - `route-usecase-boundary` を拡張し、route 層から `usecases` 直参照の後戻りを防止。
-    - `apps/api/tests/architecture/route-usecase-boundary.test.ts`
-  - `entities-usecase` の `domain/schemas` 依存を除去し、HTTP入力型から分離。
-    - `apps/api/src/usecases/entities-usecase.ts`
-  - 永続化モデル命名を `*Row` から `*Record` に統一。
-    - `apps/api/src/domain/models.ts`
-    - `apps/api/src/repositories/*`
-    - `apps/api/src/usecases/*`
-  - ユースケースのレスポンス型名を `*Dto` に統一。
-    - `apps/api/src/usecases/entities-usecase.ts`
-    - `apps/api/src/usecases/entity-relations-usecase.ts`
-    - `apps/api/src/usecases/entity-images-usecase.ts`
+    - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
+  - 現在の品質ゲート結果:
+    - `npm --workspace @shikouroku/api run check` 通過
+    - `npm --workspace @shikouroku/api run test` 通過（`28 files / 74 tests`）
+
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
-  - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行を導入）
-  - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
-  - `High-2`（層混線/命名不整合）: **改善中**（schema依存削減 + 命名統一 + entity/tag/kind/relation/image/auth/maintenanceのmodules移行）
+  - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行）
+  - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一）
+  - `High-2`（層混線/命名不整合）: **大きく改善**（modules + infraへ移行し互換レイヤ撤去）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
-  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テスト + API CIを追加、統合テストは未実装）
+  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット/境界テストを追加、統合テストは未実装）
 
 ## 1. Findings（重大度順）
+
+注: この章の「根拠」ファイル参照は初回監査時点の記録を含みます。現行コードでは modules への再配置と互換レイヤ撤去により、一部パスは履歴参照です。
 
 ### Critical-1: 複数更新処理の整合性境界が弱く、部分成功でデータ不整合が残り得る
 

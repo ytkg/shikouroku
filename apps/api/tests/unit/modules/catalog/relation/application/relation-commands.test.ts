@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../../../../../src/repositories/entity-repository", () => ({
-  fetchEntitiesWithKindsByIds: vi.fn(),
-  fetchTagsByEntityIds: vi.fn(),
-  findEntityById: vi.fn()
+vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
+  fetchEntitiesWithKindsByIdsFromD1: vi.fn(),
+  fetchTagsByEntityIdsFromD1: vi.fn(),
+  findEntityByIdFromD1: vi.fn()
 }));
 
 vi.mock("../../../../../../src/modules/catalog/relation/infra/relation-repository-d1", () => ({
@@ -13,10 +13,10 @@ vi.mock("../../../../../../src/modules/catalog/relation/infra/relation-repositor
 }));
 
 import {
-  fetchEntitiesWithKindsByIds,
-  fetchTagsByEntityIds,
-  findEntityById
-} from "../../../../../../src/repositories/entity-repository";
+  fetchEntitiesWithKindsByIdsFromD1,
+  fetchTagsByEntityIdsFromD1,
+  findEntityByIdFromD1
+} from "../../../../../../src/modules/catalog/entity/infra/entity-repository-d1";
 import {
   createRelationInD1,
   deleteRelationInD1,
@@ -26,10 +26,10 @@ import { createEntityRelationCommand } from "../../../../../../src/modules/catal
 import { deleteEntityRelationCommand } from "../../../../../../src/modules/catalog/relation/application/delete-entity-relation-command";
 import { listRelatedEntitiesQuery } from "../../../../../../src/modules/catalog/relation/application/list-related-entities-query";
 
-const findEntityByIdMock = vi.mocked(findEntityById);
+const findEntityByIdFromD1Mock = vi.mocked(findEntityByIdFromD1);
 const listRelatedEntityIdsFromD1Mock = vi.mocked(listRelatedEntityIdsFromD1);
-const fetchEntitiesWithKindsByIdsMock = vi.mocked(fetchEntitiesWithKindsByIds);
-const fetchTagsByEntityIdsMock = vi.mocked(fetchTagsByEntityIds);
+const fetchEntitiesWithKindsByIdsFromD1Mock = vi.mocked(fetchEntitiesWithKindsByIdsFromD1);
+const fetchTagsByEntityIdsFromD1Mock = vi.mocked(fetchTagsByEntityIdsFromD1);
 const createRelationInD1Mock = vi.mocked(createRelationInD1);
 const deleteRelationInD1Mock = vi.mocked(deleteRelationInD1);
 
@@ -39,7 +39,7 @@ describe("relation module application", () => {
   });
 
   it("listRelatedEntitiesQuery returns 404 when base entity is missing", async () => {
-    findEntityByIdMock.mockResolvedValue(null);
+    findEntityByIdFromD1Mock.mockResolvedValue(null);
 
     const result = await listRelatedEntitiesQuery({} as D1Database, "entity-1");
 
@@ -51,9 +51,9 @@ describe("relation module application", () => {
   });
 
   it("listRelatedEntitiesQuery returns mapped related entities", async () => {
-    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
+    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
     listRelatedEntityIdsFromD1Mock.mockResolvedValue(["entity-2"]);
-    fetchEntitiesWithKindsByIdsMock.mockResolvedValue([
+    fetchEntitiesWithKindsByIdsFromD1Mock.mockResolvedValue([
       {
         id: "entity-2",
         kind_id: 3,
@@ -65,7 +65,7 @@ describe("relation module application", () => {
         updated_at: "2026-01-01"
       }
     ] as any);
-    fetchTagsByEntityIdsMock.mockResolvedValue(
+    fetchTagsByEntityIdsFromD1Mock.mockResolvedValue(
       new Map([
         [
           "entity-2",
@@ -112,7 +112,7 @@ describe("relation module application", () => {
   });
 
   it("createEntityRelationCommand returns conflict when relation exists", async () => {
-    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
+    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
     createRelationInD1Mock.mockResolvedValue("conflict");
 
     const result = await createEntityRelationCommand({} as D1Database, "entity-1", "entity-2");
@@ -125,7 +125,7 @@ describe("relation module application", () => {
   });
 
   it("deleteEntityRelationCommand returns not found when relation does not exist", async () => {
-    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
+    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
     deleteRelationInD1Mock.mockResolvedValue("not_found");
 
     const result = await deleteEntityRelationCommand({} as D1Database, "entity-1", "entity-2");

@@ -1,10 +1,10 @@
-import { findEntityById } from "../../../../repositories/entity-repository";
+import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
 import {
-  collapseEntityImageSortOrderAfterDelete,
-  deleteEntityImage,
-  findEntityImageById
-} from "../../../../repositories/entity-image-repository";
-import { enqueueImageCleanupTask } from "../../../../repositories/image-cleanup-task-repository";
+  collapseEntityImageSortOrderAfterDeleteInD1,
+  deleteEntityImageInD1,
+  findEntityImageByIdFromD1
+} from "../infra/image-repository-d1";
+import { enqueueImageCleanupTaskToD1 } from "../../../maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../usecases/result";
 import { toErrorMessage } from "./image-shared";
 
@@ -14,17 +14,17 @@ export async function deleteEntityImageCommand(
   entityId: string,
   imageId: string
 ): Promise<UseCaseResult<Record<string, never>>> {
-  const entity = await findEntityById(db, entityId);
+  const entity = await findEntityByIdFromD1(db, entityId);
   if (!entity) {
     return fail(404, "entity not found");
   }
 
-  const image = await findEntityImageById(db, entityId, imageId);
+  const image = await findEntityImageByIdFromD1(db, entityId, imageId);
   if (!image) {
     return fail(404, "image not found");
   }
 
-  const deleted = await deleteEntityImage(db, entityId, imageId);
+  const deleted = await deleteEntityImageInD1(db, entityId, imageId);
   if (deleted === "not_found") {
     return fail(404, "image not found");
   }
@@ -32,7 +32,7 @@ export async function deleteEntityImageCommand(
     return fail(500, "failed to delete image metadata");
   }
 
-  const collapsed = await collapseEntityImageSortOrderAfterDelete(db, entityId, image.sort_order);
+  const collapsed = await collapseEntityImageSortOrderAfterDeleteInD1(db, entityId, image.sort_order);
   if (!collapsed) {
     return fail(500, "failed to update image sort order");
   }
@@ -40,7 +40,7 @@ export async function deleteEntityImageCommand(
   try {
     await imageBucket.delete(image.object_key);
   } catch (error) {
-    const queued = await enqueueImageCleanupTask(
+    const queued = await enqueueImageCleanupTaskToD1(
       db,
       image.object_key,
       "entity_image_delete_failed",

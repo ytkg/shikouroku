@@ -43,3 +43,17 @@ export async function deleteTagWithRelationsFromD1(
     return "error";
   }
 }
+
+export async function countExistingTagsByIdsFromD1(db: D1Database, tagIds: number[]): Promise<number> {
+  if (tagIds.length === 0) {
+    return 0;
+  }
+
+  const placeholders = tagIds.map(() => "?").join(", ");
+  const result = await db
+    .prepare(`SELECT id FROM tags WHERE id IN (${placeholders})`)
+    .bind(...tagIds)
+    .all<{ id: number }>();
+
+  return (result.results ?? []).length;
+}

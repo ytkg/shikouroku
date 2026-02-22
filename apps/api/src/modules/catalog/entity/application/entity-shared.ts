@@ -5,7 +5,7 @@ import type {
   KindRecord,
   TagRecord
 } from "../../../../domain/models";
-import { countExistingTagsByIds } from "../../../../repositories/tag-repository";
+import { countExistingTagsByIdsFromD1 } from "../../tag/infra/tag-repository-d1";
 
 export type UpsertEntityCommand = {
   kindId: number;
@@ -36,7 +36,7 @@ export async function validateTagIds(db: D1Database, tagIds: number[]): Promise<
     return true;
   }
 
-  const count = await countExistingTagsByIds(db, tagIds);
+  const count = await countExistingTagsByIdsFromD1(db, tagIds);
   return count === tagIds.length;
 }
 

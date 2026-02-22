@@ -1,9 +1,9 @@
-import { findEntityById } from "../../../../repositories/entity-repository";
+import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
 import {
-  insertEntityImage,
-  nextEntityImageSortOrder
-} from "../../../../repositories/entity-image-repository";
-import { enqueueImageCleanupTask } from "../../../../repositories/image-cleanup-task-repository";
+  insertEntityImageInD1,
+  nextEntityImageSortOrderFromD1
+} from "../infra/image-repository-d1";
+import { enqueueImageCleanupTaskToD1 } from "../../../maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../usecases/result";
 import {
   ALLOWED_IMAGE_MIME_TYPES,
@@ -22,7 +22,7 @@ export async function uploadEntityImageCommand(
   entityId: string,
   file: UploadImageFile
 ): Promise<UseCaseResult<{ image: EntityImageResponseDto }>> {
-  const entity = await findEntityById(db, entityId);
+  const entity = await findEntityByIdFromD1(db, entityId);
   if (!entity) {
     return fail(404, "entity not found");
   }
@@ -44,7 +44,7 @@ export async function uploadEntityImageCommand(
 
   const imageId = crypto.randomUUID();
   const objectKey = `entities/${entityId}/${imageId}.${extension}`;
-  const sortOrder = await nextEntityImageSortOrder(db, entityId);
+  const sortOrder = await nextEntityImageSortOrderFromD1(db, entityId);
   const fileName = normalizeFileName(file.name, `image.${extension}`);
 
   let imageBinary: ArrayBuffer;
@@ -64,7 +64,7 @@ export async function uploadEntityImageCommand(
     return fail(500, "failed to upload image");
   }
 
-  const inserted = await insertEntityImage(db, {
+  const inserted = await insertEntityImageInD1(db, {
     id: imageId,
     entityId,
     objectKey,
@@ -77,7 +77,7 @@ export async function uploadEntityImageCommand(
     try {
       await imageBucket.delete(objectKey);
     } catch (error) {
-      await enqueueImageCleanupTask(db, objectKey, "metadata_insert_failed", toErrorMessage(error));
+      await enqueueImageCleanupTaskToD1(db, objectKey, "metadata_insert_failed", toErrorMessage(error));
     }
     return fail(500, "failed to save image metadata");
   }

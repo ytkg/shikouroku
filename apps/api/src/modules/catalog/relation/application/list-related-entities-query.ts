@@ -1,5 +1,9 @@
 import type { EntityWithKindRecord, EntityWithTagsRecord, KindRecord, TagRecord } from "../../../../domain/models";
-import { fetchEntitiesWithKindsByIds, fetchTagsByEntityIds, findEntityById } from "../../../../repositories/entity-repository";
+import {
+  fetchEntitiesWithKindsByIdsFromD1,
+  fetchTagsByEntityIdsFromD1,
+  findEntityByIdFromD1
+} from "../../entity/infra/entity-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../usecases/result";
 import { listRelatedEntityIdsFromD1 } from "../infra/relation-repository-d1";
 
@@ -44,7 +48,7 @@ export async function listRelatedEntitiesQuery(
   db: D1Database,
   entityId: string
 ): Promise<UseCaseResult<{ related: RelatedEntityResponseDto[] }>> {
-  const entity = await findEntityById(db, entityId);
+  const entity = await findEntityByIdFromD1(db, entityId);
   if (!entity) {
     return fail(404, "entity not found");
   }
@@ -54,8 +58,8 @@ export async function listRelatedEntitiesQuery(
     return success({ related: [] });
   }
 
-  const relatedEntities = await fetchEntitiesWithKindsByIds(db, relatedEntityIds);
-  const tagsByEntity = await fetchTagsByEntityIds(db, relatedEntityIds);
+  const relatedEntities = await fetchEntitiesWithKindsByIdsFromD1(db, relatedEntityIds);
+  const tagsByEntity = await fetchTagsByEntityIdsFromD1(db, relatedEntityIds);
   const entityMap = new Map(relatedEntities.map((relatedEntity) => [relatedEntity.id, relatedEntity]));
   const related: RelatedEntityResponseDto[] = [];
 

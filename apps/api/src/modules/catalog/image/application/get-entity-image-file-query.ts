@@ -1,6 +1,6 @@
 import type { EntityImageRecord } from "../../../../domain/models";
-import { findEntityById } from "../../../../repositories/entity-repository";
-import { findEntityImageById } from "../../../../repositories/entity-image-repository";
+import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
+import { findEntityImageByIdFromD1 } from "../infra/image-repository-d1";
 import { fail, success, type UseCaseResult } from "../../../../usecases/result";
 
 export async function getEntityImageFileQuery(
@@ -14,12 +14,12 @@ export async function getEntityImageFileQuery(
     file: R2ObjectBody;
   }>
 > {
-  const entity = await findEntityById(db, entityId);
+  const entity = await findEntityByIdFromD1(db, entityId);
   if (!entity) {
     return fail(404, "entity not found");
   }
 
-  const image = await findEntityImageById(db, entityId, imageId);
+  const image = await findEntityImageByIdFromD1(db, entityId, imageId);
   if (!image) {
     return fail(404, "image not found");
   }

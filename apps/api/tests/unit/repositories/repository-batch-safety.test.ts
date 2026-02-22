@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { reorderEntityImages } from "../../../src/repositories/entity-image-repository";
-import { replaceEntityTags } from "../../../src/repositories/entity-repository";
-import { deleteTagAndRelations } from "../../../src/repositories/tag-repository";
+import { replaceEntityTagsInD1 } from "../../../src/modules/catalog/entity/infra/entity-repository-d1";
+import { reorderEntityImagesInD1 } from "../../../src/modules/catalog/image/infra/image-repository-d1";
+import { deleteTagWithRelationsFromD1 } from "../../../src/modules/catalog/tag/infra/tag-repository-d1";
 
 type MockResult = {
   success: boolean;
@@ -39,7 +39,7 @@ describe("repository batch safety", () => {
       { success: true, meta: {} }
     ]);
 
-    const result = await replaceEntityTags(db, "entity-1", [1, 2]);
+    const result = await replaceEntityTagsInD1(db, "entity-1", [1, 2]);
 
     expect(result).toBe(true);
     expect(batch).toHaveBeenCalledTimes(1);
@@ -52,65 +52,65 @@ describe("repository batch safety", () => {
       { success: false, meta: {} }
     ]);
 
-    const result = await replaceEntityTags(db, "entity-1", [10]);
+    const result = await replaceEntityTagsInD1(db, "entity-1", [10]);
 
     expect(result).toBe(false);
   });
 
-  it("reorderEntityImages executes negation and updates in one batch", async () => {
+  it("reorderEntityImagesInD1 executes negation and updates in one batch", async () => {
     const { db, batch } = createMockDb([
       { success: true, meta: {} },
       { success: true, meta: {} },
       { success: true, meta: {} }
     ]);
 
-    const result = await reorderEntityImages(db, "entity-1", ["img-1", "img-2"]);
+    const result = await reorderEntityImagesInD1(db, "entity-1", ["img-1", "img-2"]);
 
     expect(result).toBe(true);
     expect(batch).toHaveBeenCalledTimes(1);
     expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(3);
   });
 
-  it("reorderEntityImages returns false when any statement fails", async () => {
+  it("reorderEntityImagesInD1 returns false when any statement fails", async () => {
     const { db } = createMockDb([
       { success: true, meta: {} },
       { success: false, meta: {} }
     ]);
 
-    const result = await reorderEntityImages(db, "entity-1", ["img-1"]);
+    const result = await reorderEntityImagesInD1(db, "entity-1", ["img-1"]);
 
     expect(result).toBe(false);
   });
 
-  it("deleteTagAndRelations returns deleted when tag row is removed", async () => {
+  it("deleteTagWithRelationsFromD1 returns deleted when tag row is removed", async () => {
     const { db } = createMockDb([
       { success: true, meta: {} },
       { success: true, meta: { changes: 1 } }
     ]);
 
-    const result = await deleteTagAndRelations(db, 10);
+    const result = await deleteTagWithRelationsFromD1(db, 10);
 
     expect(result).toBe("deleted");
   });
 
-  it("deleteTagAndRelations returns not_found when tag row does not exist", async () => {
+  it("deleteTagWithRelationsFromD1 returns not_found when tag row does not exist", async () => {
     const { db } = createMockDb([
       { success: true, meta: {} },
       { success: true, meta: { changes: 0 } }
     ]);
 
-    const result = await deleteTagAndRelations(db, 999);
+    const result = await deleteTagWithRelationsFromD1(db, 999);
 
     expect(result).toBe("not_found");
   });
 
-  it("deleteTagAndRelations returns error when batch fails", async () => {
+  it("deleteTagWithRelationsFromD1 returns error when batch fails", async () => {
     const { db } = createMockDb([
       { success: false, meta: {} },
       { success: true, meta: { changes: 1 } }
     ]);
 
-    const result = await deleteTagAndRelations(db, 1);
+    const result = await deleteTagWithRelationsFromD1(db, 1);
 
     expect(result).toBe("error");
   });
