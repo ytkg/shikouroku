@@ -15,6 +15,7 @@ export type Entity = {
   description: string | null;
   isWishlist: boolean;
   tags: Tag[];
+  firstImageUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

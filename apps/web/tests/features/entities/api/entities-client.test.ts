@@ -19,6 +19,7 @@ describe("entities.client", () => {
               name: "Clean Code",
               description: null,
               is_wishlist: 1,
+              first_image_url: "/api/entities/entity-1/images/image-1/file",
               tags: [{ id: 10, name: "read" }]
             }
           ]
@@ -37,6 +38,7 @@ describe("entities.client", () => {
         name: "Clean Code",
         description: null,
         isWishlist: true,
+        firstImageUrl: "/api/entities/entity-1/images/image-1/file",
         tags: [{ id: 10, name: "read" }],
         createdAt: undefined,
         updatedAt: undefined

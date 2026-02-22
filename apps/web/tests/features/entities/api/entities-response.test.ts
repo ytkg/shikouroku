@@ -36,7 +36,7 @@ describe("entities.response", () => {
     });
   });
 
-  it("配列レスポンスでtags省略時は空配列になる", () => {
+  it("配列レスポンスでtags省略時は空配列になり、先頭画像URLを受け取れる", () => {
     const entities = parseEntitiesResponse({
       ok: true,
       entities: [
@@ -45,7 +45,8 @@ describe("entities.response", () => {
           kind: { id: 1, label: "book" },
           name: "Clean Code",
           description: "notes",
-          is_wishlist: 0
+          is_wishlist: 0,
+          first_image_url: "/api/entities/entity-1/images/image-1/file"
         }
       ]
     });
@@ -53,6 +54,7 @@ describe("entities.response", () => {
     expect(entities).toHaveLength(1);
     expect(entities[0]?.isWishlist).toBe(false);
     expect(entities[0]?.tags).toEqual([]);
+    expect(entities[0]?.firstImageUrl).toBe("/api/entities/entity-1/images/image-1/file");
   });
 
   it("kinds/tags/tag/okレスポンスを検証できる", () => {

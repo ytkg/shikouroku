@@ -22,6 +22,10 @@ export type EntityWithKindRow = EntityRow & {
   kind_label: string;
 };
 
+export type EntityWithKindAndFirstImageRow = EntityWithKindRow & {
+  first_image_id: string | null;
+};
+
 export type EntityTagRow = {
   entity_id: string;
   id: number;

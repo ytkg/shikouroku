@@ -30,6 +30,14 @@ function expectOkRoot(value: unknown, rootName: string): JsonObject {
   return root;
 }
 
+function expectOptionalNullableString(value: unknown, path: string): string | null | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  return expectNullableString(value, path);
+}
+
 function parseKind(value: unknown, path: string): Kind {
   const kind = expectObject(value, path);
   return {
@@ -49,6 +57,10 @@ function parseTag(value: unknown, path: string): Tag {
 function parseEntity(value: unknown, path: string): Entity {
   const entity = expectObject(value, path);
   const tagsValue = entity.tags;
+  const firstImageUrl = expectOptionalNullableString(
+    entity.first_image_url,
+    `${path}.first_image_url`
+  );
   const tags =
     tagsValue === undefined
       ? []
@@ -63,6 +75,7 @@ function parseEntity(value: unknown, path: string): Entity {
     description: expectNullableString(entity.description, `${path}.description`),
     isWishlist: expectWishlistFlag(entity.is_wishlist, `${path}.is_wishlist`),
     tags,
+    ...(firstImageUrl !== undefined ? { firstImageUrl } : {}),
     createdAt: expectOptionalString(entity.created_at, `${path}.created_at`),
     updatedAt: expectOptionalString(entity.updated_at, `${path}.updated_at`)
   };

@@ -1,5 +1,11 @@
 import type { EntityBody } from "../domain/schemas";
-import type { EntityWithKindRow, EntityWithTagsRow, KindRow, TagRow } from "../domain/models";
+import type {
+  EntityWithKindAndFirstImageRow,
+  EntityWithKindRow,
+  EntityWithTagsRow,
+  KindRow,
+  TagRow
+} from "../domain/models";
 import { findKindById } from "../repositories/kind-repository";
 import {
   deleteEntity,
@@ -22,6 +28,7 @@ type EntityResponseRow = {
   description: string | null;
   is_wishlist: number;
   tags: TagRow[];
+  first_image_url?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -47,7 +54,15 @@ function toWishlistFlag(value: boolean): number {
   return value ? 1 : 0;
 }
 
-function toEntityResponse(entity: EntityWithTagsRow, kind: KindRow): EntityResponseRow {
+function toImageFilePath(entityId: string, imageId: string): string {
+  return `/api/entities/${encodeURIComponent(entityId)}/images/${encodeURIComponent(imageId)}/file`;
+}
+
+function toEntityResponse(
+  entity: EntityWithTagsRow,
+  kind: KindRow,
+  firstImageId?: string | null
+): EntityResponseRow {
   return {
     id: entity.id,
     kind,
@@ -55,6 +70,11 @@ function toEntityResponse(entity: EntityWithTagsRow, kind: KindRow): EntityRespo
     description: entity.description,
     is_wishlist: entity.is_wishlist,
     tags: entity.tags,
+    ...(firstImageId !== undefined
+      ? {
+          first_image_url: firstImageId ? toImageFilePath(entity.id, firstImageId) : null
+        }
+      : {}),
     created_at: entity.created_at,
     updated_at: entity.updated_at
   };
@@ -73,6 +93,17 @@ function toEntityWithTagsRow(entity: EntityWithKindRow, tags: TagRow[]): EntityW
   };
 }
 
+function toEntityWithFirstImageResponse(
+  entity: EntityWithKindAndFirstImageRow,
+  tags: TagRow[]
+): EntityResponseRow {
+  return toEntityResponse(
+    toEntityWithTagsRow(entity, tags),
+    { id: entity.kind_id, label: entity.kind_label },
+    entity.first_image_id
+  );
+}
+
 export async function listEntitiesUseCase(
   db: D1Database
 ): Promise<UseCaseResult<{ entities: EntityResponseRow[] }>> {
@@ -84,12 +115,7 @@ export async function listEntitiesUseCase(
   const entitiesWithKinds: EntityResponseRow[] = [];
 
   for (const entity of entities) {
-    entitiesWithKinds.push(
-      toEntityResponse(
-        toEntityWithTagsRow(entity, tagsByEntity.get(entity.id) ?? []),
-        { id: entity.kind_id, label: entity.kind_label }
-      )
-    );
+    entitiesWithKinds.push(toEntityWithFirstImageResponse(entity, tagsByEntity.get(entity.id) ?? []));
   }
 
   return success({

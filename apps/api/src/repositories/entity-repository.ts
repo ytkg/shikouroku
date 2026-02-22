@@ -1,4 +1,11 @@
-import type { EntityRow, EntityTagRow, EntityWithKindRow, EntityWithTagsRow, TagRow } from "../domain/models";
+import type {
+  EntityRow,
+  EntityTagRow,
+  EntityWithKindAndFirstImageRow,
+  EntityWithKindRow,
+  EntityWithTagsRow,
+  TagRow
+} from "../domain/models";
 
 type InsertEntityInput = {
   id: string;
@@ -16,16 +23,31 @@ type UpdateEntityInput = {
   isWishlistFlag: number;
 };
 
-export async function listEntitiesWithKinds(db: D1Database): Promise<EntityWithKindRow[]> {
+export async function listEntitiesWithKinds(db: D1Database): Promise<EntityWithKindAndFirstImageRow[]> {
   const result = await db
     .prepare(
-      `SELECT e.id, e.kind_id, k.label AS kind_label, e.name, e.description, e.is_wishlist, e.created_at, e.updated_at
+      `SELECT
+         e.id,
+         e.kind_id,
+         k.label AS kind_label,
+         e.name,
+         e.description,
+         e.is_wishlist,
+         e.created_at,
+         e.updated_at,
+         (
+           SELECT ei.id
+           FROM entity_images ei
+           WHERE ei.entity_id = e.id
+           ORDER BY ei.sort_order ASC, ei.created_at ASC
+           LIMIT 1
+         ) AS first_image_id
        FROM entities e
        INNER JOIN kinds k ON k.id = e.kind_id
        ORDER BY e.created_at DESC
        LIMIT 50`
     )
-    .all<EntityWithKindRow>();
+    .all<EntityWithKindAndFirstImageRow>();
 
   return result.results ?? [];
 }
