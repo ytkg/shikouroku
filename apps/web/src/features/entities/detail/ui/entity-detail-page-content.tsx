@@ -41,6 +41,10 @@ export function EntityDetailPageContent() {
             page.entity && (
               <>
                 <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">ID</p>
+                  <p className="break-all text-xs">{page.entity.id}</p>
+                </div>
+                <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">種別</p>
                   <p className="text-sm">{kindLabel}</p>
                 </div>
@@ -65,10 +69,6 @@ export function EntityDetailPageContent() {
                       ))}
                     </div>
                   )}
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">ID</p>
-                  <p className="break-all text-xs">{page.entity.id}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">関連嗜好</p>
