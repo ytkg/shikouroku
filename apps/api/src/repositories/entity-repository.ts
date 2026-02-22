@@ -1,10 +1,10 @@
 import type {
-  EntityRow,
-  EntityTagRow,
-  EntityWithKindAndFirstImageRow,
-  EntityWithKindRow,
-  EntityWithTagsRow,
-  TagRow
+  EntityRecord,
+  EntityTagRecord,
+  EntityWithKindAndFirstImageRecord,
+  EntityWithKindRecord,
+  EntityWithTagsRecord,
+  TagRecord
 } from "../domain/models";
 
 type InsertEntityInput = {
@@ -23,7 +23,7 @@ type UpdateEntityInput = {
   isWishlistFlag: number;
 };
 
-export async function listEntitiesWithKinds(db: D1Database): Promise<EntityWithKindAndFirstImageRow[]> {
+export async function listEntitiesWithKinds(db: D1Database): Promise<EntityWithKindAndFirstImageRecord[]> {
   const result = await db
     .prepare(
       `SELECT
@@ -47,18 +47,18 @@ export async function listEntitiesWithKinds(db: D1Database): Promise<EntityWithK
        ORDER BY e.created_at DESC
        LIMIT 50`
     )
-    .all<EntityWithKindAndFirstImageRow>();
+    .all<EntityWithKindAndFirstImageRecord>();
 
   return result.results ?? [];
 }
 
-export async function findEntityById(db: D1Database, id: string): Promise<EntityRow | null> {
+export async function findEntityById(db: D1Database, id: string): Promise<EntityRecord | null> {
   const entity = await db
     .prepare(
       "SELECT id, kind_id, name, description, is_wishlist, created_at, updated_at FROM entities WHERE id = ? LIMIT 1"
     )
     .bind(id)
-    .first<EntityRow>();
+    .first<EntityRecord>();
 
   return entity ?? null;
 }
@@ -76,7 +76,7 @@ export async function findEntityIdByKindAndName(
   return entity ?? null;
 }
 
-export async function findEntityWithKindById(db: D1Database, id: string): Promise<EntityWithKindRow | null> {
+export async function findEntityWithKindById(db: D1Database, id: string): Promise<EntityWithKindRecord | null> {
   const entity = await db
     .prepare(
       `SELECT e.id, e.kind_id, k.label AS kind_label, e.name, e.description, e.is_wishlist, e.created_at, e.updated_at
@@ -86,7 +86,7 @@ export async function findEntityWithKindById(db: D1Database, id: string): Promis
        LIMIT 1`
     )
     .bind(id)
-    .first<EntityWithKindRow>();
+    .first<EntityWithKindRecord>();
 
   return entity ?? null;
 }
@@ -94,7 +94,7 @@ export async function findEntityWithKindById(db: D1Database, id: string): Promis
 export async function fetchEntitiesWithKindsByIds(
   db: D1Database,
   ids: string[]
-): Promise<EntityWithKindRow[]> {
+): Promise<EntityWithKindRecord[]> {
   if (ids.length === 0) {
     return [];
   }
@@ -108,7 +108,7 @@ export async function fetchEntitiesWithKindsByIds(
        WHERE e.id IN (${placeholders})`
     )
     .bind(...ids)
-    .all<EntityWithKindRow>();
+    .all<EntityWithKindRecord>();
 
   return result.results ?? [];
 }
@@ -154,8 +154,8 @@ export async function replaceEntityTags(db: D1Database, entityId: string, tagIds
   return results.every((result) => result.success);
 }
 
-export async function fetchTagsByEntityIds(db: D1Database, entityIds: string[]): Promise<Map<string, TagRow[]>> {
-  const tagsByEntity = new Map<string, TagRow[]>();
+export async function fetchTagsByEntityIds(db: D1Database, entityIds: string[]): Promise<Map<string, TagRecord[]>> {
+  const tagsByEntity = new Map<string, TagRecord[]>();
   if (entityIds.length === 0) {
     return tagsByEntity;
   }
@@ -170,7 +170,7 @@ export async function fetchTagsByEntityIds(db: D1Database, entityIds: string[]):
        ORDER BY t.name ASC, t.id ASC`
     )
     .bind(...entityIds)
-    .all<EntityTagRow>();
+    .all<EntityTagRecord>();
 
   for (const row of tagsResult.results ?? []) {
     const current = tagsByEntity.get(row.entity_id);
@@ -185,7 +185,7 @@ export async function fetchTagsByEntityIds(db: D1Database, entityIds: string[]):
   return tagsByEntity;
 }
 
-export async function fetchEntityWithTags(db: D1Database, entityId: string): Promise<EntityWithTagsRow | null> {
+export async function fetchEntityWithTags(db: D1Database, entityId: string): Promise<EntityWithTagsRecord | null> {
   const entity = await findEntityById(db, entityId);
   if (!entity) {
     return null;

@@ -1,4 +1,4 @@
-import type { EntityImageRow } from "../domain/models";
+import type { EntityImageRecord } from "../domain/models";
 import { findEntityById } from "../repositories/entity-repository";
 import {
   collapseEntityImageSortOrderAfterDelete,
@@ -15,7 +15,7 @@ import { fail, success, type UseCaseResult } from "./result";
 const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
-type EntityImageResponseRow = {
+type EntityImageResponseDto = {
   id: string;
   entity_id: string;
   file_name: string;
@@ -32,7 +32,7 @@ function toImageFilePath(entityId: string, imageId: string): string {
   return `/api/entities/${encodeURIComponent(entityId)}/images/${encodeURIComponent(imageId)}/file`;
 }
 
-function toEntityImageResponse(image: EntityImageRow): EntityImageResponseRow {
+function toEntityImageResponse(image: EntityImageRecord): EntityImageResponseDto {
   return {
     id: image.id,
     entity_id: image.entity_id,
@@ -82,7 +82,7 @@ function toErrorMessage(error: unknown): string | null {
 export async function listEntityImagesUseCase(
   db: D1Database,
   entityId: string
-): Promise<UseCaseResult<{ images: EntityImageResponseRow[] }>> {
+): Promise<UseCaseResult<{ images: EntityImageResponseDto[] }>> {
   const entity = await findEntityById(db, entityId);
   if (!entity) {
     return fail(404, "entity not found");
@@ -99,7 +99,7 @@ export async function uploadEntityImageUseCase(
   imageBucket: R2Bucket,
   entityId: string,
   file: UploadImageFile
-): Promise<UseCaseResult<{ image: EntityImageResponseRow }>> {
+): Promise<UseCaseResult<{ image: EntityImageResponseDto }>> {
   const entity = await findEntityById(db, entityId);
   if (!entity) {
     return fail(404, "entity not found");
@@ -267,7 +267,7 @@ export async function getEntityImageFileUseCase(
   imageId: string
 ): Promise<
   UseCaseResult<{
-    image: EntityImageRow;
+    image: EntityImageRecord;
     file: R2ObjectBody;
   }>
 > {

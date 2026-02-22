@@ -1,12 +1,12 @@
-import type { TagRow } from "../domain/models";
+import type { TagRecord } from "../domain/models";
 
-export async function listTags(db: D1Database): Promise<TagRow[]> {
-  const result = await db.prepare("SELECT id, name FROM tags ORDER BY name ASC, id ASC").all<TagRow>();
+export async function listTags(db: D1Database): Promise<TagRecord[]> {
+  const result = await db.prepare("SELECT id, name FROM tags ORDER BY name ASC, id ASC").all<TagRecord>();
   return result.results ?? [];
 }
 
-export async function findTagByName(db: D1Database, name: string): Promise<TagRow | null> {
-  const tag = await db.prepare("SELECT id, name FROM tags WHERE name = ? LIMIT 1").bind(name).first<TagRow>();
+export async function findTagByName(db: D1Database, name: string): Promise<TagRecord | null> {
+  const tag = await db.prepare("SELECT id, name FROM tags WHERE name = ? LIMIT 1").bind(name).first<TagRecord>();
   return tag ?? null;
 }
 
@@ -15,7 +15,7 @@ export async function findTagById(db: D1Database, id: number): Promise<{ id: num
   return tag ?? null;
 }
 
-export async function insertTag(db: D1Database, name: string): Promise<TagRow | null> {
+export async function insertTag(db: D1Database, name: string): Promise<TagRecord | null> {
   const inserted = await db.prepare("INSERT INTO tags (name) VALUES (?)").bind(name).run();
   if (!inserted.success) {
     return null;

@@ -81,11 +81,19 @@
     - `apps/api/tests/architecture/usecase-schema-coupling.test.ts`
   - `entities-usecase` の `domain/schemas` 依存を除去し、HTTP入力型から分離。
     - `apps/api/src/usecases/entities-usecase.ts`
+  - 永続化モデル命名を `*Row` から `*Record` に統一。
+    - `apps/api/src/domain/models.ts`
+    - `apps/api/src/repositories/*`
+    - `apps/api/src/usecases/*`
+  - ユースケースのレスポンス型名を `*Dto` に統一。
+    - `apps/api/src/usecases/entities-usecase.ts`
+    - `apps/api/src/usecases/entity-relations-usecase.ts`
+    - `apps/api/src/usecases/entity-images-usecase.ts`
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
   - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行を導入）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
-  - `High-2`（層混線/命名不整合）: **一部解消**（usecase の schema 依存を削減）
+  - `High-2`（層混線/命名不整合）: **改善中**（schema依存削減 + `*Record`/`*Dto` 命名へ統一）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
   - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テスト + API CIを追加、統合テストは未実装）

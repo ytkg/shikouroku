@@ -1,14 +1,14 @@
-export type KindRow = {
+export type KindRecord = {
   id: number;
   label: string;
 };
 
-export type TagRow = {
+export type TagRecord = {
   id: number;
   name: string;
 };
 
-export type EntityRow = {
+export type EntityRecord = {
   id: string;
   kind_id: number;
   name: string;
@@ -18,23 +18,23 @@ export type EntityRow = {
   updated_at: string;
 };
 
-export type EntityWithKindRow = EntityRow & {
+export type EntityWithKindRecord = EntityRecord & {
   kind_label: string;
 };
 
-export type EntityWithKindAndFirstImageRow = EntityWithKindRow & {
+export type EntityWithKindAndFirstImageRecord = EntityWithKindRecord & {
   first_image_id: string | null;
 };
 
-export type EntityTagRow = {
+export type EntityTagRecord = {
   entity_id: string;
   id: number;
   name: string;
 };
 
-export type EntityWithTagsRow = EntityRow & { tags: TagRow[] };
+export type EntityWithTagsRecord = EntityRecord & { tags: TagRecord[] };
 
-export type EntityImageRow = {
+export type EntityImageRecord = {
   id: string;
   entity_id: string;
   object_key: string;

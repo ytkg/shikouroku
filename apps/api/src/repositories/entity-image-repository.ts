@@ -1,4 +1,4 @@
-import type { EntityImageRow } from "../domain/models";
+import type { EntityImageRecord } from "../domain/models";
 
 type InsertEntityImageInput = {
   id: string;
@@ -14,7 +14,7 @@ type NextSortOrderRow = {
   next_sort_order: number;
 };
 
-export async function listEntityImages(db: D1Database, entityId: string): Promise<EntityImageRow[]> {
+export async function listEntityImages(db: D1Database, entityId: string): Promise<EntityImageRecord[]> {
   const result = await db
     .prepare(
       `SELECT id, entity_id, object_key, file_name, mime_type, file_size, sort_order, created_at
@@ -23,7 +23,7 @@ export async function listEntityImages(db: D1Database, entityId: string): Promis
        ORDER BY sort_order ASC, created_at ASC`
     )
     .bind(entityId)
-    .all<EntityImageRow>();
+    .all<EntityImageRecord>();
 
   return result.results ?? [];
 }
@@ -32,7 +32,7 @@ export async function findEntityImageById(
   db: D1Database,
   entityId: string,
   imageId: string
-): Promise<EntityImageRow | null> {
+): Promise<EntityImageRecord | null> {
   const image = await db
     .prepare(
       `SELECT id, entity_id, object_key, file_name, mime_type, file_size, sort_order, created_at
@@ -41,7 +41,7 @@ export async function findEntityImageById(
        LIMIT 1`
     )
     .bind(entityId, imageId)
-    .first<EntityImageRow>();
+    .first<EntityImageRecord>();
 
   return image ?? null;
 }

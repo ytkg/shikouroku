@@ -1,15 +1,15 @@
-import type { KindRow } from "../domain/models";
+import type { KindRecord } from "../domain/models";
 
-export async function listKinds(db: D1Database): Promise<KindRow[]> {
-  const result = await db.prepare("SELECT id, label FROM kinds ORDER BY id ASC").all<KindRow>();
+export async function listKinds(db: D1Database): Promise<KindRecord[]> {
+  const result = await db.prepare("SELECT id, label FROM kinds ORDER BY id ASC").all<KindRecord>();
   return result.results ?? [];
 }
 
-export async function findKindById(db: D1Database, id: number): Promise<KindRow | null> {
+export async function findKindById(db: D1Database, id: number): Promise<KindRecord | null> {
   const kind = await db
     .prepare("SELECT id, label FROM kinds WHERE id = ? LIMIT 1")
     .bind(id)
-    .first<KindRow>();
+    .first<KindRecord>();
 
   return kind ?? null;
 }

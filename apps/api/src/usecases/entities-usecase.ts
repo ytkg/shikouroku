@@ -1,9 +1,9 @@
 import type {
-  EntityWithKindAndFirstImageRow,
-  EntityWithKindRow,
-  EntityWithTagsRow,
-  KindRow,
-  TagRow
+  EntityWithKindAndFirstImageRecord,
+  EntityWithKindRecord,
+  EntityWithTagsRecord,
+  KindRecord,
+  TagRecord
 } from "../domain/models";
 import { findKindById } from "../repositories/kind-repository";
 import {
@@ -28,13 +28,13 @@ export type UpsertEntityCommand = {
   tagIds: number[];
 };
 
-type EntityResponseRow = {
+type EntityResponseDto = {
   id: string;
-  kind: KindRow;
+  kind: KindRecord;
   name: string;
   description: string | null;
   is_wishlist: number;
-  tags: TagRow[];
+  tags: TagRecord[];
   first_image_url?: string | null;
   created_at: string;
   updated_at: string;
@@ -66,10 +66,10 @@ function toImageFilePath(entityId: string, imageId: string): string {
 }
 
 function toEntityResponse(
-  entity: EntityWithTagsRow,
-  kind: KindRow,
+  entity: EntityWithTagsRecord,
+  kind: KindRecord,
   firstImageId?: string | null
-): EntityResponseRow {
+): EntityResponseDto {
   return {
     id: entity.id,
     kind,
@@ -87,7 +87,7 @@ function toEntityResponse(
   };
 }
 
-function toEntityWithTagsRow(entity: EntityWithKindRow, tags: TagRow[]): EntityWithTagsRow {
+function toEntityWithTagsRow(entity: EntityWithKindRecord, tags: TagRecord[]): EntityWithTagsRecord {
   return {
     id: entity.id,
     kind_id: entity.kind_id,
@@ -101,9 +101,9 @@ function toEntityWithTagsRow(entity: EntityWithKindRow, tags: TagRow[]): EntityW
 }
 
 function toEntityWithFirstImageResponse(
-  entity: EntityWithKindAndFirstImageRow,
-  tags: TagRow[]
-): EntityResponseRow {
+  entity: EntityWithKindAndFirstImageRecord,
+  tags: TagRecord[]
+): EntityResponseDto {
   return toEntityResponse(
     toEntityWithTagsRow(entity, tags),
     { id: entity.kind_id, label: entity.kind_label },
@@ -113,13 +113,13 @@ function toEntityWithFirstImageResponse(
 
 export async function listEntitiesUseCase(
   db: D1Database
-): Promise<UseCaseResult<{ entities: EntityResponseRow[] }>> {
+): Promise<UseCaseResult<{ entities: EntityResponseDto[] }>> {
   const entities = await listEntitiesWithKinds(db);
   const tagsByEntity = await fetchTagsByEntityIds(
     db,
     entities.map((entity) => entity.id)
   );
-  const entitiesWithKinds: EntityResponseRow[] = [];
+  const entitiesWithKinds: EntityResponseDto[] = [];
 
   for (const entity of entities) {
     entitiesWithKinds.push(toEntityWithFirstImageResponse(entity, tagsByEntity.get(entity.id) ?? []));
@@ -133,7 +133,7 @@ export async function listEntitiesUseCase(
 export async function getEntityUseCase(
   db: D1Database,
   id: string
-): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
+): Promise<UseCaseResult<{ entity: EntityResponseDto }>> {
   const entity = await findEntityWithKindById(db, id);
   if (!entity) {
     return fail(404, "entity not found");
@@ -152,7 +152,7 @@ export async function getEntityUseCase(
 export async function createEntityUseCase(
   db: D1Database,
   body: UpsertEntityCommand
-): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
+): Promise<UseCaseResult<{ entity: EntityResponseDto }>> {
   const normalizedTagIds = uniqTagIds(body.tagIds);
 
   const kind = await findKindById(db, body.kindId);
@@ -203,7 +203,7 @@ export async function updateEntityUseCase(
   db: D1Database,
   id: string,
   body: UpsertEntityCommand
-): Promise<UseCaseResult<{ entity: EntityResponseRow }>> {
+): Promise<UseCaseResult<{ entity: EntityResponseDto }>> {
   const kind = await findKindById(db, body.kindId);
   if (!kind) {
     return fail(400, "kind not found");

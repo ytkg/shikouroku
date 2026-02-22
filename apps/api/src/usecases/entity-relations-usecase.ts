@@ -1,4 +1,4 @@
-import type { EntityWithKindRow, EntityWithTagsRow, KindRow, TagRow } from "../domain/models";
+import type { EntityWithKindRecord, EntityWithTagsRecord, KindRecord, TagRecord } from "../domain/models";
 import {
   createEntityRelation,
   deleteEntityRelation,
@@ -11,18 +11,18 @@ import {
 } from "../repositories/entity-repository";
 import { fail, success, type UseCaseResult } from "./result";
 
-type RelatedEntityResponseRow = {
+type RelatedEntityResponseDto = {
   id: string;
-  kind: KindRow;
+  kind: KindRecord;
   name: string;
   description: string | null;
   is_wishlist: number;
-  tags: TagRow[];
+  tags: TagRecord[];
   created_at: string;
   updated_at: string;
 };
 
-function toEntityWithTagsRow(entity: EntityWithKindRow, tags: TagRow[]): EntityWithTagsRow {
+function toEntityWithTagsRow(entity: EntityWithKindRecord, tags: TagRecord[]): EntityWithTagsRecord {
   return {
     id: entity.id,
     kind_id: entity.kind_id,
@@ -35,7 +35,7 @@ function toEntityWithTagsRow(entity: EntityWithKindRow, tags: TagRow[]): EntityW
   };
 }
 
-function toRelatedEntityResponse(entity: EntityWithTagsRow, kind: KindRow): RelatedEntityResponseRow {
+function toRelatedEntityResponse(entity: EntityWithTagsRecord, kind: KindRecord): RelatedEntityResponseDto {
   return {
     id: entity.id,
     kind,
@@ -51,7 +51,7 @@ function toRelatedEntityResponse(entity: EntityWithTagsRow, kind: KindRow): Rela
 export async function listRelatedEntitiesUseCase(
   db: D1Database,
   entityId: string
-): Promise<UseCaseResult<{ related: RelatedEntityResponseRow[] }>> {
+): Promise<UseCaseResult<{ related: RelatedEntityResponseDto[] }>> {
   const entity = await findEntityById(db, entityId);
   if (!entity) {
     return fail(404, "entity not found");
@@ -65,7 +65,7 @@ export async function listRelatedEntitiesUseCase(
   const relatedEntities = await fetchEntitiesWithKindsByIds(db, relatedEntityIds);
   const tagsByEntity = await fetchTagsByEntityIds(db, relatedEntityIds);
   const entityMap = new Map(relatedEntities.map((relatedEntity) => [relatedEntity.id, relatedEntity]));
-  const related: RelatedEntityResponseRow[] = [];
+  const related: RelatedEntityResponseDto[] = [];
 
   for (const relatedEntityId of relatedEntityIds) {
     const relatedEntity = entityMap.get(relatedEntityId);
