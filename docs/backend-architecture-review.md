@@ -18,7 +18,7 @@
 - [ ] Phase 3: `UnitOfWork` 導入による整合性境界の統一
 - [x] Phase 4: アーキテクチャテストによる依存境界の固定
 - [ ] Phase 4: `domain` / `lib` の最終整理（責務再配置と縮退）
-- [ ] 品質: 統合テスト（`tests/integration`）の追加
+- [x] 品質: 統合テスト（`tests/integration`）の追加
 
 - 実施済み（Phase 0 / 1）:
   - `requestId` 付与とエラーレスポンス契約の統一を反映。
@@ -62,12 +62,14 @@
   - modules application/infra のユニットテストを拡充。
     - `apps/api/tests/unit/modules/**/*`
     - `apps/api/tests/unit/repositories/*`
+  - 統合テストを追加（middleware + route + application + infra の貫通確認）。
+    - `apps/api/tests/integration/maintenance-image-cleanup.integration.test.ts`
   - アーキテクチャ回帰ガードを追加。
     - `apps/api/tests/architecture/route-usecase-boundary.test.ts`
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`29 files / 77 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`30 files / 78 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
@@ -350,6 +352,7 @@ apps/api/src
   - [x] 画像操作の整合性ポリシーを確定し、再試行戦略を実装する（補償キュー + 定期実行）。
 - [ ] **Phase 4: ルール固定**
   - [x] 命名規約・依存規約を architecture testで強制する。
+  - [x] `tests/integration` を追加し、主要フローの貫通テストを導入する。
   - [ ] `domain` / `lib` の最終整理と廃止範囲の確定。
 
 ## 7. 命名変更の具体例
