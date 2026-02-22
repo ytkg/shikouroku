@@ -30,6 +30,12 @@
     - `apps/api/src/index.ts`
     - `apps/api/src/middleware/auth-session-middleware.ts`
     - `apps/api/src/routes/api-router.ts`
+  - APIルーターを機能別に分割し、変更単位を縮小。
+    - `apps/api/src/routes/api/auth-routes.ts`
+    - `apps/api/src/routes/api/kind-routes.ts`
+    - `apps/api/src/routes/api/tag-routes.ts`
+    - `apps/api/src/routes/api/entity-routes.ts`
+    - `apps/api/src/routes/api/shared.ts`
   - 全体アプリに対するAPIエラー契約テストを追加。
     - `apps/api/tests/contract/app/api-error-shape.contract.test.ts`
 - 実施済み（Phase 3の先行反映）:
@@ -56,6 +62,8 @@
     - `package.json`（`quality:api`）
   - API向けCIワークフローを追加。
     - `.github/workflows/api-quality.yml`
+  - 認証ミドルウェアのユニットテストを追加。
+    - `apps/api/tests/unit/middleware/auth-session-middleware.test.ts`
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
   - `Critical-2`（D1/R2跨り整合性）: **一部解消**（削除失敗時の補償キュー導入。自動実行ワーカーは未実装）
