@@ -1,9 +1,9 @@
-import { listKindsFromD1 } from "../infra/kind-repository-d1";
+import type { KindRepository } from "../ports/kind-repository";
 import { success, type UseCaseResult } from "../../../../shared/application/result";
 
 export async function listKindsQuery(
-  db: D1Database
+  kindRepository: KindRepository
 ): Promise<UseCaseResult<{ kinds: { id: number; label: string }[] }>> {
-  const kinds = await listKindsFromD1(db);
+  const kinds = await kindRepository.listKinds();
   return success({ kinds });
 }

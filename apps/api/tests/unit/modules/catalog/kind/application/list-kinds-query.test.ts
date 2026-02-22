@@ -1,27 +1,18 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("../../../../../../src/modules/catalog/kind/infra/kind-repository-d1", () => ({
-  listKindsFromD1: vi.fn()
-}));
-
-import { listKindsFromD1 } from "../../../../../../src/modules/catalog/kind/infra/kind-repository-d1";
+import { describe, expect, it, vi } from "vitest";
 import { listKindsQuery } from "../../../../../../src/modules/catalog/kind/application/list-kinds-query";
-
-const listKindsFromD1Mock = vi.mocked(listKindsFromD1);
+import type { KindRepository } from "../../../../../../src/modules/catalog/kind/ports/kind-repository";
 
 describe("kind module application", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("listKindsQuery returns kinds from repository", async () => {
-    const db = {} as D1Database;
-    listKindsFromD1Mock.mockResolvedValue([
-      { id: 1, label: "Book" },
-      { id: 2, label: "Movie" }
-    ]);
+    const repository: KindRepository = {
+      listKinds: vi.fn().mockResolvedValue([
+        { id: 1, label: "Book" },
+        { id: 2, label: "Movie" }
+      ]),
+      findKindById: vi.fn()
+    };
 
-    const result = await listKindsQuery(db);
+    const result = await listKindsQuery(repository);
 
     expect(result).toEqual({
       ok: true,
