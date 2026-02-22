@@ -9,6 +9,7 @@ import {
   nextEntityImageSortOrder,
   reorderEntityImages
 } from "../repositories/entity-image-repository";
+import { enqueueImageCleanupTask } from "../repositories/image-cleanup-task-repository";
 import { fail, success, type UseCaseResult } from "./result";
 
 const MAX_IMAGE_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -68,6 +69,14 @@ function hasSameIds(a: string[], b: string[]): boolean {
   }
 
   return true;
+}
+
+function toErrorMessage(error: unknown): string | null {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return null;
 }
 
 export async function listEntityImagesUseCase(
@@ -145,8 +154,8 @@ export async function uploadEntityImageUseCase(
   if (!inserted) {
     try {
       await imageBucket.delete(objectKey);
-    } catch {
-      // rollback best-effort
+    } catch (error) {
+      await enqueueImageCleanupTask(db, objectKey, "metadata_insert_failed", toErrorMessage(error));
     }
     return fail(500, "failed to save image metadata");
   }
@@ -196,8 +205,16 @@ export async function deleteEntityImageUseCase(
 
   try {
     await imageBucket.delete(image.object_key);
-  } catch {
-    return fail(500, "failed to delete image file");
+  } catch (error) {
+    const queued = await enqueueImageCleanupTask(
+      db,
+      image.object_key,
+      "entity_image_delete_failed",
+      toErrorMessage(error)
+    );
+    if (!queued) {
+      return fail(500, "failed to delete image file and schedule cleanup");
+    }
   }
 
   return success({});

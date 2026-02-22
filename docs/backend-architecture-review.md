@@ -39,6 +39,13 @@
     - `apps/api/src/repositories/tag-repository.ts`（`deleteTagAndRelations`）
   - 上記バッチ処理の回帰防止テストを追加。
     - `apps/api/tests/unit/repositories/repository-batch-safety.test.ts`
+  - D1/R2跨り削除失敗に備えたクリーンアップキューを追加。
+    - `apps/api/migrations/0008_create_image_cleanup_tasks.sql`
+    - `apps/api/src/repositories/image-cleanup-task-repository.ts`
+    - `apps/api/src/usecases/entity-images-usecase.ts`
+  - クリーンアップキューのリポジトリ/ユースケーステストを追加。
+    - `apps/api/tests/unit/repositories/image-cleanup-task-repository.test.ts`
+    - `apps/api/tests/unit/usecases/entity-images-usecase.test.ts`
 - 実施済み（保守性改善の先行反映）:
   - `validationMessage` の if連鎖を辞書化し、更新漏れリスクを削減。
     - `apps/api/src/domain/schemas.ts`
@@ -50,7 +57,8 @@
   - API向けCIワークフローを追加。
     - `.github/workflows/api-quality.yml`
 - Findingsへの反映状況:
-  - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化。D1/R2跨りは継続対応）
+  - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
+  - `Critical-2`（D1/R2跨り整合性）: **一部解消**（削除失敗時の補償キュー導入。自動実行ワーカーは未実装）
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
   - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
   - `Medium-2`（認証URLハードコード）: **解消**
