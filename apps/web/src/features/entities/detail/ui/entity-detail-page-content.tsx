@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
-import { RelatedEntityDialog } from "./related-entity-dialog";
 import {
   getEntityDetailPath,
   getEntityEditPath,
@@ -72,17 +71,7 @@ export function EntityDetailPageContent() {
                   <p className="break-all text-xs">{page.entity.id}</p>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-muted-foreground">関連嗜好</p>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => page.setRelatedDialogOpen(true)}
-                    >
-                      関連を追加
-                    </Button>
-                  </div>
+                  <p className="text-xs text-muted-foreground">関連嗜好</p>
                   {page.relatedLoading ? (
                     <p className="text-sm">読み込み中...</p>
                   ) : page.relatedEntities.length === 0 ? (
@@ -129,16 +118,6 @@ export function EntityDetailPageContent() {
       <Button variant="outline" onClick={() => navigate(routePaths.home)}>
         一覧へ戻る
       </Button>
-      <RelatedEntityDialog
-        open={page.relatedDialogOpen}
-        candidates={page.relatedCandidates}
-        selectedRelatedEntityId={page.relatedCandidateId}
-        saving={page.relatedSaving}
-        error={page.relatedError}
-        onOpenChange={page.setRelatedDialogOpen}
-        onSelectedRelatedEntityIdChange={page.setRelatedCandidateId}
-        onSubmit={page.addRelated}
-      />
     </main>
   );
 }
