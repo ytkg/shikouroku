@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const MODULES_DIR = path.resolve(__dirname, "../../src/modules");
-const FORBIDDEN_IMPORT = "domain/schemas";
+const FORBIDDEN_IMPORT = "shared/validation/request-schemas";
 
 function collectFiles(rootDir: string): string[] {
   const entries = fs.readdirSync(rootDir, { withFileTypes: true });
@@ -25,7 +25,7 @@ function collectFiles(rootDir: string): string[] {
 }
 
 describe("application-schema coupling", () => {
-  it("does not import domain/schemas from module application layer", () => {
+  it("does not import shared/validation/request-schemas from module application layer", () => {
     const applicationFiles = collectFiles(MODULES_DIR).filter((filePath) =>
       filePath.includes(`${path.sep}application${path.sep}`)
     );

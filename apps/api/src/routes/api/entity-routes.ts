@@ -4,7 +4,7 @@ import {
   entityBodySchema,
   entityImageOrderBodySchema,
   relatedEntityBodySchema
-} from "../../domain/schemas";
+} from "../../shared/validation/request-schemas";
 import { parseJsonBody } from "../../lib/http";
 import { createEntityCommand } from "../../modules/catalog/entity/application/create-entity-command";
 import { getEntityQuery } from "../../modules/catalog/entity/application/get-entity-query";

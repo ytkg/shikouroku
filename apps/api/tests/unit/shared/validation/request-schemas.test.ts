@@ -5,7 +5,7 @@ import {
   loginBodySchema,
   relatedEntityBodySchema,
   validationMessage
-} from "../../../src/domain/schemas";
+} from "../../../../src/shared/validation/request-schemas";
 
 describe("validationMessage", () => {
   it("maps known login field errors", () => {

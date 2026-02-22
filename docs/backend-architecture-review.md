@@ -35,6 +35,10 @@
     - `apps/api/src/app/create-app.ts`
     - `apps/api/src/app/scheduled.ts`
     - `apps/api/src/index.ts`
+  - HTTP入力スキーマを `domain` から `shared/validation` へ移設。
+    - `apps/api/src/shared/validation/request-schemas.ts`
+    - `apps/api/src/lib/http.ts`
+    - `apps/api/src/routes/api/*.ts`
 
 - 実施済み（Phase 2: modules移行 + 互換レイヤ撤去）:
   - `auth` / `catalog(entity,image,relation,kind,tag)` / `maintenance(image-cleanup)` を `modules/*` へ集約。

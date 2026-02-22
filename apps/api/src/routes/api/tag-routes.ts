@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../../app-env";
-import { tagBodySchema } from "../../domain/schemas";
+import { tagBodySchema } from "../../shared/validation/request-schemas";
 import { parseJsonBody } from "../../lib/http";
 import { createTagCommand } from "../../modules/catalog/tag/application/create-tag-command";
 import { deleteTagCommand } from "../../modules/catalog/tag/application/delete-tag-command";
