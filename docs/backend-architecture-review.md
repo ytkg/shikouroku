@@ -5,6 +5,21 @@
 
 ## 0. 進捗サマリー（2026-02-22）
 
+### 0.1 実施チェックリスト
+
+- [x] Phase 0: 契約テストの先行追加（`tests/contract`）
+- [x] Phase 0: 共通エラー形式と `requestId` の導入
+- [x] Phase 1: APIルートの機能別分割（auth/kind/tag/entity/maintenance）
+- [ ] Phase 1: `index.ts` の完全分割（`main.ts`, `app/create-app.ts` などへの再配置）
+- [x] Phase 2: `modules/*` への再配置（auth/catalog/maintenance）
+- [x] Phase 2: 旧互換レイヤ（`usecases/*`, `repositories/*`, `lib/auth-client.ts`）の撤去
+- [x] Phase 3: 代表的な複数更新の `db.batch` 化
+- [x] Phase 3: D1/R2整合性の補償キュー + 手動実行API + cron実行
+- [ ] Phase 3: `UnitOfWork` 導入による整合性境界の統一
+- [x] Phase 4: アーキテクチャテストによる依存境界の固定
+- [ ] Phase 4: `domain` / `lib` の最終整理（責務再配置と縮退）
+- [ ] 品質: 統合テスト（`tests/integration`）の追加
+
 - 実施済み（Phase 0 / 1）:
   - `requestId` 付与とエラーレスポンス契約の統一を反映。
     - `apps/api/src/shared/http/request-id.ts`
@@ -319,23 +334,23 @@ apps/api/src
 - ルート・エラー契約・JSON形状を契約テストで固定する。
 - import境界ルール（layer/module）を静的検査でCIブロックする。
 
-## 6. 移行ロードマップ（段階的）
+## 6. 移行ロードマップ（チェックボックス）
 
-1. **Phase 0: 足場**
-   - `tests/contract` を先行追加し、現行API契約を固定する。
-   - 共通エラー形式と `requestId` を先に導入する。
-2. **Phase 1: 入口分割**
-   - `index.ts` を `main.ts`, `app/create-app.ts`, `app/middleware/*` に分割する。
-   - ルートをモジュール単位へ移す。
-3. **Phase 2: カタログ領域再編**
-   - `entities/tags/kinds/relations/images` を `modules/catalog/*` へ再配置する。
-   - `Row/Body` 型を `Record/Dto/Command` へ改名する。
-4. **Phase 3: 整合性強化**
-   - `UnitOfWork` 導入。
-   - 画像操作の整合性ポリシーを確定し、再試行戦略を実装する。
-5. **Phase 4: ルール固定**
-   - 命名規約・依存規約をlint/architecture testで強制する。
-   - 旧 `usecases`, `repositories`, `domain`, `lib` を廃止する。
+- [x] **Phase 0: 足場**
+  - [x] `tests/contract` を先行追加し、現行API契約を固定する。
+  - [x] 共通エラー形式と `requestId` を先に導入する。
+- [ ] **Phase 1: 入口分割**
+  - [ ] `index.ts` を `main.ts`, `app/create-app.ts`, `app/middleware/*` に分割する。
+  - [x] ルートをモジュール単位へ移す。
+- [x] **Phase 2: カタログ領域再編**
+  - [x] `entities/tags/kinds/relations/images` を `modules/catalog/*` へ再配置する。
+  - [x] `Row/Body` 型を `Record/Dto/Command` へ改名する。
+- [ ] **Phase 3: 整合性強化**
+  - [ ] `UnitOfWork` 導入。
+  - [x] 画像操作の整合性ポリシーを確定し、再試行戦略を実装する（補償キュー + 定期実行）。
+- [ ] **Phase 4: ルール固定**
+  - [x] 命名規約・依存規約を architecture testで強制する。
+  - [ ] `domain` / `lib` の最終整理と廃止範囲の確定。
 
 ## 7. 命名変更の具体例
 
