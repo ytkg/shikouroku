@@ -1,10 +1,11 @@
-import { findKindByIdFromD1 } from "../../kind/infra/kind-repository-d1";
+import type { KindRepository } from "../../kind/ports/kind-repository";
 import {
   fetchEntityWithTagsFromD1,
   findEntityIdByKindAndNameFromD1,
   replaceEntityTagsInD1,
   updateEntityInD1
 } from "../infra/entity-repository-d1";
+import type { TagRepository } from "../../tag/ports/tag-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
   toDescription,
@@ -18,10 +19,12 @@ import {
 
 export async function updateEntityCommand(
   db: D1Database,
+  kindRepository: Pick<KindRepository, "findKindById">,
+  tagRepository: Pick<TagRepository, "countExistingTagsByIds">,
   id: string,
   body: UpsertEntityCommand
 ): Promise<UseCaseResult<{ entity: EntityResponseDto }>> {
-  const kind = await findKindByIdFromD1(db, body.kindId);
+  const kind = await kindRepository.findKindById(body.kindId);
   if (!kind) {
     return fail(400, "kind not found");
   }
@@ -32,7 +35,7 @@ export async function updateEntityCommand(
   }
 
   const normalizedTagIds = uniqTagIds(body.tagIds);
-  const hasValidTags = await validateTagIds(db, normalizedTagIds);
+  const hasValidTags = await validateTagIds(tagRepository, normalizedTagIds);
   if (!hasValidTags) {
     return fail(400, "tag not found");
   }

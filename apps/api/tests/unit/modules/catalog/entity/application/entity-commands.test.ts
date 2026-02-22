@@ -1,13 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../../../../../src/modules/catalog/kind/infra/kind-repository-d1", () => ({
-  findKindByIdFromD1: vi.fn()
-}));
-
-vi.mock("../../../../../../src/modules/catalog/tag/infra/tag-repository-d1", () => ({
-  countExistingTagsByIdsFromD1: vi.fn()
-}));
-
 vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
   deleteEntityInD1: vi.fn(),
   fetchEntityWithTagsFromD1: vi.fn(),
@@ -35,11 +27,9 @@ import {
   replaceEntityTagsInD1,
   updateEntityInD1
 } from "../../../../../../src/modules/catalog/entity/infra/entity-repository-d1";
-import { findKindByIdFromD1 } from "../../../../../../src/modules/catalog/kind/infra/kind-repository-d1";
-import { countExistingTagsByIdsFromD1 } from "../../../../../../src/modules/catalog/tag/infra/tag-repository-d1";
 
-const findKindByIdFromD1Mock = vi.mocked(findKindByIdFromD1);
-const countExistingTagsByIdsFromD1Mock = vi.mocked(countExistingTagsByIdsFromD1);
+const findKindByIdMock = vi.fn();
+const countExistingTagsByIdsMock = vi.fn();
 const deleteEntityInD1Mock = vi.mocked(deleteEntityInD1);
 const fetchEntityWithTagsFromD1Mock = vi.mocked(fetchEntityWithTagsFromD1);
 const fetchTagsByEntityIdsFromD1Mock = vi.mocked(fetchTagsByEntityIdsFromD1);
@@ -49,6 +39,8 @@ const insertEntityInD1Mock = vi.mocked(insertEntityInD1);
 const listEntitiesWithKindsFromD1Mock = vi.mocked(listEntitiesWithKindsFromD1);
 const replaceEntityTagsInD1Mock = vi.mocked(replaceEntityTagsInD1);
 const updateEntityInD1Mock = vi.mocked(updateEntityInD1);
+const kindRepository = { findKindById: findKindByIdMock };
+const tagRepository = { countExistingTagsByIds: countExistingTagsByIdsMock };
 
 describe("entity module application", () => {
   beforeEach(() => {
@@ -108,13 +100,13 @@ describe("entity module application", () => {
   it("createEntityCommand rolls back entity when tag update fails", async () => {
     const db = {} as D1Database;
     const randomUUIDSpy = vi.spyOn(crypto, "randomUUID").mockReturnValue("entity-new");
-    findKindByIdFromD1Mock.mockResolvedValue({ id: 1, label: "Book" } as any);
+    findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue(null);
-    countExistingTagsByIdsFromD1Mock.mockResolvedValue(1);
+    countExistingTagsByIdsMock.mockResolvedValue(1);
     insertEntityInD1Mock.mockResolvedValue(true);
     replaceEntityTagsInD1Mock.mockResolvedValue(false);
 
-    const result = await createEntityCommand(db, {
+    const result = await createEntityCommand(db, kindRepository, tagRepository, {
       kindId: 1,
       name: "DDD",
       description: "",
@@ -132,9 +124,9 @@ describe("entity module application", () => {
   });
 
   it("createEntityCommand returns 400 when kind does not exist", async () => {
-    findKindByIdFromD1Mock.mockResolvedValue(null);
+    findKindByIdMock.mockResolvedValue(null);
 
-    const result = await createEntityCommand({} as D1Database, {
+    const result = await createEntityCommand({} as D1Database, kindRepository, tagRepository, {
       kindId: 999,
       name: "DDD",
       description: "",
@@ -150,10 +142,10 @@ describe("entity module application", () => {
   });
 
   it("updateEntityCommand returns conflict when another entity has same kind/name", async () => {
-    findKindByIdFromD1Mock.mockResolvedValue({ id: 1, label: "Book" } as any);
+    findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue({ id: "entity-other" } as any);
 
-    const result = await updateEntityCommand({} as D1Database, "entity-1", {
+    const result = await updateEntityCommand({} as D1Database, kindRepository, tagRepository, "entity-1", {
       kindId: 1,
       name: "DDD",
       description: "",
@@ -169,12 +161,12 @@ describe("entity module application", () => {
   });
 
   it("updateEntityCommand returns 404 when target entity is missing", async () => {
-    findKindByIdFromD1Mock.mockResolvedValue({ id: 1, label: "Book" } as any);
+    findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue(null);
-    countExistingTagsByIdsFromD1Mock.mockResolvedValue(0);
+    countExistingTagsByIdsMock.mockResolvedValue(0);
     updateEntityInD1Mock.mockResolvedValue("not_found");
 
-    const result = await updateEntityCommand({} as D1Database, "entity-1", {
+    const result = await updateEntityCommand({} as D1Database, kindRepository, tagRepository, "entity-1", {
       kindId: 1,
       name: "DDD",
       description: "",
@@ -190,9 +182,9 @@ describe("entity module application", () => {
   });
 
   it("updateEntityCommand returns entity after successful update", async () => {
-    findKindByIdFromD1Mock.mockResolvedValue({ id: 1, label: "Book" } as any);
+    findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
-    countExistingTagsByIdsFromD1Mock.mockResolvedValue(1);
+    countExistingTagsByIdsMock.mockResolvedValue(1);
     updateEntityInD1Mock.mockResolvedValue("updated");
     replaceEntityTagsInD1Mock.mockResolvedValue(true);
     fetchEntityWithTagsFromD1Mock.mockResolvedValue({
@@ -206,7 +198,7 @@ describe("entity module application", () => {
       updated_at: "2026-01-01"
     } as any);
 
-    const result = await updateEntityCommand({} as D1Database, "entity-1", {
+    const result = await updateEntityCommand({} as D1Database, kindRepository, tagRepository, "entity-1", {
       kindId: 1,
       name: "DDD",
       description: "",

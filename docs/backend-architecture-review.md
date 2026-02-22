@@ -78,6 +78,11 @@
     - 更新: `apps/api/src/modules/catalog/tag/application/*.ts`
     - 更新: `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
     - 更新: `apps/api/src/routes/api/tag-routes.ts`
+  - entity application から他モジュール infra への直依存を排除。
+    - 更新: `apps/api/src/modules/catalog/entity/application/create-entity-command.ts`
+    - 更新: `apps/api/src/modules/catalog/entity/application/update-entity-command.ts`
+    - 更新: `apps/api/src/modules/catalog/entity/application/entity-shared.ts`
+    - 更新: `apps/api/src/routes/api/entity-routes.ts`
   - 回帰ガードとして legacy-layer architecture test を強化。
     - 更新: `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - auth application の依存境界テストを追加。
@@ -86,6 +91,8 @@
     - 追加: `apps/api/tests/architecture/kind-application-port-boundary.test.ts`
   - tag application の依存境界テストを追加。
     - 追加: `apps/api/tests/architecture/tag-application-port-boundary.test.ts`
+  - entity application の外部依存境界テストを追加。
+    - 追加: `apps/api/tests/architecture/entity-application-external-port-boundary.test.ts`
 
 - 実施済み（Phase 3: 整合性と運用品質）:
   - `db.batch` による複数更新の整合性改善を modules infra に反映。
@@ -112,7 +119,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`36 files / 98 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`37 files / 99 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）

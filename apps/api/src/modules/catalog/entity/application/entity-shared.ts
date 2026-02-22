@@ -5,7 +5,7 @@ import type {
   KindRecord,
   TagRecord
 } from "../../../../shared/db/records";
-import { countExistingTagsByIdsFromD1 } from "../../tag/infra/tag-repository-d1";
+import type { TagRepository } from "../../tag/ports/tag-repository";
 
 export type UpsertEntityCommand = {
   kindId: number;
@@ -31,12 +31,15 @@ export function uniqTagIds(tagIds: number[]): number[] {
   return [...new Set(tagIds)];
 }
 
-export async function validateTagIds(db: D1Database, tagIds: number[]): Promise<boolean> {
+export async function validateTagIds(
+  tagRepository: Pick<TagRepository, "countExistingTagsByIds">,
+  tagIds: number[]
+): Promise<boolean> {
   if (tagIds.length === 0) {
     return true;
   }
 
-  const count = await countExistingTagsByIdsFromD1(db, tagIds);
+  const count = await tagRepository.countExistingTagsByIds(tagIds);
   return count === tagIds.length;
 }
 

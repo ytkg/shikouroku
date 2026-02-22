@@ -10,6 +10,8 @@ import { createEntityCommand } from "../../modules/catalog/entity/application/cr
 import { getEntityQuery } from "../../modules/catalog/entity/application/get-entity-query";
 import { listEntitiesQuery } from "../../modules/catalog/entity/application/list-entities-query";
 import { updateEntityCommand } from "../../modules/catalog/entity/application/update-entity-command";
+import { createD1KindRepository } from "../../modules/catalog/kind/infra/kind-repository-d1";
+import { createD1TagRepository } from "../../modules/catalog/tag/infra/tag-repository-d1";
 import { deleteEntityImageCommand } from "../../modules/catalog/image/application/delete-entity-image-command";
 import { getEntityImageFileQuery } from "../../modules/catalog/image/application/get-entity-image-file-query";
 import { listEntityImagesQuery } from "../../modules/catalog/image/application/list-entity-images-query";
@@ -49,7 +51,9 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await createEntityCommand(c.env.DB, parsedBody.data);
+    const kindRepository = createD1KindRepository(c.env.DB);
+    const tagRepository = createD1TagRepository(c.env.DB);
+    const result = await createEntityCommand(c.env.DB, kindRepository, tagRepository, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -68,7 +72,9 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await updateEntityCommand(c.env.DB, id, parsedBody.data);
+    const kindRepository = createD1KindRepository(c.env.DB);
+    const tagRepository = createD1TagRepository(c.env.DB);
+    const result = await updateEntityCommand(c.env.DB, kindRepository, tagRepository, id, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
