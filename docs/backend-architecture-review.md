@@ -25,10 +25,17 @@
     - `apps/api/tests/contract/http/parse-json-body.contract.test.ts`
     - `apps/api/package.json`
     - `package.json`
+- 実施済み（Phase 1の一部反映）:
+  - `index.ts` の責務を「アプリ配線」に縮小し、認証ミドルウェアとAPIルーターを分離。
+    - `apps/api/src/index.ts`
+    - `apps/api/src/middleware/auth-session-middleware.ts`
+    - `apps/api/src/routes/api-router.ts`
+  - 全体アプリに対するAPIエラー契約テストを追加。
+    - `apps/api/tests/contract/app/api-error-shape.contract.test.ts`
 - Findingsへの反映状況:
   - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一、成功レスポンス契約は今後統一余地あり）
   - `Medium-2`（認証URLハードコード）: **解消**
-  - `Medium-3`（APIテスト不足）: **一部解消**（契約/ユニットの足場を追加、統合テストは未実装）
+  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット + アプリ契約テストを追加、統合テストは未実装）
 
 ## 1. Findings（重大度順）
 
