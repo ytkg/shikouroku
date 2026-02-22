@@ -1,4 +1,13 @@
 import type { EntityImageRecord } from "../domain/models";
+import {
+  collapseEntityImageSortOrderAfterDeleteInD1,
+  deleteEntityImageInD1,
+  findEntityImageByIdFromD1,
+  insertEntityImageInD1,
+  listEntityImagesFromD1,
+  nextEntityImageSortOrderFromD1,
+  reorderEntityImagesInD1
+} from "../modules/catalog/image/infra/image-repository-d1";
 
 type InsertEntityImageInput = {
   id: string;
@@ -10,22 +19,8 @@ type InsertEntityImageInput = {
   sortOrder: number;
 };
 
-type NextSortOrderRow = {
-  next_sort_order: number;
-};
-
 export async function listEntityImages(db: D1Database, entityId: string): Promise<EntityImageRecord[]> {
-  const result = await db
-    .prepare(
-      `SELECT id, entity_id, object_key, file_name, mime_type, file_size, sort_order, created_at
-       FROM entity_images
-       WHERE entity_id = ?
-       ORDER BY sort_order ASC, created_at ASC`
-    )
-    .bind(entityId)
-    .all<EntityImageRecord>();
-
-  return result.results ?? [];
+  return listEntityImagesFromD1(db, entityId);
 }
 
 export async function findEntityImageById(
@@ -33,51 +28,15 @@ export async function findEntityImageById(
   entityId: string,
   imageId: string
 ): Promise<EntityImageRecord | null> {
-  const image = await db
-    .prepare(
-      `SELECT id, entity_id, object_key, file_name, mime_type, file_size, sort_order, created_at
-       FROM entity_images
-       WHERE entity_id = ? AND id = ?
-       LIMIT 1`
-    )
-    .bind(entityId, imageId)
-    .first<EntityImageRecord>();
-
-  return image ?? null;
+  return findEntityImageByIdFromD1(db, entityId, imageId);
 }
 
 export async function nextEntityImageSortOrder(db: D1Database, entityId: string): Promise<number> {
-  const row = await db
-    .prepare(
-      `SELECT COALESCE(MAX(sort_order), 0) + 1 AS next_sort_order
-       FROM entity_images
-       WHERE entity_id = ?`
-    )
-    .bind(entityId)
-    .first<NextSortOrderRow>();
-
-  return Number(row?.next_sort_order ?? 1);
+  return nextEntityImageSortOrderFromD1(db, entityId);
 }
 
 export async function insertEntityImage(db: D1Database, input: InsertEntityImageInput): Promise<boolean> {
-  const inserted = await db
-    .prepare(
-      `INSERT INTO entity_images (
-        id, entity_id, object_key, file_name, mime_type, file_size, sort_order
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(
-      input.id,
-      input.entityId,
-      input.objectKey,
-      input.fileName,
-      input.mimeType,
-      input.fileSize,
-      input.sortOrder
-    )
-    .run();
-
-  return inserted.success;
+  return insertEntityImageInD1(db, input);
 }
 
 export async function deleteEntityImage(
@@ -85,16 +44,7 @@ export async function deleteEntityImage(
   entityId: string,
   imageId: string
 ): Promise<"deleted" | "not_found" | "error"> {
-  const deleted = await db
-    .prepare("DELETE FROM entity_images WHERE entity_id = ? AND id = ?")
-    .bind(entityId, imageId)
-    .run();
-
-  if (!deleted.success) {
-    return "error";
-  }
-
-  return Number(deleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
+  return deleteEntityImageInD1(db, entityId, imageId);
 }
 
 export async function collapseEntityImageSortOrderAfterDelete(
@@ -102,16 +52,7 @@ export async function collapseEntityImageSortOrderAfterDelete(
   entityId: string,
   deletedSortOrder: number
 ): Promise<boolean> {
-  const updated = await db
-    .prepare(
-      `UPDATE entity_images
-       SET sort_order = sort_order - 1
-       WHERE entity_id = ? AND sort_order > ?`
-    )
-    .bind(entityId, deletedSortOrder)
-    .run();
-
-  return updated.success;
+  return collapseEntityImageSortOrderAfterDeleteInD1(db, entityId, deletedSortOrder);
 }
 
 export async function reorderEntityImages(
@@ -119,24 +60,5 @@ export async function reorderEntityImages(
   entityId: string,
   orderedImageIds: string[]
 ): Promise<boolean> {
-  const statements = [
-    db
-      .prepare(
-        `UPDATE entity_images
-         SET sort_order = -sort_order
-         WHERE entity_id = ?`
-      )
-      .bind(entityId),
-    ...orderedImageIds.map((imageId, index) =>
-      db
-        .prepare(
-          `UPDATE entity_images
-           SET sort_order = ?
-           WHERE entity_id = ? AND id = ?`
-        )
-        .bind(index + 1, entityId, imageId)
-    )
-  ];
-  const results = await db.batch(statements);
-  return results.every((result) => result.success);
+  return reorderEntityImagesInD1(db, entityId, orderedImageIds);
 }

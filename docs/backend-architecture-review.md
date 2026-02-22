@@ -70,9 +70,12 @@
     - `apps/api/tests/architecture/relation-route-module-migration.test.ts`
   - `entity-images` スライスを `modules/catalog/image` へ段階移行。
     - `apps/api/src/modules/catalog/image/application/*`
+    - `apps/api/src/modules/catalog/image/infra/image-repository-d1.ts`
     - `apps/api/src/routes/api/entity-routes.ts`
   - 旧 `entity-images-usecase` との互換を維持する委譲レイヤを追加。
     - `apps/api/src/usecases/entity-images-usecase.ts`
+  - 旧 `entity-image-repository` との互換を維持する委譲レイヤを追加。
+    - `apps/api/src/repositories/entity-image-repository.ts`
   - `image` モジュールのユニット/アーキテクチャテストを追加。
     - `apps/api/tests/unit/modules/catalog/image/application/image-commands.test.ts`
     - `apps/api/tests/architecture/image-route-module-migration.test.ts`
