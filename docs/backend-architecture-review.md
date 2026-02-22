@@ -83,6 +83,13 @@
     - 更新: `apps/api/src/modules/catalog/entity/application/update-entity-command.ts`
     - 更新: `apps/api/src/modules/catalog/entity/application/entity-shared.ts`
     - 更新: `apps/api/src/routes/api/entity-routes.ts`
+  - relation application の依存を `infra` 直参照から `ports` 経由へ整理。
+    - 追加: `apps/api/src/modules/catalog/entity/ports/entity-read-repository.ts`
+    - 追加: `apps/api/src/modules/catalog/relation/ports/relation-repository.ts`
+    - 更新: `apps/api/src/modules/catalog/entity/infra/entity-repository-d1.ts`
+    - 更新: `apps/api/src/modules/catalog/relation/application/*.ts`
+    - 更新: `apps/api/src/modules/catalog/relation/infra/relation-repository-d1.ts`
+    - 更新: `apps/api/src/routes/api/entity-routes.ts`
   - 回帰ガードとして legacy-layer architecture test を強化。
     - 更新: `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - auth application の依存境界テストを追加。
@@ -93,6 +100,8 @@
     - 追加: `apps/api/tests/architecture/tag-application-port-boundary.test.ts`
   - entity application の外部依存境界テストを追加。
     - 追加: `apps/api/tests/architecture/entity-application-external-port-boundary.test.ts`
+  - relation application の依存境界テストを追加。
+    - 追加: `apps/api/tests/architecture/relation-application-port-boundary.test.ts`
 
 - 実施済み（Phase 3: 整合性と運用品質）:
   - `db.batch` による複数更新の整合性改善を modules infra に反映。
@@ -119,7 +128,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`37 files / 99 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`38 files / 100 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）

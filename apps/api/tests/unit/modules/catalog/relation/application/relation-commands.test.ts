@@ -1,47 +1,36 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
-  fetchEntitiesWithKindsByIdsFromD1: vi.fn(),
-  fetchTagsByEntityIdsFromD1: vi.fn(),
-  findEntityByIdFromD1: vi.fn()
-}));
-
-vi.mock("../../../../../../src/modules/catalog/relation/infra/relation-repository-d1", () => ({
-  createRelationInD1: vi.fn(),
-  deleteRelationInD1: vi.fn(),
-  listRelatedEntityIdsFromD1: vi.fn()
-}));
-
-import {
-  fetchEntitiesWithKindsByIdsFromD1,
-  fetchTagsByEntityIdsFromD1,
-  findEntityByIdFromD1
-} from "../../../../../../src/modules/catalog/entity/infra/entity-repository-d1";
-import {
-  createRelationInD1,
-  deleteRelationInD1,
-  listRelatedEntityIdsFromD1
-} from "../../../../../../src/modules/catalog/relation/infra/relation-repository-d1";
 import { createEntityRelationCommand } from "../../../../../../src/modules/catalog/relation/application/create-entity-relation-command";
 import { deleteEntityRelationCommand } from "../../../../../../src/modules/catalog/relation/application/delete-entity-relation-command";
 import { listRelatedEntitiesQuery } from "../../../../../../src/modules/catalog/relation/application/list-related-entities-query";
-
-const findEntityByIdFromD1Mock = vi.mocked(findEntityByIdFromD1);
-const listRelatedEntityIdsFromD1Mock = vi.mocked(listRelatedEntityIdsFromD1);
-const fetchEntitiesWithKindsByIdsFromD1Mock = vi.mocked(fetchEntitiesWithKindsByIdsFromD1);
-const fetchTagsByEntityIdsFromD1Mock = vi.mocked(fetchTagsByEntityIdsFromD1);
-const createRelationInD1Mock = vi.mocked(createRelationInD1);
-const deleteRelationInD1Mock = vi.mocked(deleteRelationInD1);
+import type { EntityReadRepository } from "../../../../../../src/modules/catalog/entity/ports/entity-read-repository";
+import type { RelationRepository } from "../../../../../../src/modules/catalog/relation/ports/relation-repository";
 
 describe("relation module application", () => {
+  const findEntityByIdMock = vi.fn();
+  const fetchEntitiesWithKindsByIdsMock = vi.fn();
+  const fetchTagsByEntityIdsMock = vi.fn();
+  const listRelatedEntityIdsMock = vi.fn();
+  const createRelationMock = vi.fn();
+  const deleteRelationMock = vi.fn();
+  const entityReadRepository: EntityReadRepository = {
+    findEntityById: findEntityByIdMock,
+    fetchEntitiesWithKindsByIds: fetchEntitiesWithKindsByIdsMock,
+    fetchTagsByEntityIds: fetchTagsByEntityIdsMock
+  };
+  const relationRepository: RelationRepository = {
+    listRelatedEntityIds: listRelatedEntityIdsMock,
+    createRelation: createRelationMock,
+    deleteRelation: deleteRelationMock
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("listRelatedEntitiesQuery returns 404 when base entity is missing", async () => {
-    findEntityByIdFromD1Mock.mockResolvedValue(null);
+    findEntityByIdMock.mockResolvedValue(null);
 
-    const result = await listRelatedEntitiesQuery({} as D1Database, "entity-1");
+    const result = await listRelatedEntitiesQuery(entityReadRepository, relationRepository, "entity-1");
 
     expect(result).toEqual({
       ok: false,
@@ -51,9 +40,9 @@ describe("relation module application", () => {
   });
 
   it("listRelatedEntitiesQuery returns mapped related entities", async () => {
-    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
-    listRelatedEntityIdsFromD1Mock.mockResolvedValue(["entity-2"]);
-    fetchEntitiesWithKindsByIdsFromD1Mock.mockResolvedValue([
+    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
+    listRelatedEntityIdsMock.mockResolvedValue(["entity-2"]);
+    fetchEntitiesWithKindsByIdsMock.mockResolvedValue([
       {
         id: "entity-2",
         kind_id: 3,
@@ -65,7 +54,7 @@ describe("relation module application", () => {
         updated_at: "2026-01-01"
       }
     ] as any);
-    fetchTagsByEntityIdsFromD1Mock.mockResolvedValue(
+    fetchTagsByEntityIdsMock.mockResolvedValue(
       new Map([
         [
           "entity-2",
@@ -77,7 +66,7 @@ describe("relation module application", () => {
       ])
     );
 
-    const result = await listRelatedEntitiesQuery({} as D1Database, "entity-1");
+    const result = await listRelatedEntitiesQuery(entityReadRepository, relationRepository, "entity-1");
 
     expect(result).toEqual({
       ok: true,
@@ -102,7 +91,7 @@ describe("relation module application", () => {
   });
 
   it("createEntityRelationCommand rejects self relation", async () => {
-    const result = await createEntityRelationCommand({} as D1Database, "entity-1", "entity-1");
+    const result = await createEntityRelationCommand(entityReadRepository, relationRepository, "entity-1", "entity-1");
 
     expect(result).toEqual({
       ok: false,
@@ -112,10 +101,10 @@ describe("relation module application", () => {
   });
 
   it("createEntityRelationCommand returns conflict when relation exists", async () => {
-    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
-    createRelationInD1Mock.mockResolvedValue("conflict");
+    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
+    createRelationMock.mockResolvedValue("conflict");
 
-    const result = await createEntityRelationCommand({} as D1Database, "entity-1", "entity-2");
+    const result = await createEntityRelationCommand(entityReadRepository, relationRepository, "entity-1", "entity-2");
 
     expect(result).toEqual({
       ok: false,
@@ -125,10 +114,10 @@ describe("relation module application", () => {
   });
 
   it("deleteEntityRelationCommand returns not found when relation does not exist", async () => {
-    findEntityByIdFromD1Mock.mockResolvedValue({ id: "entity-1" } as any);
-    deleteRelationInD1Mock.mockResolvedValue("not_found");
+    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
+    deleteRelationMock.mockResolvedValue("not_found");
 
-    const result = await deleteEntityRelationCommand({} as D1Database, "entity-1", "entity-2");
+    const result = await deleteEntityRelationCommand(entityReadRepository, relationRepository, "entity-1", "entity-2");
 
     expect(result).toEqual({
       ok: false,

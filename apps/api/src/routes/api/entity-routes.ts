@@ -10,6 +10,7 @@ import { createEntityCommand } from "../../modules/catalog/entity/application/cr
 import { getEntityQuery } from "../../modules/catalog/entity/application/get-entity-query";
 import { listEntitiesQuery } from "../../modules/catalog/entity/application/list-entities-query";
 import { updateEntityCommand } from "../../modules/catalog/entity/application/update-entity-command";
+import { createD1EntityReadRepository } from "../../modules/catalog/entity/infra/entity-repository-d1";
 import { createD1KindRepository } from "../../modules/catalog/kind/infra/kind-repository-d1";
 import { createD1TagRepository } from "../../modules/catalog/tag/infra/tag-repository-d1";
 import { deleteEntityImageCommand } from "../../modules/catalog/image/application/delete-entity-image-command";
@@ -20,6 +21,7 @@ import { uploadEntityImageCommand } from "../../modules/catalog/image/applicatio
 import { createEntityRelationCommand } from "../../modules/catalog/relation/application/create-entity-relation-command";
 import { deleteEntityRelationCommand } from "../../modules/catalog/relation/application/delete-entity-relation-command";
 import { listRelatedEntitiesQuery } from "../../modules/catalog/relation/application/list-related-entities-query";
+import { createD1RelationRepository } from "../../modules/catalog/relation/infra/relation-repository-d1";
 import { jsonError, jsonOk } from "../../shared/http/api-response";
 import { useCaseError } from "./shared";
 
@@ -84,7 +86,9 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id/related", async (c) => {
     const id = c.req.param("id");
-    const result = await listRelatedEntitiesQuery(c.env.DB, id);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const relationRepository = createD1RelationRepository(c.env.DB);
+    const result = await listRelatedEntitiesQuery(entityReadRepository, relationRepository, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -99,7 +103,14 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const result = await createEntityRelationCommand(c.env.DB, id, parsedBody.data.relatedEntityId);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const relationRepository = createD1RelationRepository(c.env.DB);
+    const result = await createEntityRelationCommand(
+      entityReadRepository,
+      relationRepository,
+      id,
+      parsedBody.data.relatedEntityId
+    );
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -110,7 +121,9 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.delete("/entities/:id/related/:relatedEntityId", async (c) => {
     const id = c.req.param("id");
     const relatedEntityId = c.req.param("relatedEntityId");
-    const result = await deleteEntityRelationCommand(c.env.DB, id, relatedEntityId);
+    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const relationRepository = createD1RelationRepository(c.env.DB);
+    const result = await deleteEntityRelationCommand(entityReadRepository, relationRepository, id, relatedEntityId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }

@@ -1,9 +1,10 @@
-import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
+import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
-import { createRelationInD1 } from "../infra/relation-repository-d1";
+import type { RelationRepository } from "../ports/relation-repository";
 
 export async function createEntityRelationCommand(
-  db: D1Database,
+  entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  relationRepository: Pick<RelationRepository, "createRelation">,
   entityId: string,
   relatedEntityId: string
 ): Promise<UseCaseResult<Record<string, never>>> {
@@ -12,14 +13,14 @@ export async function createEntityRelationCommand(
   }
 
   const [entity, relatedEntity] = await Promise.all([
-    findEntityByIdFromD1(db, entityId),
-    findEntityByIdFromD1(db, relatedEntityId)
+    entityReadRepository.findEntityById(entityId),
+    entityReadRepository.findEntityById(relatedEntityId)
   ]);
   if (!entity || !relatedEntity) {
     return fail(404, "entity not found");
   }
 
-  const relationCreated = await createRelationInD1(db, entityId, relatedEntityId);
+  const relationCreated = await relationRepository.createRelation(entityId, relatedEntityId);
   if (relationCreated === "conflict") {
     return fail(409, "relation already exists");
   }

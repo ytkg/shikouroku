@@ -1,9 +1,10 @@
-import { findEntityByIdFromD1 } from "../../entity/infra/entity-repository-d1";
+import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
-import { deleteRelationInD1 } from "../infra/relation-repository-d1";
+import type { RelationRepository } from "../ports/relation-repository";
 
 export async function deleteEntityRelationCommand(
-  db: D1Database,
+  entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  relationRepository: Pick<RelationRepository, "deleteRelation">,
   entityId: string,
   relatedEntityId: string
 ): Promise<UseCaseResult<Record<string, never>>> {
@@ -12,14 +13,14 @@ export async function deleteEntityRelationCommand(
   }
 
   const [entity, relatedEntity] = await Promise.all([
-    findEntityByIdFromD1(db, entityId),
-    findEntityByIdFromD1(db, relatedEntityId)
+    entityReadRepository.findEntityById(entityId),
+    entityReadRepository.findEntityById(relatedEntityId)
   ]);
   if (!entity || !relatedEntity) {
     return fail(404, "entity not found");
   }
 
-  const relationDeleted = await deleteRelationInD1(db, entityId, relatedEntityId);
+  const relationDeleted = await relationRepository.deleteRelation(entityId, relatedEntityId);
   if (relationDeleted === "not_found") {
     return fail(404, "relation not found");
   }

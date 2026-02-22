@@ -1,3 +1,9 @@
+import type {
+  CreateRelationResult,
+  DeleteRelationResult,
+  RelationRepository
+} from "../ports/relation-repository";
+
 type RelatedEntityIdRecord = {
   related_id: string;
 };
@@ -27,7 +33,7 @@ export async function createRelationInD1(
   db: D1Database,
   entityIdA: string,
   entityIdB: string
-): Promise<"created" | "conflict" | "error"> {
+): Promise<CreateRelationResult> {
   const [entityIdLow, entityIdHigh] = normalizeEntityPair(entityIdA, entityIdB);
   const created = await db
     .prepare(
@@ -47,7 +53,7 @@ export async function deleteRelationInD1(
   db: D1Database,
   entityIdA: string,
   entityIdB: string
-): Promise<"deleted" | "not_found" | "error"> {
+): Promise<DeleteRelationResult> {
   const [entityIdLow, entityIdHigh] = normalizeEntityPair(entityIdA, entityIdB);
   const deleted = await db
     .prepare(
@@ -61,4 +67,12 @@ export async function deleteRelationInD1(
   }
 
   return Number(deleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
+}
+
+export function createD1RelationRepository(db: D1Database): RelationRepository {
+  return {
+    listRelatedEntityIds: (entityId) => listRelatedEntityIdsFromD1(db, entityId),
+    createRelation: (entityIdA, entityIdB) => createRelationInD1(db, entityIdA, entityIdB),
+    deleteRelation: (entityIdA, entityIdB) => deleteRelationInD1(db, entityIdA, entityIdB)
+  };
 }

@@ -7,6 +7,7 @@ import type {
   TagRecord
 } from "../../../../shared/db/records";
 import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
+import type { EntityReadRepository } from "../ports/entity-read-repository";
 
 export type InsertEntityInput = {
   id: string;
@@ -210,5 +211,13 @@ export async function fetchEntityWithTagsFromD1(
   return {
     ...entity,
     tags: tagsByEntity.get(entityId) ?? []
+  };
+}
+
+export function createD1EntityReadRepository(db: D1Database): EntityReadRepository {
+  return {
+    findEntityById: (id) => findEntityByIdFromD1(db, id),
+    fetchEntitiesWithKindsByIds: (ids) => fetchEntitiesWithKindsByIdsFromD1(db, ids),
+    fetchTagsByEntityIds: (entityIds) => fetchTagsByEntityIdsFromD1(db, entityIds)
   };
 }
