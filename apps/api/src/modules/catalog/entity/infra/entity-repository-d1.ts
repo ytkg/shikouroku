@@ -6,6 +6,7 @@ import type {
   EntityWithTagsRecord,
   TagRecord
 } from "../../../../domain/models";
+import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
 
 export type InsertEntityInput = {
   id: string;
@@ -158,9 +159,8 @@ export async function replaceEntityTagsInD1(
     db.prepare("DELETE FROM entity_tags WHERE entity_id = ?").bind(entityId),
     ...tagIds.map((tagId) => db.prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)").bind(entityId, tagId))
   ];
-  const results = await db.batch(statements);
-
-  return results.every((result) => result.success);
+  const results = await runD1UnitOfWork(db, statements);
+  return results ? isSuccessfulD1UnitOfWork(results) : false;
 }
 
 export async function fetchTagsByEntityIdsFromD1(

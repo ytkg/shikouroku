@@ -15,7 +15,8 @@
 - [x] Phase 2: 旧互換レイヤ（`usecases/*`, `repositories/*`, `lib/auth-client.ts`）の撤去
 - [x] Phase 3: 代表的な複数更新の `db.batch` 化
 - [x] Phase 3: D1/R2整合性の補償キュー + 手動実行API + cron実行
-- [ ] Phase 3: `UnitOfWork` 導入による整合性境界の統一
+- [x] Phase 3: `UnitOfWork` ヘルパー導入（D1 `batch` の共通化）
+- [ ] Phase 3: 整合性境界の完全統一（複数リソース跨りの最終統合）
 - [x] Phase 4: アーキテクチャテストによる依存境界の固定
 - [ ] Phase 4: `domain` / `lib` の最終整理（責務再配置と縮退）
 - [x] 品質: 統合テスト（`tests/integration`）の追加
@@ -59,6 +60,8 @@
     - `apps/api/src/modules/catalog/entity/infra/entity-repository-d1.ts`
     - `apps/api/src/modules/catalog/image/infra/image-repository-d1.ts`
     - `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
+  - D1 `batch` の共通実行ヘルパーを導入。
+    - `apps/api/src/shared/db/unit-of-work.ts`
   - D1/R2跨り削除の補償キューと手動/cron実行を反映。
     - `apps/api/migrations/0008_create_image_cleanup_tasks.sql`
     - `apps/api/src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1.ts`
@@ -77,7 +80,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`30 files / 78 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`31 files / 82 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
@@ -357,7 +360,8 @@ apps/api/src
   - [x] `entities/tags/kinds/relations/images` を `modules/catalog/*` へ再配置する。
   - [x] `Row/Body` 型を `Record/Dto/Command` へ改名する。
 - [ ] **Phase 3: 整合性強化**
-  - [ ] `UnitOfWork` 導入。
+  - [x] D1 `batch` の `UnitOfWork` ヘルパーを導入する。
+  - [ ] 複数リソース跨りの整合性境界を統一する。
   - [x] 画像操作の整合性ポリシーを確定し、再試行戦略を実装する（補償キュー + 定期実行）。
 - [ ] **Phase 4: ルール固定**
   - [x] 命名規約・依存規約を architecture testで強制する。

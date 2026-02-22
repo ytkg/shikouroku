@@ -1,4 +1,5 @@
 import type { TagRecord } from "../../../../domain/models";
+import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
 
 export async function listTagsFromD1(db: D1Database): Promise<TagRecord[]> {
   const result = await db.prepare("SELECT id, name FROM tags ORDER BY name ASC, id ASC").all<TagRecord>();
@@ -28,20 +29,16 @@ export async function deleteTagWithRelationsFromD1(
   db: D1Database,
   id: number
 ): Promise<"deleted" | "not_found" | "error"> {
-  try {
-    const results = await db.batch([
-      db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id),
-      db.prepare("DELETE FROM tags WHERE id = ?").bind(id)
-    ]);
-    if (!results.every((result) => result.success)) {
-      return "error";
-    }
-
-    const tagDeleted = results[1];
-    return Number(tagDeleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
-  } catch {
+  const results = await runD1UnitOfWork(db, [
+    db.prepare("DELETE FROM entity_tags WHERE tag_id = ?").bind(id),
+    db.prepare("DELETE FROM tags WHERE id = ?").bind(id)
+  ]);
+  if (!results || !isSuccessfulD1UnitOfWork(results)) {
     return "error";
   }
+
+  const tagDeleted = results[1];
+  return Number(tagDeleted?.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
 }
 
 export async function countExistingTagsByIdsFromD1(db: D1Database, tagIds: number[]): Promise<number> {

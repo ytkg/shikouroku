@@ -1,4 +1,5 @@
 import type { EntityImageRecord } from "../../../../domain/models";
+import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
 
 export type InsertEntityImageInput = {
   id: string;
@@ -143,6 +144,6 @@ export async function reorderEntityImagesInD1(
         .bind(index + 1, entityId, imageId)
     )
   ];
-  const results = await db.batch(statements);
-  return results.every((result) => result.success);
+  const results = await runD1UnitOfWork(db, statements);
+  return results ? isSuccessfulD1UnitOfWork(results) : false;
 }
