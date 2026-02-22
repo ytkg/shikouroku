@@ -37,4 +37,18 @@ describe("route-usecase boundary", () => {
 
     expect(violations).toEqual([]);
   });
+
+  it("does not import legacy usecases directly from routes", () => {
+    const routeFiles = collectRouteFiles(ROUTES_DIR);
+    const violations: string[] = [];
+
+    for (const routeFile of routeFiles) {
+      const source = fs.readFileSync(routeFile, "utf8");
+      if (source.includes("/usecases/") || source.includes("../usecases/")) {
+        violations.push(path.relative(ROUTES_DIR, routeFile));
+      }
+    }
+
+    expect(violations).toEqual([]);
+  });
 });
