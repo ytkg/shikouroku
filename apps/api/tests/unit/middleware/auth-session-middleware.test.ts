@@ -88,4 +88,23 @@ describe("authSessionMiddleware", () => {
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/");
   });
+
+  it("redirects unauthenticated dotted route path to /login", async () => {
+    const app = createApp();
+
+    const response = await app.request("http://localhost/profile.v2/edit", { method: "GET" }, TEST_ENV);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("/login");
+    expect(response.headers.get("set-cookie")).toContain("shikouroku_token=");
+  });
+
+  it("treats file-like request path as static asset", async () => {
+    const app = createApp();
+
+    const response = await app.request("http://localhost/favicon.ico", { method: "GET" }, TEST_ENV);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("location")).toBeNull();
+  });
 });

@@ -92,7 +92,7 @@
     - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
   - 現在の品質ゲート結果:
     - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`33 files / 93 tests`）
+    - `npm --workspace @shikouroku/api run test` 通過（`33 files / 95 tests`）
 
 - Findingsへの反映状況:
   - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
