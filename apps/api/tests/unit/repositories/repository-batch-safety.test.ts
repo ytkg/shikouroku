@@ -4,7 +4,10 @@ import {
   replaceEntityTagsInD1,
   updateEntityWithTagsInD1
 } from "../../../src/modules/catalog/entity/infra/entity-repository-d1";
-import { reorderEntityImagesInD1 } from "../../../src/modules/catalog/image/infra/image-repository-d1";
+import {
+  deleteEntityImageAndCollapseSortOrderInD1,
+  reorderEntityImagesInD1
+} from "../../../src/modules/catalog/image/infra/image-repository-d1";
 import { deleteTagWithRelationsFromD1 } from "../../../src/modules/catalog/tag/infra/tag-repository-d1";
 
 type MockResult = {
@@ -141,6 +144,30 @@ describe("repository batch safety", () => {
     expect(result).toBe(true);
     expect(batch).toHaveBeenCalledTimes(1);
     expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(3);
+  });
+
+  it("deleteEntityImageAndCollapseSortOrderInD1 executes delete and collapse in one batch", async () => {
+    const { db, batch } = createMockDb([
+      { success: true, meta: { changes: 1 } },
+      { success: true, meta: { changes: 2 } }
+    ]);
+
+    const result = await deleteEntityImageAndCollapseSortOrderInD1(db, "entity-1", "img-1", 1);
+
+    expect(result).toBe("deleted");
+    expect(batch).toHaveBeenCalledTimes(1);
+    expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(2);
+  });
+
+  it("deleteEntityImageAndCollapseSortOrderInD1 returns not_found when delete target is missing", async () => {
+    const { db } = createMockDb([
+      { success: true, meta: { changes: 0 } },
+      { success: true, meta: { changes: 0 } }
+    ]);
+
+    const result = await deleteEntityImageAndCollapseSortOrderInD1(db, "entity-1", "img-missing", 1);
+
+    expect(result).toBe("not_found");
   });
 
   it("reorderEntityImagesInD1 returns false when any statement fails", async () => {

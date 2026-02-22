@@ -1,7 +1,6 @@
 import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
 import {
-  collapseEntityImageSortOrderAfterDeleteInD1,
-  deleteEntityImageInD1,
+  deleteEntityImageAndCollapseSortOrderInD1,
   findEntityImageByIdFromD1
 } from "../infra/image-repository-d1";
 import type { ImageCleanupTaskRepository } from "../../../maintenance/image-cleanup/ports/image-cleanup-task-repository";
@@ -26,17 +25,12 @@ export async function deleteEntityImageCommand(
     return fail(404, "image not found");
   }
 
-  const deleted = await deleteEntityImageInD1(db, entityId, imageId);
+  const deleted = await deleteEntityImageAndCollapseSortOrderInD1(db, entityId, imageId, image.sort_order);
   if (deleted === "not_found") {
     return fail(404, "image not found");
   }
   if (deleted === "error") {
     return fail(500, "failed to delete image metadata");
-  }
-
-  const collapsed = await collapseEntityImageSortOrderAfterDeleteInD1(db, entityId, image.sort_order);
-  if (!collapsed) {
-    return fail(500, "failed to update image sort order");
   }
 
   try {

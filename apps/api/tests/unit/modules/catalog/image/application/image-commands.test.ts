@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../../../../src/modules/catalog/image/infra/image-repository-d1", () => ({
-  collapseEntityImageSortOrderAfterDeleteInD1: vi.fn(),
-  deleteEntityImageInD1: vi.fn(),
+  deleteEntityImageAndCollapseSortOrderInD1: vi.fn(),
   findEntityImageByIdFromD1: vi.fn(),
   insertEntityImageInD1: vi.fn(),
   listEntityImagesFromD1: vi.fn(),
@@ -11,8 +10,7 @@ vi.mock("../../../../../../src/modules/catalog/image/infra/image-repository-d1",
 }));
 
 import {
-  collapseEntityImageSortOrderAfterDeleteInD1,
-  deleteEntityImageInD1,
+  deleteEntityImageAndCollapseSortOrderInD1,
   findEntityImageByIdFromD1,
   insertEntityImageInD1,
   nextEntityImageSortOrderFromD1
@@ -23,10 +21,7 @@ import type { EntityReadRepository } from "../../../../../../src/modules/catalog
 import type { ImageCleanupTaskRepository } from "../../../../../../src/modules/maintenance/image-cleanup/ports/image-cleanup-task-repository";
 
 const findEntityImageByIdFromD1Mock = vi.mocked(findEntityImageByIdFromD1);
-const deleteEntityImageInD1Mock = vi.mocked(deleteEntityImageInD1);
-const collapseEntityImageSortOrderAfterDeleteInD1Mock = vi.mocked(
-  collapseEntityImageSortOrderAfterDeleteInD1
-);
+const deleteEntityImageAndCollapseSortOrderInD1Mock = vi.mocked(deleteEntityImageAndCollapseSortOrderInD1);
 const nextEntityImageSortOrderFromD1Mock = vi.mocked(nextEntityImageSortOrderFromD1);
 const insertEntityImageInD1Mock = vi.mocked(insertEntityImageInD1);
 const findEntityByIdMock = vi.fn();
@@ -72,8 +67,7 @@ describe("image module application", () => {
       sort_order: 1,
       created_at: "2026-01-01T00:00:00.000Z"
     });
-    deleteEntityImageInD1Mock.mockResolvedValue("deleted");
-    collapseEntityImageSortOrderAfterDeleteInD1Mock.mockResolvedValue(true);
+    deleteEntityImageAndCollapseSortOrderInD1Mock.mockResolvedValue("deleted");
     enqueueTaskMock.mockResolvedValue(true);
 
     const result = await deleteEntityImageCommand(
@@ -112,8 +106,7 @@ describe("image module application", () => {
       sort_order: 1,
       created_at: "2026-01-01T00:00:00.000Z"
     });
-    deleteEntityImageInD1Mock.mockResolvedValue("deleted");
-    collapseEntityImageSortOrderAfterDeleteInD1Mock.mockResolvedValue(true);
+    deleteEntityImageAndCollapseSortOrderInD1Mock.mockResolvedValue("deleted");
     enqueueTaskMock.mockResolvedValue(false);
 
     const result = await deleteEntityImageCommand(

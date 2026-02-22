@@ -87,38 +87,28 @@ export async function insertEntityImageInD1(
   return inserted.success;
 }
 
-export async function deleteEntityImageInD1(
+export async function deleteEntityImageAndCollapseSortOrderInD1(
   db: D1Database,
   entityId: string,
-  imageId: string
+  imageId: string,
+  deletedSortOrder: number
 ): Promise<"deleted" | "not_found" | "error"> {
-  const deleted = await db
-    .prepare("DELETE FROM entity_images WHERE entity_id = ? AND id = ?")
-    .bind(entityId, imageId)
-    .run();
+  const results = await runD1UnitOfWork(db, [
+    db.prepare("DELETE FROM entity_images WHERE entity_id = ? AND id = ?").bind(entityId, imageId),
+    db
+      .prepare(
+        `UPDATE entity_images
+         SET sort_order = sort_order - 1
+         WHERE entity_id = ? AND sort_order > ?`
+      )
+      .bind(entityId, deletedSortOrder)
+  ]);
 
-  if (!deleted.success) {
+  if (!results || !isSuccessfulD1UnitOfWork(results)) {
     return "error";
   }
 
-  return Number(deleted.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
-}
-
-export async function collapseEntityImageSortOrderAfterDeleteInD1(
-  db: D1Database,
-  entityId: string,
-  deletedSortOrder: number
-): Promise<boolean> {
-  const updated = await db
-    .prepare(
-      `UPDATE entity_images
-       SET sort_order = sort_order - 1
-       WHERE entity_id = ? AND sort_order > ?`
-    )
-    .bind(entityId, deletedSortOrder)
-    .run();
-
-  return updated.success;
+  return Number(results[0]?.meta.changes ?? 0) > 0 ? "deleted" : "not_found";
 }
 
 export async function reorderEntityImagesInD1(
