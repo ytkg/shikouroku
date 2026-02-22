@@ -5,7 +5,7 @@ import {
   entityImageOrderBodySchema,
   relatedEntityBodySchema
 } from "../../shared/validation/request-schemas";
-import { parseJsonBody } from "../../lib/http";
+import { parseJsonBody } from "../../shared/http/parse-json-body";
 import { createEntityCommand } from "../../modules/catalog/entity/application/create-entity-command";
 import { getEntityQuery } from "../../modules/catalog/entity/application/get-entity-query";
 import { listEntitiesQuery } from "../../modules/catalog/entity/application/list-entities-query";

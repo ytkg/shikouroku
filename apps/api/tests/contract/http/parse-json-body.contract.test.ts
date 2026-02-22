@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { describe, expect, it } from "vitest";
 import type { AppEnv } from "../../../src/app-env";
-import { parseJsonBody } from "../../../src/lib/http";
+import { parseJsonBody } from "../../../src/shared/http/parse-json-body";
 import { jsonOk } from "../../../src/shared/http/api-response";
 import { REQUEST_ID_HEADER, requestIdMiddleware } from "../../../src/shared/http/request-id";
 

@@ -1,8 +1,8 @@
 import type { ZodTypeAny } from "zod";
 import { z } from "zod";
-import type { AppContext } from "../app-env";
-import { validationMessage } from "../shared/validation/request-schemas";
-import { jsonError } from "../shared/http/api-response";
+import type { AppContext } from "../../app-env";
+import { validationMessage } from "../validation/request-schemas";
+import { jsonError } from "./api-response";
 
 export async function parseJsonBody<TSchema extends ZodTypeAny>(
   c: AppContext,

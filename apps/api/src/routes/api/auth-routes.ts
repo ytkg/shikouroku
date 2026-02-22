@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../../app-env";
 import { loginBodySchema } from "../../shared/validation/request-schemas";
-import { parseJsonBody } from "../../lib/http";
+import { parseJsonBody } from "../../shared/http/parse-json-body";
 import { loginCommand } from "../../modules/auth/application/login-command";
 import { jsonOk } from "../../shared/http/api-response";
 import { clearAuthCookies, setAuthCookies, useCaseError } from "./shared";
