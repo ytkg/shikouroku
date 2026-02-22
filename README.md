@@ -84,6 +84,8 @@ npm --workspace @shikouroku/api run dev
 ログインは `auth.takagi.dev` の `POST /login` を使い、取得したJWTを `shikouroku_token` Cookie に保存します。  
 リクエスト時は `GET /verify` でトークン検証します。
 
+認証APIの接続先は `apps/api/wrangler.toml` の `[vars] AUTH_BASE_URL` で切り替え可能です。
+
 ## ビルド
 
 ```bash
@@ -98,11 +100,13 @@ npm run build
 ```bash
 npm run lint
 npm run test
+npm run test:api
 npm run typecheck
 ```
 
 - `lint`: `apps/web/eslint.config.js` の依存境界・命名規約を検証
 - `test`: `apps/web/tests` のユニットテスト（Vitest）を実行
+- `test:api`: `apps/api/tests` の契約/ユニットテスト（Vitest）を実行
 - `typecheck`: ワークスペース全体の型チェックを実行
 - CI: `.github/workflows/web-quality.yml` で `lint` / `test` / `typecheck` を実行
 

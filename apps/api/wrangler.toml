@@ -2,6 +2,9 @@ name = "shikouroku"
 main = "src/index.ts"
 compatibility_date = "2025-11-01"
 
+[vars]
+AUTH_BASE_URL = "https://auth.takagi.dev"
+
 [assets]
 directory = "../web/dist"
 binding = "ASSETS"

@@ -1,5 +1,3 @@
-const AUTH_BASE_URL = "https://auth.takagi.dev";
-
 export type AuthTokenPair = {
   accessToken: string;
   refreshToken: string;
@@ -33,11 +31,20 @@ function toAuthTokenPair(json: AuthApiTokenResponse): AuthTokenPair | null {
   };
 }
 
+function trimTrailingSlash(baseUrl: string): string {
+  return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+}
+
+function authUrl(baseUrl: string, path: string): string {
+  return `${trimTrailingSlash(baseUrl)}${path}`;
+}
+
 export async function loginAgainstAuthServer(
+  authBaseUrl: string,
   username: string,
   password: string
 ): Promise<AuthTokenPair | null> {
-  const authRes = await fetch(`${AUTH_BASE_URL}/login`, {
+  const authRes = await fetch(authUrl(authBaseUrl, "/login"), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ username, password })
@@ -51,8 +58,11 @@ export async function loginAgainstAuthServer(
   return toAuthTokenPair(json);
 }
 
-export async function refreshAgainstAuthServer(refreshToken: string): Promise<AuthTokenPair | null> {
-  const refreshRes = await fetch(`${AUTH_BASE_URL}/refresh`, {
+export async function refreshAgainstAuthServer(
+  authBaseUrl: string,
+  refreshToken: string
+): Promise<AuthTokenPair | null> {
+  const refreshRes = await fetch(authUrl(authBaseUrl, "/refresh"), {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ refreshToken })
@@ -66,8 +76,8 @@ export async function refreshAgainstAuthServer(refreshToken: string): Promise<Au
   return toAuthTokenPair(json);
 }
 
-export async function verifyAuthToken(token: string): Promise<boolean> {
-  const res = await fetch(`${AUTH_BASE_URL}/verify`, {
+export async function verifyAuthToken(authBaseUrl: string, token: string): Promise<boolean> {
+  const res = await fetch(authUrl(authBaseUrl, "/verify"), {
     headers: { Authorization: `Bearer ${token}` }
   });
   return res.ok;

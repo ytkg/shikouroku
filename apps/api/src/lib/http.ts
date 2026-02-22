@@ -2,6 +2,7 @@ import type { ZodTypeAny } from "zod";
 import { z } from "zod";
 import type { AppContext } from "../app-env";
 import { validationMessage } from "../domain/schemas";
+import { jsonError } from "../shared/http/api-response";
 
 export async function parseJsonBody<TSchema extends ZodTypeAny>(
   c: AppContext,
@@ -13,7 +14,7 @@ export async function parseJsonBody<TSchema extends ZodTypeAny>(
   } catch {
     return {
       ok: false,
-      response: c.json({ ok: false, message: "invalid json body" }, 400)
+      response: jsonError(c, 400, "INVALID_JSON_BODY", "invalid json body")
     };
   }
 
@@ -21,7 +22,7 @@ export async function parseJsonBody<TSchema extends ZodTypeAny>(
   if (!parsed.success) {
     return {
       ok: false,
-      response: c.json({ ok: false, message: validationMessage(parsed.error) }, 400)
+      response: jsonError(c, 400, "INVALID_REQUEST_BODY", validationMessage(parsed.error))
     };
   }
 
