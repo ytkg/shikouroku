@@ -5,12 +5,17 @@ import { createMaintenanceRoutes } from "../../../src/routes/api/maintenance-rou
 import { requestIdMiddleware } from "../../../src/shared/http/request-id";
 
 vi.mock("../../../src/usecases/image-cleanup-usecase", () => ({
+  listImageCleanupTasksUseCase: vi.fn(),
   runImageCleanupTasksUseCase: vi.fn()
 }));
 
-import { runImageCleanupTasksUseCase } from "../../../src/usecases/image-cleanup-usecase";
+import {
+  listImageCleanupTasksUseCase,
+  runImageCleanupTasksUseCase
+} from "../../../src/usecases/image-cleanup-usecase";
 
 const runImageCleanupTasksUseCaseMock = vi.mocked(runImageCleanupTasksUseCase);
+const listImageCleanupTasksUseCaseMock = vi.mocked(listImageCleanupTasksUseCase);
 
 const TEST_ENV = {
   AUTH_BASE_URL: "https://auth.example.test",
@@ -44,6 +49,44 @@ describe("maintenance routes", () => {
         code: "INVALID_CLEANUP_LIMIT"
       }
     });
+  });
+
+  it("lists cleanup tasks with default limit", async () => {
+    const app = createApp();
+    listImageCleanupTasksUseCaseMock.mockResolvedValue({
+      ok: true,
+      data: {
+        tasks: [
+          {
+            id: 1,
+            object_key: "entities/e1/i1.png",
+            reason: "delete_failed",
+            last_error: null,
+            retry_count: 0,
+            created_at: "2026-01-01",
+            updated_at: "2026-01-01"
+          }
+        ],
+        total: 3
+      }
+    });
+
+    const response = await app.request("http://localhost/maintenance/image-cleanup/tasks", { method: "GET" }, TEST_ENV);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: true,
+      cleanup: {
+        tasks: [
+          {
+            id: 1,
+            object_key: "entities/e1/i1.png"
+          }
+        ],
+        total: 3
+      }
+    });
+    expect(listImageCleanupTasksUseCaseMock).toHaveBeenCalledWith(TEST_ENV.DB, 20);
   });
 
   it("runs cleanup with default limit when no query is provided", async () => {

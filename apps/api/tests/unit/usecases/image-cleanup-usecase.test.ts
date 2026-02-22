@@ -13,7 +13,7 @@ import {
   listImageCleanupTasks,
   markImageCleanupTaskFailed
 } from "../../../src/repositories/image-cleanup-task-repository";
-import { runImageCleanupTasksUseCase } from "../../../src/usecases/image-cleanup-usecase";
+import { listImageCleanupTasksUseCase, runImageCleanupTasksUseCase } from "../../../src/usecases/image-cleanup-usecase";
 
 const listImageCleanupTasksMock = vi.mocked(listImageCleanupTasks);
 const deleteImageCleanupTaskMock = vi.mocked(deleteImageCleanupTask);
@@ -117,6 +117,42 @@ describe("runImageCleanupTasksUseCase", () => {
       ok: false,
       status: 500,
       message: "failed to finalize cleanup task"
+    });
+  });
+
+  it("lists cleanup tasks with total count", async () => {
+    const db = {} as D1Database;
+    listImageCleanupTasksMock.mockResolvedValue([
+      {
+        id: 1,
+        object_key: "entities/e1/i1.png",
+        reason: "delete_failed",
+        last_error: null,
+        retry_count: 0,
+        created_at: "2026-01-01",
+        updated_at: "2026-01-01"
+      }
+    ]);
+    countImageCleanupTasksMock.mockResolvedValue(9);
+
+    const result = await listImageCleanupTasksUseCase(db, 20);
+
+    expect(result).toEqual({
+      ok: true,
+      data: {
+        tasks: [
+          {
+            id: 1,
+            object_key: "entities/e1/i1.png",
+            reason: "delete_failed",
+            last_error: null,
+            retry_count: 0,
+            created_at: "2026-01-01",
+            updated_at: "2026-01-01"
+          }
+        ],
+        total: 9
+      }
     });
   });
 });

@@ -1,5 +1,6 @@
 import {
   countImageCleanupTasks,
+  type ImageCleanupTaskRow,
   deleteImageCleanupTask,
   listImageCleanupTasks,
   markImageCleanupTaskFailed
@@ -53,5 +54,20 @@ export async function runImageCleanupTasksUseCase(
     deleted,
     failed,
     remaining
+  });
+}
+
+export async function listImageCleanupTasksUseCase(
+  db: D1Database,
+  limit: number
+): Promise<UseCaseResult<{ tasks: ImageCleanupTaskRow[]; total: number }>> {
+  const [tasks, total] = await Promise.all([
+    listImageCleanupTasks(db, limit),
+    countImageCleanupTasks(db)
+  ]);
+
+  return success({
+    tasks,
+    total
   });
 }

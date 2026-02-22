@@ -52,6 +52,8 @@
   - クリーンアップタスク実行用のメンテナンスAPIを追加（手動実行）。
     - `apps/api/src/usecases/image-cleanup-usecase.ts`
     - `apps/api/src/routes/api/maintenance-routes.ts`
+  - クリーンアップキュー参照APIを追加（一覧）。
+    - `GET /api/maintenance/image-cleanup/tasks`
   - クリーンアップキューのリポジトリ/ユースケーステストを追加。
     - `apps/api/tests/unit/repositories/image-cleanup-task-repository.test.ts`
     - `apps/api/tests/unit/usecases/entity-images-usecase.test.ts`
