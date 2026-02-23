@@ -2,6 +2,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import { useImagePreviewNavigation } from "../model/use-image-preview-navigation";
 import { EntityDetailImageGallery } from "./entity-detail-image-gallery";
+import { EntityDetailPageSkeleton } from "./entity-detail-page-skeleton";
 import { EntityImagePreviewModal } from "./entity-image-preview-modal";
 import { EntityDetailRelatedSection } from "./entity-detail-related-section";
 import { EntityDetailSummarySection } from "./entity-detail-summary-section";
@@ -55,7 +56,7 @@ export function EntityDetailPageContent() {
   };
 
   if (entityId && page.isLoading) {
-    return <main className="w-full bg-background pt-20" />;
+    return <EntityDetailPageSkeleton />;
   }
 
   return (

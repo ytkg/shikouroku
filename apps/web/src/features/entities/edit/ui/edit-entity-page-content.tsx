@@ -4,6 +4,7 @@ import { TagEditDialog } from "../../manage-tags";
 import { RelatedEntityEditDialog } from "../../manage-related";
 import { EntityFormFields } from "../../shared/ui/entity-form-fields";
 import { EntityImageEditorField } from "../../shared/ui/entity-image-editor-field";
+import { EntityFormPageSkeleton } from "../../shared/ui/entity-form-page-skeleton";
 import { getEntityDetailPath, routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import {
@@ -22,7 +23,7 @@ export function EditEntityPageContent() {
   const detailPath = entityId ? getEntityDetailPath(entityId) : routePaths.home;
 
   if (form.loading) {
-    return <main className="w-full bg-background pt-20" />;
+    return <EntityFormPageSkeleton />;
   }
 
   const onSave = async () => {
