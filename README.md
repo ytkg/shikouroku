@@ -163,6 +163,9 @@ erDiagram
   kinds ||--o{ entities : kind_id
   entities ||--o{ entity_tags : entity_id
   tags ||--o{ entity_tags : tag_id
+  entities ||--o{ entity_relations : entity_id_low
+  entities ||--o{ entity_relations : entity_id_high
+  entities ||--o{ entity_images : entity_id
 
   kinds {
     INTEGER id PK
@@ -194,9 +197,40 @@ erDiagram
     TEXT created_at
     TEXT updated_at
   }
+
+  entity_relations {
+    TEXT entity_id_low FK
+    TEXT entity_id_high FK
+    TEXT created_at
+  }
+
+  entity_images {
+    TEXT id PK
+    TEXT entity_id FK
+    TEXT object_key "UNIQUE"
+    TEXT file_name
+    TEXT mime_type
+    INTEGER file_size
+    INTEGER sort_order
+    TEXT created_at
+  }
+
+  image_cleanup_tasks {
+    INTEGER id PK
+    TEXT object_key "UNIQUE"
+    TEXT reason
+    TEXT last_error
+    INTEGER retry_count
+    TEXT created_at
+    TEXT updated_at
+  }
 ```
 
-`entity_tags` は `(entity_id, tag_id)` の複合主キーです。
+- `entities` は `(kind_id, name)` の複合ユニーク制約があります。
+- `entity_tags` は `(entity_id, tag_id)` の複合主キーです。
+- `entity_relations` は `(entity_id_low, entity_id_high)` の複合主キーで、`entity_id_low <> entity_id_high` 制約があります。
+- `entity_images` は `(entity_id, sort_order)` の複合ユニーク制約があります。
+- `image_cleanup_tasks` は外部キーを持たない補償処理キューです。
 
 ## デプロイ（Workers一本）
 
