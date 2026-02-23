@@ -22,7 +22,6 @@ type EntityFormFieldsProps = {
   onToggleTag: (tagId: number, checked: boolean) => void;
   onOpenTagDialog: () => void;
   imageFieldContent?: ReactNode;
-  beforeRelatedContent?: ReactNode;
   relatedCandidates?: RelatedCandidate[];
   selectedRelatedEntityIds?: string[];
   onOpenRelatedDialog?: () => void;
@@ -44,7 +43,6 @@ export function EntityFormFields({
   onToggleTag,
   onOpenTagDialog,
   imageFieldContent,
-  beforeRelatedContent,
   relatedCandidates,
   selectedRelatedEntityIds,
   onOpenRelatedDialog,
@@ -54,7 +52,6 @@ export function EntityFormFields({
     relatedCandidates !== undefined &&
     selectedRelatedEntityIds !== undefined &&
     onOpenRelatedDialog !== undefined;
-  const betweenTagAndRelatedContent = imageFieldContent ?? beforeRelatedContent;
 
   return (
     <>
@@ -74,7 +71,7 @@ export function EntityFormFields({
         onToggleTag={onToggleTag}
         onOpenTagDialog={onOpenTagDialog}
       />
-      {betweenTagAndRelatedContent}
+      {imageFieldContent}
       {hasRelatedEditor && (
         <EntityRelatedField
           relatedCandidates={relatedCandidates}
