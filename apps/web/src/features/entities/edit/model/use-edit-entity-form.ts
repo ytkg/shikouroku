@@ -24,6 +24,9 @@ import { httpStatus } from "@/shared/config/http-status";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
 import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
+import { notificationMessageKeys } from "@/shared/config/notification-messages";
+import { notify } from "@/shared/lib/notify";
+import { resolveOperationErrorMessageKey } from "@/shared/lib/notification-error";
 
 type EditEntityResult = {
   ensureAuthorized: (status: number) => boolean;
@@ -229,9 +232,20 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setError(null);
     try {
       const failedUploads = await uploadImages(entityId, Array.from(files));
+      const uploadedCount = files.length - failedUploads.length;
+      if (uploadedCount > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.imageAddSuccess
+        });
+      }
       setFailedImageFiles((current) => [...current, ...failedUploads]);
       if (failedUploads.length > 0) {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+        notify({
+          type: "error",
+          messageKey: notificationMessageKeys.commonSaveError
+        });
       }
     } finally {
       setUploadingImages(false);
@@ -251,6 +265,16 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
         setError(null);
       } else {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+        notify({
+          type: "error",
+          messageKey: notificationMessageKeys.commonSaveError
+        });
+      }
+      if (failedImageFiles.length - failedUploads.length > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.imageAddSuccess
+        });
       }
     } finally {
       setUploadingImages(false);
@@ -266,11 +290,19 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setError(null);
     try {
       await deleteEntityImage(entityId, imageId);
+      notify({
+        type: "success",
+        messageKey: notificationMessageKeys.imageRemoveSuccess
+      });
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return;
       }
       setError(toErrorMessage(e));
+      notify({
+        type: "error",
+        messageKey: resolveOperationErrorMessageKey(e, "delete")
+      });
     } finally {
       setDeletingImageIds((current) => current.filter((id) => id !== imageId));
     }
@@ -376,12 +408,32 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       }
 
       setSavedRelatedEntityIds([...selectedRelatedEntityIds]);
+      if (relationDiff.toAdd.length > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.relationAddSuccess
+        });
+      }
+      if (relationDiff.toRemove.length > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.relationRemoveSuccess
+        });
+      }
+      notify({
+        type: "success",
+        messageKey: notificationMessageKeys.entryUpdateSuccess
+      });
       return true;
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return false;
       }
       setError(toErrorMessage(e));
+      notify({
+        type: "error",
+        messageKey: resolveOperationErrorMessageKey(e, "save")
+      });
       return false;
     } finally {
       setSaving(false);

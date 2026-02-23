@@ -7,6 +7,7 @@ import {
   NewEntityPage
 } from "@/pages";
 import { routePaths } from "@/shared/config/route-paths";
+import { ToastViewport } from "@/shared/ui/toast-viewport";
 import { AppFooter, AppHeader } from "@/widgets";
 
 export function AppRouter() {
@@ -23,6 +24,7 @@ export function AppRouter() {
           <Route path={routePaths.notFound} element={<Navigate to={routePaths.home} replace />} />
         </Routes>
       </div>
+      <ToastViewport />
       <AppFooter />
     </div>
   );

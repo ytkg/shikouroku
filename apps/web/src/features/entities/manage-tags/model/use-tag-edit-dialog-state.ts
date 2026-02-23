@@ -4,6 +4,9 @@ import { useTagMutations } from "@/entities/entity";
 import { ApiError } from "@/shared/api/api-error";
 import { errorMessages } from "@/shared/config/error-messages";
 import { toErrorMessage } from "@/shared/lib/error-message";
+import { notificationMessageKeys } from "@/shared/config/notification-messages";
+import { notify } from "@/shared/lib/notify";
+import { resolveOperationErrorMessageKey } from "@/shared/lib/notification-error";
 
 type UseTagEditDialogStateInput = {
   open: boolean;
@@ -71,11 +74,19 @@ export function useTagEditDialogState({
       const tag = await createTag({ name: normalizedName });
       onCreated(tag);
       setName("");
+      notify({
+        type: "success",
+        messageKey: notificationMessageKeys.tagAddSuccess
+      });
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return;
       }
       setError(toErrorMessage(e));
+      notify({
+        type: "error",
+        messageKey: resolveOperationErrorMessageKey(e, "save")
+      });
     } finally {
       setCreating(false);
     }
@@ -91,11 +102,19 @@ export function useTagEditDialogState({
     try {
       await deleteTag(tag.id);
       onDeleted(tag.id);
+      notify({
+        type: "success",
+        messageKey: notificationMessageKeys.tagRemoveSuccess
+      });
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return;
       }
       setError(toErrorMessage(e));
+      notify({
+        type: "error",
+        messageKey: resolveOperationErrorMessageKey(e, "delete")
+      });
     } finally {
       setDeletingTagId(null);
     }

@@ -17,6 +17,11 @@ import { errorMessages } from "@/shared/config/error-messages";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
 import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
+import {
+  notificationMessageKeys
+} from "@/shared/config/notification-messages";
+import { notify } from "@/shared/lib/notify";
+import { resolveOperationErrorMessageKey } from "@/shared/lib/notification-error";
 
 type CreateEntityResult = {
   ensureAuthorized: (status: number) => boolean;
@@ -170,13 +175,30 @@ export function useCreateEntityForm(): CreateEntityResult {
       for (const relatedEntityId of selectedRelatedEntityIds) {
         await createEntityRelation(entity.id, { relatedEntityId });
       }
+      if (selectedRelatedEntityIds.length > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.relationAddSuccess
+        });
+      }
 
       const failedUploads = await uploadImages(entity.id, selectedImageFiles);
+      const uploadedCount = selectedImageFiles.length - failedUploads.length;
+      if (uploadedCount > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.imageAddSuccess
+        });
+      }
       setImageRetryEntityId(entity.id);
       setFailedImageFiles(failedUploads);
       setSelectedImageFiles(failedUploads);
       if (failedUploads.length > 0) {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+        notify({
+          type: "error",
+          messageKey: notificationMessageKeys.commonSaveError
+        });
       }
 
       setName("");
@@ -184,12 +206,20 @@ export function useCreateEntityForm(): CreateEntityResult {
       setIsWishlist(false);
       setSelectedTagIds([]);
       setSelectedRelatedEntityIds([]);
+      notify({
+        type: "success",
+        messageKey: notificationMessageKeys.entryCreateSuccess
+      });
       return entity.id;
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
         return null;
       }
       setError(toErrorMessage(e));
+      notify({
+        type: "error",
+        messageKey: resolveOperationErrorMessageKey(e, "save")
+      });
       return null;
     } finally {
       setSubmitLoading(false);
@@ -211,6 +241,16 @@ export function useCreateEntityForm(): CreateEntityResult {
         setError(null);
       } else {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
+        notify({
+          type: "error",
+          messageKey: notificationMessageKeys.commonSaveError
+        });
+      }
+      if (failedImageFiles.length - failedUploads.length > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.imageAddSuccess
+        });
       }
     } finally {
       setRetryingFailedImages(false);
