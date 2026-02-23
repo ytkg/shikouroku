@@ -5,7 +5,7 @@ type EntityListLoadMoreProps = {
   canUseIntersectionObserver: boolean;
   isLoadingMore: boolean;
   onLoadMore: () => Promise<void>;
-  triggerRef?: RefObject<HTMLDivElement | null>;
+  triggerRef?: RefObject<HTMLDivElement>;
 };
 
 export function EntityListLoadMore({
