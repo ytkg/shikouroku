@@ -1,4 +1,7 @@
 import type { EntityImage } from "@/entities/entity";
+import { DndContext, type DragEndEvent, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -12,10 +15,92 @@ type EntityImageEditorFieldProps = {
   deletingImageIds: string[];
   onSelectImageFiles: (files: FileList | null) => Promise<void>;
   onRetryFailedImageUploads: () => Promise<void>;
-  onMoveImageUp: (imageId: string) => Promise<void>;
-  onMoveImageDown: (imageId: string) => Promise<void>;
+  onMoveImageUp: (imageId: string) => void;
+  onMoveImageDown: (imageId: string) => void;
+  onReorderImages: (activeImageId: string, overImageId: string) => void;
   onDeleteImage: (imageId: string) => Promise<void>;
 };
+
+type SortableImageCardProps = {
+  image: EntityImage;
+  index: number;
+  total: number;
+  reorderingImages: boolean;
+  deletingImageIds: string[];
+  onMoveImageUp: (imageId: string) => void;
+  onMoveImageDown: (imageId: string) => void;
+  onDeleteImage: (imageId: string) => Promise<void>;
+};
+
+function SortableImageCard({
+  image,
+  index,
+  total,
+  reorderingImages,
+  deletingImageIds,
+  onMoveImageUp,
+  onMoveImageDown,
+  onDeleteImage
+}: SortableImageCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: image.id,
+    disabled: reorderingImages
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        touchAction: "none"
+      }}
+      className={`rounded-md border p-3 ${isDragging ? "opacity-70" : ""}`}
+      {...attributes}
+      {...listeners}
+    >
+      <div className="flex items-start gap-3">
+        <img src={image.url} alt={image.fileName} className="h-20 w-20 rounded-md object-cover" loading="lazy" />
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="truncate text-sm font-medium">{image.fileName}</p>
+          <p className="text-xs text-muted-foreground">
+            {image.mimeType} / {toFileSizeLabel(image.fileSize)}
+          </p>
+          <p className="text-xs text-muted-foreground">表示順: {index + 1}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={index === 0 || reorderingImages}
+          onClick={() => onMoveImageUp(image.id)}
+        >
+          上へ
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={index === total - 1 || reorderingImages}
+          onClick={() => onMoveImageDown(image.id)}
+        >
+          下へ
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={deletingImageIds.includes(image.id)}
+          onClick={() => void onDeleteImage(image.id)}
+        >
+          {deletingImageIds.includes(image.id) ? "削除中..." : "削除"}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export function EntityImageEditorField({
   images,
@@ -27,8 +112,28 @@ export function EntityImageEditorField({
   onRetryFailedImageUploads,
   onMoveImageUp,
   onMoveImageDown,
+  onReorderImages,
   onDeleteImage
 }: EntityImageEditorFieldProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 0,
+        tolerance: 8
+      }
+    })
+  );
+
+  const onDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    onReorderImages(String(active.id), String(over.id));
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor="entity-images-edit">画像</Label>
@@ -62,51 +167,25 @@ export function EntityImageEditorField({
       {images.length === 0 ? (
         <p className="text-sm text-muted-foreground">画像はまだ登録されていません。</p>
       ) : (
-        <div className="space-y-2">
-          {images.map((image, index) => (
-            <div key={image.id} className="rounded-md border p-3">
-              <div className="flex items-start gap-3">
-                <img src={image.url} alt={image.fileName} className="h-20 w-20 rounded-md object-cover" loading="lazy" />
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="truncate text-sm font-medium">{image.fileName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {image.mimeType} / {toFileSizeLabel(image.fileSize)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">表示順: {index + 1}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={index === 0 || reorderingImages}
-                  onClick={() => void onMoveImageUp(image.id)}
-                >
-                  上へ
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={index === images.length - 1 || reorderingImages}
-                  onClick={() => void onMoveImageDown(image.id)}
-                >
-                  下へ
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={deletingImageIds.includes(image.id)}
-                  onClick={() => void onDeleteImage(image.id)}
-                >
-                  {deletingImageIds.includes(image.id) ? "削除中..." : "削除"}
-                </Button>
-              </div>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={images.map((image) => image.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-2">
+              {images.map((image, index) => (
+                <SortableImageCard
+                  key={image.id}
+                  image={image}
+                  index={index}
+                  total={images.length}
+                  reorderingImages={reorderingImages}
+                  deletingImageIds={deletingImageIds}
+                  onMoveImageUp={onMoveImageUp}
+                  onMoveImageDown={onMoveImageDown}
+                  onDeleteImage={onDeleteImage}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

@@ -73,6 +73,7 @@ export function EditEntityPageContent() {
                     onRetryFailedImageUploads={form.retryFailedImageUploads}
                     onMoveImageUp={form.moveImageUp}
                     onMoveImageDown={form.moveImageDown}
+                    onReorderImages={form.reorderImages}
                     onDeleteImage={form.deleteImage}
                   />
                 }

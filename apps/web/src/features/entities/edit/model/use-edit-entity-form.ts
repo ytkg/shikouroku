@@ -61,8 +61,9 @@ type EditEntityResult = {
   onSelectImageFiles: (files: FileList | null) => Promise<void>;
   retryFailedImageUploads: () => Promise<void>;
   deleteImage: (imageId: string) => Promise<void>;
-  moveImageUp: (imageId: string) => Promise<void>;
-  moveImageDown: (imageId: string) => Promise<void>;
+  moveImageUp: (imageId: string) => void;
+  moveImageDown: (imageId: string) => void;
+  reorderImages: (activeImageId: string, overImageId: string) => void;
   onTagCreated: (tag: Tag) => void;
   onTagDeleted: (tagId: number) => void;
   save: () => Promise<boolean>;
@@ -119,6 +120,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   const [reorderingImages, setReorderingImages] = useState(false);
   const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
   const [failedImageFiles, setFailedImageFiles] = useState<File[]>([]);
+  const [pendingImageOrderIds, setPendingImageOrderIds] = useState<string[] | null>(null);
   const initializedEntityIdRef = useRef<string | null>(null);
 
   const relatedCandidates = useMemo(() => {
@@ -149,7 +151,64 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setSavedRelatedEntityIds([]);
     setFailedImageFiles([]);
     setDeletingImageIds([]);
+    setPendingImageOrderIds(null);
   }, [entityId]);
+
+  const serverImageOrderIds = useMemo(() => images.map((image) => image.id), [images]);
+
+  useEffect(() => {
+    if (!pendingImageOrderIds) {
+      return;
+    }
+
+    const imageIdSet = new Set(serverImageOrderIds);
+    const normalized = pendingImageOrderIds.filter((imageId) => imageIdSet.has(imageId));
+    const normalizedIdSet = new Set(normalized);
+    for (const imageId of serverImageOrderIds) {
+      if (normalizedIdSet.has(imageId)) {
+        continue;
+      }
+      normalized.push(imageId);
+      normalizedIdSet.add(imageId);
+    }
+
+    const matchesServer =
+      normalized.length === serverImageOrderIds.length &&
+      normalized.every((imageId, index) => imageId === serverImageOrderIds[index]);
+    if (matchesServer) {
+      setPendingImageOrderIds(null);
+      return;
+    }
+
+    const unchanged =
+      normalized.length === pendingImageOrderIds.length &&
+      normalized.every((imageId, index) => imageId === pendingImageOrderIds[index]);
+    if (!unchanged) {
+      setPendingImageOrderIds(normalized);
+    }
+  }, [pendingImageOrderIds, serverImageOrderIds]);
+
+  const orderedImages = useMemo(() => {
+    if (!pendingImageOrderIds) {
+      return images;
+    }
+
+    const imageById = new Map(images.map((image) => [image.id, image]));
+    const ordered: EntityImage[] = [];
+    for (const imageId of pendingImageOrderIds) {
+      const image = imageById.get(imageId);
+      if (image) {
+        ordered.push(image);
+        imageById.delete(imageId);
+      }
+    }
+    for (const image of images) {
+      if (imageById.has(image.id)) {
+        ordered.push(image);
+      }
+    }
+    return ordered;
+  }, [images, pendingImageOrderIds]);
 
   useEffect(() => {
     if (!entity || !entityId || relatedLoading) {
@@ -308,12 +367,34 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     }
   };
 
-  const reorderByDelta = async (imageId: string, delta: -1 | 1): Promise<void> => {
-    if (!entityId || reorderingImages) {
+  const applyPendingImageOrder = (orderedImageIds: string[]) => {
+    const normalized = [...orderedImageIds];
+    const serverIdSet = new Set(serverImageOrderIds);
+    for (const imageId of serverImageOrderIds) {
+      if (normalized.includes(imageId)) {
+        continue;
+      }
+      normalized.push(imageId);
+    }
+
+    const onlyKnownIds = normalized.filter((imageId) => serverIdSet.has(imageId));
+    const matchesServer =
+      onlyKnownIds.length === serverImageOrderIds.length &&
+      onlyKnownIds.every((imageId, index) => imageId === serverImageOrderIds[index]);
+    if (matchesServer) {
+      setPendingImageOrderIds(null);
       return;
     }
 
-    const fromIndex = images.findIndex((image) => image.id === imageId);
+    setPendingImageOrderIds(onlyKnownIds);
+  };
+
+  const reorderByDelta = (imageId: string, delta: -1 | 1): void => {
+    if (!entityId || orderedImages.length === 0) {
+      return;
+    }
+
+    const fromIndex = orderedImages.findIndex((image) => image.id === imageId);
     if (fromIndex < 0) {
       return;
     }
@@ -323,35 +404,42 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       return;
     }
 
-    const reordered = [...images];
-    const [moved] = reordered.splice(fromIndex, 1);
+    const reorderedIds = orderedImages.map((image) => image.id);
+    const [moved] = reorderedIds.splice(fromIndex, 1);
     if (!moved) {
       return;
     }
-    reordered.splice(toIndex, 0, moved);
+    reorderedIds.splice(toIndex, 0, moved);
+    applyPendingImageOrder(reorderedIds);
+  };
 
-    setReorderingImages(true);
-    setError(null);
-    try {
-      await reorderEntityImages(entityId, {
-        orderedImageIds: reordered.map((image) => image.id)
-      });
-    } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-        return;
-      }
-      setError(toErrorMessage(e));
-    } finally {
-      setReorderingImages(false);
+  const moveImageUp = (imageId: string): void => {
+    reorderByDelta(imageId, -1);
+  };
+
+  const moveImageDown = (imageId: string): void => {
+    reorderByDelta(imageId, 1);
+  };
+
+  const reorderImages = (activeImageId: string, overImageId: string): void => {
+    if (!entityId || activeImageId === overImageId || orderedImages.length === 0) {
+      return;
     }
-  };
 
-  const moveImageUp = async (imageId: string): Promise<void> => {
-    await reorderByDelta(imageId, -1);
-  };
+    const currentOrder = orderedImages.map((image) => image.id);
+    const fromIndex = currentOrder.indexOf(activeImageId);
+    const toIndex = currentOrder.indexOf(overImageId);
+    if (fromIndex < 0 || toIndex < 0) {
+      return;
+    }
 
-  const moveImageDown = async (imageId: string): Promise<void> => {
-    await reorderByDelta(imageId, 1);
+    const nextOrder = [...currentOrder];
+    const [moved] = nextOrder.splice(fromIndex, 1);
+    if (!moved) {
+      return;
+    }
+    nextOrder.splice(toIndex, 0, moved);
+    applyPendingImageOrder(nextOrder);
   };
 
   const save = async (): Promise<boolean> => {
@@ -407,6 +495,18 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
         }
       }
 
+      if (pendingImageOrderIds) {
+        setReorderingImages(true);
+        try {
+          await reorderEntityImages(entityId, {
+            orderedImageIds: pendingImageOrderIds
+          });
+          setPendingImageOrderIds(null);
+        } finally {
+          setReorderingImages(false);
+        }
+      }
+
       setSavedRelatedEntityIds([...selectedRelatedEntityIds]);
       if (relationDiff.toAdd.length > 0) {
         notify({
@@ -452,7 +552,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     selectedTagIds,
     relatedCandidates,
     selectedRelatedEntityIds,
-    images,
+    images: orderedImages,
     failedImageFiles,
     tagDialogOpen,
     relatedDialogOpen,
@@ -477,6 +577,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     deleteImage,
     moveImageUp,
     moveImageDown,
+    reorderImages,
     onTagCreated,
     onTagDeleted,
     save
