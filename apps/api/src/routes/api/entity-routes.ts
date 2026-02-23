@@ -8,7 +8,10 @@ import {
 import { parseJsonBody } from "../../shared/http/parse-json-body";
 import { createEntityCommand } from "../../modules/catalog/entity/application/create-entity-command";
 import { getEntityQuery } from "../../modules/catalog/entity/application/get-entity-query";
-import { listEntitiesQuery } from "../../modules/catalog/entity/application/list-entities-query";
+import {
+  listEntitiesQuery
+} from "../../modules/catalog/entity/application/list-entities-query";
+import { resolveEntityListQueryParams } from "../../modules/catalog/entity/application/entity-list-query-params";
 import { updateEntityCommand } from "../../modules/catalog/entity/application/update-entity-command";
 import { createD1EntityReadRepository } from "../../modules/catalog/entity/infra/entity-repository-d1";
 import { createD1KindRepository } from "../../modules/catalog/kind/infra/kind-repository-d1";
@@ -30,12 +33,25 @@ export function createEntityRoutes(): Hono<AppEnv> {
   const entities = new Hono<AppEnv>();
 
   entities.get("/entities", async (c) => {
-    const result = await listEntitiesQuery(c.env.DB);
+    const resolvedQuery = resolveEntityListQueryParams({
+      limit: c.req.query("limit"),
+      cursor: c.req.query("cursor"),
+      match: c.req.query("match"),
+      fields: c.req.query("fields"),
+      kindId: c.req.query("kindId"),
+      wishlist: c.req.query("wishlist"),
+      q: c.req.query("q")
+    });
+    if (!resolvedQuery.ok) {
+      return jsonError(c, 400, resolvedQuery.error.code, resolvedQuery.error.message);
+    }
+
+    const result = await listEntitiesQuery(c.env.DB, resolvedQuery.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
 
-    return jsonOk(c, { entities: result.data.entities });
+    return jsonOk(c, { entities: result.data.entities, page: result.data.page });
   });
 
   entities.get("/entities/:id", async (c) => {

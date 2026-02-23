@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchEntities, fetchKinds } from "@/entities/entity";
+import { fetchEntities, fetchEntitiesPage, fetchKinds } from "@/entities/entity";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
 
 afterEach(() => {
@@ -12,6 +12,12 @@ describe("entities.client", () => {
       new Response(
         JSON.stringify({
           ok: true,
+          page: {
+            limit: 100,
+            hasMore: false,
+            nextCursor: null,
+            total: 1
+          },
           entities: [
             {
               id: "entity-1",
@@ -44,6 +50,41 @@ describe("entities.client", () => {
         updatedAt: undefined
       }
     ]);
+  });
+
+  it("fetchEntitiesPageは検索条件をクエリに変換する", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          page: {
+            limit: 10,
+            hasMore: false,
+            nextCursor: null,
+            total: 0
+          },
+          entities: []
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        }
+      )
+    );
+
+    await fetchEntitiesPage({
+      q: "code",
+      fields: ["title", "tags"],
+      match: "prefix",
+      kindId: 2,
+      wishlist: "exclude",
+      limit: 10,
+      cursor: "cursor-token"
+    });
+
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe(
+      "/api/entities?limit=10&q=code&match=prefix&fields=title%2Ctags&kindId=2&wishlist=exclude&cursor=cursor-token"
+    );
   });
 
   it("fetchKindsは不正なレスポンス形をApiError(INVALID_API_RESPONSE)として扱う", async () => {

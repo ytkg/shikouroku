@@ -11,6 +11,12 @@ export function parseRelatedEntitiesResponse(value: unknown): Entity[] {
 
   return parseEntitiesResponse({
     ok: true,
+    page: {
+      limit: 0,
+      hasMore: false,
+      nextCursor: null,
+      total: 0
+    },
     entities: root.related
   });
 }

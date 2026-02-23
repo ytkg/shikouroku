@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
+  countEntitiesWithKindsFromD1: vi.fn(),
   fetchEntityWithTagsFromD1: vi.fn(),
   fetchTagsByEntityIdsFromD1: vi.fn(),
   findEntityIdByKindAndNameFromD1: vi.fn(),
@@ -15,6 +16,7 @@ import { getEntityQuery } from "../../../../../../src/modules/catalog/entity/app
 import { listEntitiesQuery } from "../../../../../../src/modules/catalog/entity/application/list-entities-query";
 import { updateEntityCommand } from "../../../../../../src/modules/catalog/entity/application/update-entity-command";
 import {
+  countEntitiesWithKindsFromD1,
   fetchEntityWithTagsFromD1,
   fetchTagsByEntityIdsFromD1,
   findEntityIdByKindAndNameFromD1,
@@ -26,6 +28,7 @@ import {
 
 const findKindByIdMock = vi.fn();
 const countExistingTagsByIdsMock = vi.fn();
+const countEntitiesWithKindsFromD1Mock = vi.mocked(countEntitiesWithKindsFromD1);
 const fetchEntityWithTagsFromD1Mock = vi.mocked(fetchEntityWithTagsFromD1);
 const fetchTagsByEntityIdsFromD1Mock = vi.mocked(fetchTagsByEntityIdsFromD1);
 const findEntityIdByKindAndNameFromD1Mock = vi.mocked(findEntityIdByKindAndNameFromD1);
@@ -41,7 +44,8 @@ describe("entity module application", () => {
     vi.clearAllMocks();
   });
 
-  it("listEntitiesQuery maps first image url and tags", async () => {
+  it("listEntitiesQuery maps first image url and tags with page metadata", async () => {
+    countEntitiesWithKindsFromD1Mock.mockResolvedValue(1);
     listEntitiesWithKindsFromD1Mock.mockResolvedValue([
       {
         id: "entity-1",
@@ -57,7 +61,15 @@ describe("entity module application", () => {
     ] as any);
     fetchTagsByEntityIdsFromD1Mock.mockResolvedValue(new Map([["entity-1", [{ id: 10, name: "arch" }]]]));
 
-    const result = await listEntitiesQuery({} as D1Database);
+    const result = await listEntitiesQuery({} as D1Database, {
+      limit: 20,
+      cursor: null,
+      kindId: null,
+      wishlist: "include",
+      q: "",
+      match: "partial",
+      fields: ["title", "body", "tags"]
+    });
 
     expect(result).toEqual({
       ok: true,
@@ -74,7 +86,13 @@ describe("entity module application", () => {
             created_at: "2026-01-01",
             updated_at: "2026-01-01"
           }
-        ]
+        ],
+        page: {
+          limit: 20,
+          hasMore: false,
+          nextCursor: null,
+          total: 1
+        }
       }
     });
   });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
 import {
+  parseEntitiesPageResponse,
   parseEntitiesResponse,
   parseEntityResponse,
   parseKindsResponse,
@@ -39,6 +40,12 @@ describe("entities.response", () => {
   it("配列レスポンスでtags省略時は空配列になり、先頭画像URLを受け取れる", () => {
     const entities = parseEntitiesResponse({
       ok: true,
+      page: {
+        limit: 20,
+        hasMore: false,
+        nextCursor: null,
+        total: 1
+      },
       entities: [
         {
           id: "entity-1",
@@ -55,6 +62,35 @@ describe("entities.response", () => {
     expect(entities[0]?.isWishlist).toBe(false);
     expect(entities[0]?.tags).toEqual([]);
     expect(entities[0]?.firstImageUrl).toBe("/api/entities/entity-1/images/image-1/file");
+  });
+
+  it("ページ情報を含む一覧レスポンスを検証できる", () => {
+    const response = parseEntitiesPageResponse({
+      ok: true,
+      page: {
+        limit: 20,
+        hasMore: true,
+        nextCursor: "cursor-token",
+        total: 25
+      },
+      entities: [
+        {
+          id: "entity-1",
+          kind: { id: 1, label: "book" },
+          name: "Clean Code",
+          description: "notes",
+          is_wishlist: 0
+        }
+      ]
+    });
+
+    expect(response.page).toEqual({
+      limit: 20,
+      hasMore: true,
+      nextCursor: "cursor-token",
+      total: 25
+    });
+    expect(response.entities).toHaveLength(1);
   });
 
   it("kinds/tags/tag/okレスポンスを検証できる", () => {

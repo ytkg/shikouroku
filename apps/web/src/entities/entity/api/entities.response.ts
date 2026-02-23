@@ -12,6 +12,18 @@ import {
 
 type JsonObject = Record<string, unknown>;
 
+export type EntityListPage = {
+  limit: number;
+  hasMore: boolean;
+  nextCursor: string | null;
+  total: number;
+};
+
+export type EntitiesPageResponse = {
+  entities: Entity[];
+  page: EntityListPage;
+};
+
 function expectWishlistFlag(value: unknown, path: string): boolean {
   if (typeof value === "boolean") {
     return value;
@@ -36,6 +48,14 @@ function expectOptionalNullableString(value: unknown, path: string): string | nu
   }
 
   return expectNullableString(value, path);
+}
+
+function expectBoolean(value: unknown, path: string): boolean {
+  if (typeof value !== "boolean") {
+    throw createInvalidApiResponseError(`Invalid API response: ${path} must be a boolean`);
+  }
+
+  return value;
 }
 
 function parseKind(value: unknown, path: string): Kind {
@@ -100,11 +120,25 @@ export function parseTagResponse(value: unknown): Tag {
   return parseTag(root.tag, "tagResponse.tag");
 }
 
-export function parseEntitiesResponse(value: unknown): Entity[] {
+export function parseEntitiesPageResponse(value: unknown): EntitiesPageResponse {
   const root = expectOkRoot(value, "entitiesResponse");
-  return expectArray(root.entities, "entitiesResponse.entities").map((entity, index) =>
+  const entities = expectArray(root.entities, "entitiesResponse.entities").map((entity, index) =>
     parseEntity(entity, `entitiesResponse.entities[${index}]`)
   );
+  const page = expectObject(root.page, "entitiesResponse.page");
+  return {
+    entities,
+    page: {
+      limit: expectNumber(page.limit, "entitiesResponse.page.limit"),
+      hasMore: expectBoolean(page.hasMore, "entitiesResponse.page.hasMore"),
+      nextCursor: expectNullableString(page.nextCursor, "entitiesResponse.page.nextCursor"),
+      total: expectNumber(page.total, "entitiesResponse.page.total")
+    }
+  };
+}
+
+export function parseEntitiesResponse(value: unknown): Entity[] {
+  return parseEntitiesPageResponse(value).entities;
 }
 
 export function parseEntityResponse(value: unknown): Entity {

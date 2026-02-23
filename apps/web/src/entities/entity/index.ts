@@ -19,10 +19,14 @@ export {
   useTagsQuery
 } from "./model";
 export {
+  ENTITY_SEARCH_FIELDS,
+  ENTITY_SEARCH_MATCHES,
+  ENTITY_WISHLIST_FILTERS,
   deleteEntityImage,
   createEntityRelation,
   deleteEntityRelation,
   fetchEntities,
+  fetchEntitiesPage,
   fetchEntityById,
   fetchEntityImages,
   fetchKinds,
@@ -30,4 +34,10 @@ export {
   fetchTags,
   reorderEntityImages,
   uploadEntityImage
+} from "./api";
+export type {
+  EntitySearchField,
+  EntitySearchMatch,
+  EntityWishlistFilter,
+  FetchEntitiesPageInput
 } from "./api";

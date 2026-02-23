@@ -25,9 +25,114 @@ export type UpdateEntityInput = {
   isWishlistFlag: number;
 };
 
+type EntitySearchMatch = "partial" | "prefix" | "exact";
+type EntitySearchField = "title" | "body" | "tags";
+
+export type ListEntitiesWithKindsInput = {
+  limit: number;
+  cursorCreatedAt: string | null;
+  cursorId: string | null;
+  kindId: number | null;
+  wishlist: "include" | "exclude" | "only";
+  q: string | null;
+  match: EntitySearchMatch;
+  fields: EntitySearchField[];
+};
+
+type ListEntitiesSearchInput = Pick<
+  ListEntitiesWithKindsInput,
+  "kindId" | "wishlist" | "q" | "match" | "fields"
+>;
+
+type ListEntitiesCursorInput = Pick<ListEntitiesWithKindsInput, "cursorCreatedAt" | "cursorId">;
+
+function toSearchPattern(query: string, match: EntitySearchMatch): string {
+  if (match === "exact") {
+    return query;
+  }
+
+  if (match === "prefix") {
+    return `${query}%`;
+  }
+
+  return `%${query}%`;
+}
+
+function buildEntitySearchWhereClause(
+  search: ListEntitiesSearchInput,
+  cursor?: ListEntitiesCursorInput
+): {
+  whereClause: string;
+  bindings: unknown[];
+} {
+  const clauses: string[] = [];
+  const bindings: unknown[] = [];
+
+  if (cursor?.cursorCreatedAt && cursor.cursorId) {
+    clauses.push("(e.created_at < ? OR (e.created_at = ? AND e.id < ?))");
+    bindings.push(cursor.cursorCreatedAt, cursor.cursorCreatedAt, cursor.cursorId);
+  }
+
+  if (search.kindId !== null) {
+    clauses.push("e.kind_id = ?");
+    bindings.push(search.kindId);
+  }
+
+  if (search.wishlist === "exclude") {
+    clauses.push("e.is_wishlist = 0");
+  }
+
+  if (search.wishlist === "only") {
+    clauses.push("e.is_wishlist = 1");
+  }
+
+  if (search.q) {
+    const pattern = toSearchPattern(search.q, search.match);
+    const comparator = search.match === "exact" ? "= ? COLLATE NOCASE" : "LIKE ? COLLATE NOCASE";
+    const searchClauses: string[] = [];
+
+    if (search.fields.includes("title")) {
+      searchClauses.push(`e.name ${comparator}`);
+      bindings.push(pattern);
+    }
+
+    if (search.fields.includes("body")) {
+      searchClauses.push(`COALESCE(e.description, '') ${comparator}`);
+      bindings.push(pattern);
+    }
+
+    if (search.fields.includes("tags")) {
+      searchClauses.push(
+        `EXISTS (
+           SELECT 1
+           FROM entity_tags et
+           INNER JOIN tags t ON t.id = et.tag_id
+           WHERE et.entity_id = e.id
+             AND t.name ${comparator}
+         )`
+      );
+      bindings.push(pattern);
+    }
+
+    if (searchClauses.length > 0) {
+      clauses.push(`(${searchClauses.join(" OR ")})`);
+    }
+  }
+
+  return {
+    whereClause: clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "",
+    bindings
+  };
+}
+
 export async function listEntitiesWithKindsFromD1(
-  db: D1Database
+  db: D1Database,
+  input: ListEntitiesWithKindsInput
 ): Promise<EntityWithKindAndFirstImageRecord[]> {
+  const { whereClause, bindings } = buildEntitySearchWhereClause(input, {
+    cursorCreatedAt: input.cursorCreatedAt,
+    cursorId: input.cursorId
+  });
   const result = await db
     .prepare(
       `SELECT
@@ -48,12 +153,31 @@ export async function listEntitiesWithKindsFromD1(
          ) AS first_image_id
        FROM entities e
        INNER JOIN kinds k ON k.id = e.kind_id
-       ORDER BY e.created_at DESC
-       LIMIT 50`
+       ${whereClause}
+       ORDER BY e.created_at DESC, e.id DESC
+       LIMIT ?`
     )
+    .bind(...bindings, input.limit)
     .all<EntityWithKindAndFirstImageRecord>();
 
   return result.results ?? [];
+}
+
+export async function countEntitiesWithKindsFromD1(
+  db: D1Database,
+  input: ListEntitiesSearchInput
+): Promise<number> {
+  const { whereClause, bindings } = buildEntitySearchWhereClause(input);
+  const count = await db
+    .prepare(
+      `SELECT COUNT(*) AS total
+       FROM entities e
+       ${whereClause}`
+    )
+    .bind(...bindings)
+    .first<{ total: number }>();
+
+  return Number(count?.total ?? 0);
 }
 
 export async function findEntityByIdFromD1(db: D1Database, id: string): Promise<EntityRecord | null> {

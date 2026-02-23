@@ -1,92 +1,254 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import type { Entity } from "@/entities/entity";
-import { useEntitiesQuery } from "@/entities/entity";
-import { useAuthGuard } from "@/features/auth";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type NavigateOptions, useSearchParams } from "react-router-dom";
 import {
-  defaultEntityTab,
-  entityTabQueryKey,
-  type EntityTab,
-  getKindTabs,
-  getVisibleEntities,
-  parseEntityTab
+  fetchEntitiesPage,
+  type Entity,
+  type Kind,
+  type EntitySearchField,
+  type EntitySearchMatch,
+  useKindsQuery
+} from "@/entities/entity";
+import { useAuthGuard } from "@/features/auth";
+import { createEntityListAsyncGuard } from "./entity-list-async-guard";
+import {
+  parseEntityListSearchCriteria,
+  setEntityKindTabParams,
+  setEntitySearchFieldsParam,
+  setEntitySearchMatchParam,
+  setEntitySearchQueryParam,
+  toggleEntitySearchFieldSelection,
+  toEntityListCriteriaKey,
+  type EntityKindTab
 } from "./entity-list";
+import { buildEntityListFetchInput } from "./entity-list-page-controller";
 import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
 
-type KindTab = {
-  id: number;
-  label: string;
-};
+const SEARCH_DEBOUNCE_MS = 300;
+
+type SearchParamsMutator = (searchParams: URLSearchParams) => void;
 
 type EntityListPageResult = {
   error: string | null;
   isLoading: boolean;
-  selectedTab: EntityTab;
-  kindTabs: KindTab[];
-  filteredEntities: Entity[];
-  setSelectedTab: (tab: EntityTab) => void;
+  isLoadingMore: boolean;
+  entities: Entity[];
+  kinds: Kind[];
+  query: string;
+  selectedKindTab: EntityKindTab;
+  match: EntitySearchMatch;
+  selectedFields: EntitySearchField[];
+  isAllFieldsSelected: boolean;
+  totalCount: number;
+  hasMore: boolean;
+  setQuery: (query: string) => void;
+  setSelectedKindTab: (tab: EntityKindTab) => void;
+  setMatch: (match: EntitySearchMatch) => void;
+  setSelectedFields: (fields: EntitySearchField[]) => void;
+  toggleField: (field: EntitySearchField) => void;
+  loadMore: () => Promise<void>;
 };
+
+function isAbortError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "name" in error && error.name === "AbortError";
+}
 
 export function useEntityListPage(): EntityListPageResult {
   const ensureAuthorized = useAuthGuard();
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
-  const rawTab = searchParams.get(entityTabQueryKey);
-  const selectedTab = parseEntityTab(rawTab);
-  const { data: entities = [], error: queryError, isLoading } = useEntitiesQuery();
+  const { data: kinds = [] } = useKindsQuery();
+
+  const criteria = useMemo(() => parseEntityListSearchCriteria(searchParams), [searchParams]);
+  const { rawQuery, selectedKindTab, match, selectedFields, isAllFieldsSelected } = criteria;
+  const criteriaKey = useMemo(() => toEntityListCriteriaKey(criteria), [criteria]);
+
+  const [queryInput, setQueryInput] = useState(rawQuery);
+  const [entities, setEntities] = useState<Entity[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const asyncGuard = useRef(createEntityListAsyncGuard(criteriaKey));
+  asyncGuard.current.sync(criteriaKey);
+
+  const updateSearchParams = useCallback(
+    (mutate: SearchParamsMutator, options?: NavigateOptions) => {
+      setSearchParams(
+        (currentSearchParams) => {
+          const before = currentSearchParams.toString();
+          const nextSearchParams = new URLSearchParams(currentSearchParams);
+          mutate(nextSearchParams);
+          return nextSearchParams.toString() === before ? currentSearchParams : nextSearchParams;
+        },
+        options
+      );
+    },
+    [setSearchParams]
+  );
+
+  const fetchPage = useCallback(
+    (input: { cursor?: string | null; signal?: AbortSignal } = {}) =>
+      fetchEntitiesPage(buildEntityListFetchInput(criteria, input)),
+    [criteria]
+  );
 
   useEffect(() => {
-    const nextError = resolveQueryError({
-      queryError,
-      ensureAuthorized
-    });
-    if (nextError !== KEEP_CURRENT_ERROR) {
-      setError(nextError);
-    }
-  }, [queryError, ensureAuthorized]);
+    setQueryInput(rawQuery);
+  }, [rawQuery]);
 
   useEffect(() => {
-    const normalizedTab = selectedTab === defaultEntityTab ? null : selectedTab;
-    if (rawTab === normalizedTab) {
+    if (queryInput === rawQuery) {
       return;
     }
 
-    const nextSearchParams = new URLSearchParams(searchParams);
-    if (normalizedTab === null) {
-      nextSearchParams.delete(entityTabQueryKey);
-    } else {
-      nextSearchParams.set(entityTabQueryKey, normalizedTab);
+    const timer = setTimeout(() => {
+      updateSearchParams(
+        (nextSearchParams) => {
+          setEntitySearchQueryParam(nextSearchParams, queryInput);
+        },
+        { replace: true }
+      );
+    }, SEARCH_DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [queryInput, rawQuery, updateSearchParams]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const currentCriteriaKey = criteriaKey;
+
+    setIsLoading(true);
+    setError(null);
+    setIsLoadingMore(false);
+
+    fetchPage({ signal: controller.signal })
+      .then((response) => {
+        asyncGuard.current.runIfCurrent(currentCriteriaKey, () => {
+          setEntities(response.entities);
+          setHasMore(response.page.hasMore);
+          setNextCursor(response.page.nextCursor);
+          setTotalCount(response.page.total);
+        });
+      })
+      .catch((queryError) => {
+        if (isAbortError(queryError)) {
+          return;
+        }
+
+        asyncGuard.current.runIfCurrent(currentCriteriaKey, () => {
+          const nextError = resolveQueryError({
+            queryError,
+            ensureAuthorized
+          });
+          if (nextError !== KEEP_CURRENT_ERROR) {
+            setError(nextError);
+          }
+          setEntities([]);
+          setHasMore(false);
+          setNextCursor(null);
+          setTotalCount(0);
+        });
+      })
+      .finally(() => {
+        asyncGuard.current.runIfCurrent(currentCriteriaKey, () => {
+          setIsLoading(false);
+        });
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [criteriaKey, ensureAuthorized, fetchPage]);
+
+  const setMatch = useCallback(
+    (nextMatch: EntitySearchMatch) => {
+      updateSearchParams((nextSearchParams) => {
+        setEntitySearchMatchParam(nextSearchParams, nextMatch);
+      });
+    },
+    [updateSearchParams]
+  );
+
+  const setSelectedKindTab = useCallback(
+    (nextTab: EntityKindTab) => {
+      updateSearchParams((nextSearchParams) => {
+        setEntityKindTabParams(nextSearchParams, nextTab);
+      });
+    },
+    [updateSearchParams]
+  );
+
+  const setSelectedFields = useCallback(
+    (fields: EntitySearchField[]) => {
+      updateSearchParams((nextSearchParams) => {
+        setEntitySearchFieldsParam(nextSearchParams, fields);
+      });
+    },
+    [updateSearchParams]
+  );
+
+  const toggleField = useCallback(
+    (field: EntitySearchField) => {
+      setSelectedFields(toggleEntitySearchFieldSelection(selectedFields, field, isAllFieldsSelected));
+    },
+    [isAllFieldsSelected, selectedFields, setSelectedFields]
+  );
+
+  const loadMore = useCallback(async () => {
+    if (!hasMore || !nextCursor || isLoadingMore) {
+      return;
     }
 
-    setSearchParams(nextSearchParams, { replace: true });
-  }, [rawTab, selectedTab, searchParams, setSearchParams]);
+    const currentCriteriaKey = criteriaKey;
+    setIsLoadingMore(true);
+    setError(null);
 
-  const kindTabs = useMemo(() => getKindTabs(entities), [entities]);
-
-  const filteredEntities = useMemo(
-    () => getVisibleEntities(entities, selectedTab),
-    [entities, selectedTab]
-  );
-
-  const setSelectedTab = useCallback(
-    (tab: EntityTab) => {
-      const nextSearchParams = new URLSearchParams(searchParams);
-      if (tab === defaultEntityTab) {
-        nextSearchParams.delete(entityTabQueryKey);
-      } else {
-        nextSearchParams.set(entityTabQueryKey, tab);
+    try {
+      const response = await fetchPage({ cursor: nextCursor });
+      asyncGuard.current.runIfCurrent(currentCriteriaKey, () => {
+        setEntities((previousEntities) => [...previousEntities, ...response.entities]);
+        setHasMore(response.page.hasMore);
+        setNextCursor(response.page.nextCursor);
+        setTotalCount(response.page.total);
+      });
+    } catch (queryError) {
+      asyncGuard.current.runIfCurrent(currentCriteriaKey, () => {
+        const nextError = resolveQueryError({
+          queryError,
+          ensureAuthorized
+        });
+        if (nextError !== KEEP_CURRENT_ERROR) {
+          setError(nextError);
+        }
+      });
+    } finally {
+      if (asyncGuard.current.isCurrent(currentCriteriaKey)) {
+        setIsLoadingMore(false);
       }
-      setSearchParams(nextSearchParams);
-    },
-    [searchParams, setSearchParams]
-  );
+    }
+  }, [criteriaKey, ensureAuthorized, fetchPage, hasMore, isLoadingMore, nextCursor]);
 
   return {
     error,
     isLoading,
-    selectedTab,
-    kindTabs,
-    filteredEntities,
-    setSelectedTab
+    isLoadingMore,
+    entities,
+    kinds,
+    query: queryInput,
+    selectedKindTab,
+    match,
+    selectedFields,
+    isAllFieldsSelected,
+    totalCount,
+    hasMore,
+    setQuery: setQueryInput,
+    setSelectedKindTab,
+    setMatch,
+    setSelectedFields,
+    toggleField,
+    loadMore
   };
 }
