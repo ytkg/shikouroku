@@ -31,28 +31,32 @@ export function EntityListPageContent() {
   const [isSearchOptionsOpen, setIsSearchOptionsOpen] = useState(false);
   const selectedFieldSet = useMemo(() => new Set(page.selectedFields), [page.selectedFields]);
   const canUseIntersectionObserver = typeof IntersectionObserver !== "undefined";
+  const hasMore = page.hasMore;
+  const isLoading = page.isLoading;
+  const isLoadingMore = page.isLoadingMore;
+  const loadMore = page.loadMore;
 
   useEffect(() => {
-    if (!page.isLoadingMore) {
+    if (!isLoadingMore) {
       autoLoadPendingRef.current = false;
     }
-  }, [page.isLoadingMore]);
+  }, [isLoadingMore]);
 
   useEffect(() => {
     const triggerElement = loadMoreTriggerRef.current;
-    if (!canUseIntersectionObserver || !triggerElement || !page.hasMore || page.isLoading) {
+    if (!canUseIntersectionObserver || !triggerElement || !hasMore || isLoading) {
       return;
     }
 
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        if (!entry?.isIntersecting || autoLoadPendingRef.current || page.isLoadingMore) {
+        if (!entry?.isIntersecting || autoLoadPendingRef.current || isLoadingMore) {
           return;
         }
 
         autoLoadPendingRef.current = true;
-        void page.loadMore();
+        void loadMore();
       },
       {
         rootMargin: "240px 0px"
@@ -63,7 +67,7 @@ export function EntityListPageContent() {
     return () => {
       observer.disconnect();
     };
-  }, [canUseIntersectionObserver, page.hasMore, page.isLoading, page.isLoadingMore, page.loadMore]);
+  }, [canUseIntersectionObserver, hasMore, isLoading, isLoadingMore, loadMore]);
 
   const searchOptionsToggleButton = (
     <Button
