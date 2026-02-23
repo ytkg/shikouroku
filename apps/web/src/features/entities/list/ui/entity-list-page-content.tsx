@@ -87,10 +87,6 @@ export function EntityListPageContent() {
     </Button>
   );
 
-  if (page.isLoading && page.entities.length === 0) {
-    return <main className="w-full bg-background pt-20" />;
-  }
-
   return (
     <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-4 pt-20">
       <section className="w-full space-y-3">
@@ -201,7 +197,7 @@ export function EntityListPageContent() {
 
         {page.entities.length === 0 ? (
           <div className="rounded-md border bg-muted p-4 text-sm text-muted-foreground">
-            表示できる登録がありません。
+            {page.isLoading ? "読み込み中..." : "表示できる登録がありません。"}
           </div>
         ) : (
           page.entities.map((entity) => {

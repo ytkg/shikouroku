@@ -37,4 +37,11 @@ describe("entity list page content infinite scroll", () => {
     expect(source).toContain("if (isSearchOptionsOpen) {");
     expect(source).toContain("page.endQueryComposition();");
   });
+
+  it("初回検索中でも空のmainを返さず、読み込み文言を表示する", () => {
+    const source = fs.readFileSync(pageContentPath, "utf-8");
+
+    expect(source).not.toContain("if (page.isLoading && page.entities.length === 0)");
+    expect(source).toContain('{page.isLoading ? "読み込み中..." : "表示できる登録がありません。"}');
+  });
 });
