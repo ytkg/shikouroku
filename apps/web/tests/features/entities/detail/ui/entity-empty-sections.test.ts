@@ -8,6 +8,18 @@ const detailPagePath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/detail/ui/entity-detail-page-content.tsx"
 );
+const detailImageGalleryPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/detail/ui/entity-detail-image-gallery.tsx"
+);
+const imagePreviewModalPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/detail/ui/entity-image-preview-modal.tsx"
+);
+const imagePreviewNavigationPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/detail/model/use-image-preview-navigation.ts"
+);
 const entityFormFieldsPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/shared/ui/entity-form-fields.tsx"
@@ -15,14 +27,15 @@ const entityFormFieldsPath = path.resolve(
 
 describe("entity empty sections", () => {
   it("詳細画面はタグ/画像/関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {
-    const source = fs.readFileSync(detailPagePath, "utf-8");
+    const detailSource = fs.readFileSync(detailPagePath, "utf-8");
+    const imageGallerySource = fs.readFileSync(detailImageGalleryPath, "utf-8");
 
-    expect(source).not.toContain("（タグなし）");
-    expect(source).not.toContain("（画像なし）");
-    expect(source).not.toContain("（関連なし）");
-    expect(source).toContain("page.entity.tags.length > 0 &&");
-    expect(source).toContain("(page.imagesLoading || page.images.length > 0) &&");
-    expect(source).toContain("(page.relatedLoading || page.relatedEntities.length > 0) &&");
+    expect(detailSource).not.toContain("（タグなし）");
+    expect(detailSource).not.toContain("（関連なし）");
+    expect(imageGallerySource).not.toContain("（画像なし）");
+    expect(detailSource).toContain("page.entity.tags.length > 0 &&");
+    expect(detailSource).toContain("(page.relatedLoading || page.relatedEntities.length > 0) &&");
+    expect(detailSource).toContain("<EntityDetailImageGallery");
   });
 
   it("追加/編集フォームは関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {
@@ -43,10 +56,13 @@ describe("entity empty sections", () => {
   });
 
   it("画像プレビューの左右矢印は押せる方向のみ表示する実装になっている", () => {
-    const source = fs.readFileSync(detailPagePath, "utf-8");
+    const previewModalSource = fs.readFileSync(imagePreviewModalPath, "utf-8");
+    const previewNavigationSource = fs.readFileSync(imagePreviewNavigationPath, "utf-8");
 
-    expect(source).toContain("{canMoveToPreviousImage && (");
-    expect(source).toContain("{canMoveToNextImage && (");
-    expect(source).toContain("onPointerUp={switchImageByPreviewAreaPointer}");
+    expect(previewModalSource).toContain("{canMoveToPreviousImage && (");
+    expect(previewModalSource).toContain("{canMoveToNextImage && (");
+    expect(previewModalSource).toContain("onPointerUp={onSwitchByPreviewAreaPointer}");
+    expect(previewNavigationSource).toContain("if (event.key === \"ArrowLeft\")");
+    expect(previewNavigationSource).toContain("if (event.key === \"ArrowRight\")");
   });
 });

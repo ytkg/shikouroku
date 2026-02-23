@@ -1,6 +1,8 @@
-import { type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
+import { useImagePreviewNavigation } from "../model/use-image-preview-navigation";
+import { EntityDetailImageGallery } from "./entity-detail-image-gallery";
+import { EntityImagePreviewModal } from "./entity-image-preview-modal";
 import {
   getEntityDetailPath,
   getEntityEditPath,
@@ -14,25 +16,15 @@ import {
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
-import { ModalShell } from "@/shared/ui/modal-shell";
 
 export function EntityDetailPageContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
   const page = useEntityDetailPage(entityId);
-  const [selectedImageId, setSelectedImageId] = useState<string | null>(null);
-  const [isImageListScrolled, setIsImageListScrolled] = useState(false);
-  const imageListRef = useRef<HTMLDivElement | null>(null);
+  const imagePreview = useImagePreviewNavigation(page.images);
   const editPath = entityId ? getEntityEditPath(entityId) : routePaths.home;
   const listPath = location.search.length > 0 ? `${routePaths.home}${location.search}` : routePaths.home;
-  const selectedImage = page.images.find((image) => image.id === selectedImageId) ?? null;
-  const selectedImageIndex = selectedImage
-    ? page.images.findIndex((image) => image.id === selectedImage.id)
-    : -1;
-  const canMoveToPreviousImage = selectedImageIndex > 0;
-  const canMoveToNextImage =
-    selectedImageIndex >= 0 && selectedImageIndex < page.images.length - 1;
 
   const moveToListWithTagFilter = (tagName: string) => {
     const normalizedTagName = tagName.trim();
@@ -52,94 +44,6 @@ export function EntityDetailPageContent() {
       search: nextSearch.length > 0 ? `?${nextSearch}` : ""
     });
   };
-
-  const showPreviousImage = useCallback(() => {
-    if (!canMoveToPreviousImage) {
-      return;
-    }
-
-    const previousImage = page.images[selectedImageIndex - 1];
-    if (!previousImage) {
-      return;
-    }
-
-    setSelectedImageId(previousImage.id);
-  }, [canMoveToPreviousImage, page.images, selectedImageIndex]);
-
-  const showNextImage = useCallback(() => {
-    if (!canMoveToNextImage) {
-      return;
-    }
-
-    const nextImage = page.images[selectedImageIndex + 1];
-    if (!nextImage) {
-      return;
-    }
-
-    setSelectedImageId(nextImage.id);
-  }, [canMoveToNextImage, page.images, selectedImageIndex]);
-
-  const switchImageByPreviewAreaPointer = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (event.pointerType === "mouse" && event.button !== 0) {
-        return;
-      }
-
-      const previewRect = event.currentTarget.getBoundingClientRect();
-      const isLeftSide = event.clientX < previewRect.left + previewRect.width / 2;
-      if (isLeftSide) {
-        showPreviousImage();
-        return;
-      }
-
-      showNextImage();
-    },
-    [showNextImage, showPreviousImage]
-  );
-
-  useEffect(() => {
-    if (!selectedImageId) {
-      return;
-    }
-
-    if (page.images.some((image) => image.id === selectedImageId)) {
-      return;
-    }
-
-    setSelectedImageId(null);
-  }, [page.images, selectedImageId]);
-
-  useEffect(() => {
-    if (!selectedImage) {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowLeft") {
-        showPreviousImage();
-        return;
-      }
-
-      if (event.key === "ArrowRight") {
-        showNextImage();
-      }
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [selectedImage, showPreviousImage, showNextImage]);
-
-  useEffect(() => {
-    const imageList = imageListRef.current;
-    if (!imageList) {
-      setIsImageListScrolled(false);
-      return;
-    }
-
-    setIsImageListScrolled(imageList.scrollLeft > 2);
-  }, [page.images]);
 
   if (entityId && page.isLoading) {
     return <main className="w-full bg-background pt-20" />;
@@ -198,54 +102,11 @@ export function EntityDetailPageContent() {
                       </div>
                     </div>
                   )}
-                  {(page.imagesLoading || page.images.length > 0) && (
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">画像</p>
-                      {page.imagesLoading ? (
-                        <p className="text-sm">読み込み中...</p>
-                      ) : (
-                        <div className="relative">
-                          <div
-                            ref={imageListRef}
-                            className="grid grid-flow-col auto-cols-[calc((100%-2rem)/4.5)] gap-2 overflow-x-auto pb-1"
-                            onScroll={(event) => {
-                              setIsImageListScrolled(event.currentTarget.scrollLeft > 2);
-                            }}
-                          >
-                            {page.images.map((image) => (
-                              <button
-                                key={image.id}
-                                type="button"
-                                className="block rounded-md border p-1"
-                                onClick={() => setSelectedImageId(image.id)}
-                              >
-                                <img
-                                  src={image.url}
-                                  alt={image.fileName}
-                                  className="aspect-square w-full rounded object-cover"
-                                  loading="lazy"
-                                />
-                              </button>
-                            ))}
-                          </div>
-                          {page.images.length > 4 && (
-                            <>
-                              {isImageListScrolled && (
-                                <div
-                                  className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-background/80 via-background/40 to-transparent"
-                                  aria-hidden="true"
-                                />
-                              )}
-                              <div
-                                className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background/80 via-background/40 to-transparent"
-                                aria-hidden="true"
-                              />
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <EntityDetailImageGallery
+                    images={page.images}
+                    imagesLoading={page.imagesLoading}
+                    onSelectImage={imagePreview.openPreview}
+                  />
                   {(page.relatedLoading || page.relatedEntities.length > 0) && (
                     <div className="space-y-2">
                       <p className="text-xs text-muted-foreground">関連嗜好</p>
@@ -285,48 +146,13 @@ export function EntityDetailPageContent() {
           一覧へ戻る
         </Button>
       </main>
-      {selectedImage && (
-        <ModalShell
-          open={selectedImage !== null}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedImageId(null);
-            }
-          }}
-          ariaLabel="画像プレビュー"
-          overlayClassName="bg-black/60"
-          contentClassName="max-w-4xl p-3"
-        >
-          <div className="mb-2 flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => setSelectedImageId(null)}>
-              閉じる
-            </Button>
-          </div>
-          <div className="relative flex justify-center" onPointerUp={switchImageByPreviewAreaPointer}>
-            <img
-              src={selectedImage.url}
-              alt={selectedImage.fileName}
-              className="max-h-[80vh] w-auto max-w-full rounded object-contain"
-            />
-            {canMoveToPreviousImage && (
-              <div
-                className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-3xl text-white/50"
-                aria-hidden="true"
-              >
-                ←
-              </div>
-            )}
-            {canMoveToNextImage && (
-              <div
-                className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-3xl text-white/50"
-                aria-hidden="true"
-              >
-                →
-              </div>
-            )}
-          </div>
-        </ModalShell>
-      )}
+      <EntityImagePreviewModal
+        selectedImage={imagePreview.selectedImage}
+        canMoveToPreviousImage={imagePreview.canMoveToPreviousImage}
+        canMoveToNextImage={imagePreview.canMoveToNextImage}
+        onClose={imagePreview.closePreview}
+        onSwitchByPreviewAreaPointer={imagePreview.switchImageByPreviewAreaPointer}
+      />
     </>
   );
 }
