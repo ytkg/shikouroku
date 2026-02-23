@@ -1,169 +1,70 @@
-# 嗜好関連（関連嗜好）機能 仕様 v1
+# 関連嗜好機能 仕様 v1（実装済み / 2026-02-23）
 
 対象: `apps/web` / `apps/api`
 
-この文書でいう「嗜好関連」機能は、
-**ある嗜好に対して、関連する別の嗜好を紐づけて相互表示する機能**を指す。
+## 1. 機能概要
 
-例:
-- 嗜好A: `タナニボ`（ラーメン）
-- 嗜好B: `たなか青空笑店`（ラーメン屋）
-- AにBを関連付けると、BにもAが関連として表示される（無向）。
+- ある嗜好（entity）に別の嗜好を関連付ける。
+- 関連は無向関係として扱う（A-B を 1 レコードで管理）。
 
-## 1. 目的
+## 2. 画面仕様
 
-- 嗜好単体ではなく、嗜好同士のつながりを記録・参照できるようにする。
-- 「商品 ↔ 店」「料理 ↔ 店」「作品 ↔ 作者」など、跨る文脈を1ステップで辿れるようにする。
+### 2.1 詳細画面
 
-## 2. ユースケース
+- 関連が1件以上ある場合のみ `関連嗜好` セクションを表示。
+- 各関連嗜好は `名前（種別）` 形式で表示し、クリックで詳細へ遷移。
 
-1. 詳細画面で、その嗜好に関連する嗜好一覧を見たい。
-2. 新規登録画面・編集画面から、別の嗜好を関連として追加したい。
-3. 編集画面で、誤って付けた関連を解除したい。
-4. 追加した関連が相手側の詳細にも表示されてほしい（無向の担保）。
+### 2.2 新規登録画面
 
-## 3. V1スコープ
+- `関連を編集` ダイアログで候補を複数選択できる。
+- entity 作成後に選択済み ID へ順次 `POST /related` を実行する。
 
-- 対象画面は `嗜好詳細` `嗜好新規登録` `嗜好編集` とする。
-- 一覧画面の仕様（タブ/フィルタ）は変更しない。
-- 認証要件は既存APIと同様（`/api/login` 以外は認証必須）。
-- 関連追加候補の取得は、既存 `GET /api/entities`（最大50件）を利用する。
-- 関連候補は種別跨ぎで表示し、同種別優先などの並べ替えはV1では行わない。
-- 関連一覧の表示順は作成日時順（新しい関連を先頭）とする。
-- 1嗜好あたりの関連数上限は設けない。
+### 2.3 編集画面
 
-## 4. 画面仕様
+- `関連を編集` ダイアログで現在の関連を編集。
+- 保存時に差分計算し、追加分は `POST`、削除分は `DELETE` を実行。
+- `409 (already exists)` と `404 (already removed)` は冪等扱いで継続。
 
-### 4.1 詳細画面: 関連嗜好セクション
-
-- 見出し: `関連嗜好`
-- 表示内容
-  - 嗜好名
-  - 種別ラベル
-- 各関連嗜好はクリックで詳細に遷移できる。
-- 0件時は空状態メッセージを表示。
-- 詳細画面は表示専用とし、関連の追加・解除は行わない。
-
-### 4.2 追加操作（新規登録/編集画面）
-
-- 詳細画面からは関連嗜好を追加できない。
-- 新規登録画面・編集画面で関連嗜好を選択して保存する。
-
-### 4.3 解除操作（編集画面）
-
-- 編集画面の関連嗜好選択から対象のチェックを外して保存する。
-- 保存成功後、関連一覧から解除される。
-
-### 4.4 新規登録画面: 関連嗜好選択
-
-- `関連を編集` ボタンからダイアログを開き、関連付けたい嗜好を複数選択できる。
-- 嗜好登録成功後、選択した関連が新規嗜好へ付与される。
-
-### 4.5 編集画面: 関連嗜好編集
-
-- `関連を編集` ボタンからダイアログを開く。
-- 既存の関連嗜好をチェック状態で表示する。
-- 保存時に選択との差分で関連を追加・解除する。
-
-## 5. API仕様
-
-### 5.1 取得
+## 3. API 仕様
 
 - `GET /api/entities/:id/related`
-- 返却順: 関連作成日時の降順
-- レスポンス例
-
-```json
-{
-  "ok": true,
-  "related": [
-    {
-      "id": "...",
-      "kind": { "id": 1, "label": "ラーメン屋" },
-      "name": "たなか青空笑店",
-      "description": null,
-      "is_wishlist": 0,
-      "tags": []
-    }
-  ]
-}
-```
-
-### 5.2 追加
-
+  - `200`: `{ ok: true, related: Entity[] }`
 - `POST /api/entities/:id/related`
-- body: `{ "relatedEntityId": "..." }`
-- 正常: `201` で `{ ok: true }`
-
-### 5.3 解除
-
+  - body: `{ relatedEntityId: string }`
+  - `201`: `{ ok: true }`
 - `DELETE /api/entities/:id/related/:relatedEntityId`
-- 正常: `200` で `{ ok: true }`
+  - `200`: `{ ok: true }`
 
-### 5.4 エラー（V1実装）
+### 3.1 エラー
 
-- `400`: 自己関連（`id === relatedEntityId`）など不正入力
-- `404`: どちらかの嗜好が存在しない
-- `409`: 既に同じ関連が存在
+- `400`: 自己関連（`id === relatedEntityId`）
+- `404`: entity 不在 / relation 不在
+- `409`: 既存 relation の重複作成
 - `401`: 未認証
 
-## 6. データモデル（V1実装）
+## 4. データモデル
 
-新規テーブル `entity_relations` を追加する。
+`entity_relations`
 
-```sql
-CREATE TABLE IF NOT EXISTS entity_relations (
-  entity_id_low TEXT NOT NULL,
-  entity_id_high TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (entity_id_low, entity_id_high),
-  CHECK (entity_id_low <> entity_id_high),
-  FOREIGN KEY (entity_id_low) REFERENCES entities(id) ON DELETE CASCADE,
-  FOREIGN KEY (entity_id_high) REFERENCES entities(id) ON DELETE CASCADE
-);
+- 主キー: `(entity_id_low, entity_id_high)`
+- 制約: `entity_id_low <> entity_id_high`
+- 並び: `created_at DESC` で関連一覧を返却
+- 保存時は ID の辞書順で正規化して重複を防止
 
-CREATE INDEX IF NOT EXISTS idx_entity_relations_low ON entity_relations(entity_id_low);
-CREATE INDEX IF NOT EXISTS idx_entity_relations_high ON entity_relations(entity_id_high);
-```
+## 5. 業務ルール
 
-保存時は `(a, b)` を文字列比較で正規化し、
-`(min(a,b), max(a,b))` で保持する（無向を一意に担保）。
+1. 自己関連は禁止。
+2. 重複関連は禁止。
+3. どちらかの entity が存在しない場合は作成/削除しない。
+4. 片側で作成した関連は反対側詳細でも表示される。
 
-## 7. 業務ルール
+## 6. テスト観点（現行）
 
-- 関連は無向。
-- 自己関連は禁止。
-- 重複関連は禁止。
-- 追加時は両IDの存在チェックを行う。
-- 候補表示では「自分自身」「すでに関連済み」を除外する。
-- 1嗜好あたりの関連数上限は設けない。
+- API parser/client の正常・異常系
+- create/edit での関連選択ロジック（差分計算含む）
+- API パス生成と URL エンコード
 
-## 8. 実装方針（フロント）
+## 7. 既知の制約
 
-- `entities/entity/api` に関連嗜好APIクライアントを追加。
-- `entities/entity/model` に関連嗜好用の query/mutation を追加。
-- `features/entities/detail` は関連嗜好の表示のみ扱う。
-- 関連嗜好の追加・解除は `features/entities/create` と `features/entities/edit` で扱う。
-- 既存の `resolveQueryError` / 認証ガードを再利用する。
-- 候補選択ダイアログの初期データは `GET /api/entities` の結果を利用し、検索APIはV1対象外とする。
-
-## 9. 受け入れ条件
-
-1. AでBを関連追加すると、A詳細とB詳細の双方に相手が表示される。
-2. AでBを解除すると、A詳細とB詳細の双方から消える。
-3. 同じ関連を二重追加できない（409）。
-4. 自己関連は追加できない（400）。
-5. 未認証時は既存仕様どおりログインへ遷移する。
-
-## 10. 壁打ちしたい論点（要決定）
-
-現時点で未決論点なし。
-
-## 11. 実装状況（2026-02-21）
-
-- 完了: `entity_relations` テーブルとインデックスを migration に追加。
-- 完了: 関連取得/追加/解除 API（`GET/POST/DELETE /api/entities/:id/related*`）を追加。
-- 完了: 詳細画面に関連嗜好セクションを追加（表示専用）。
-- 完了: 新規登録画面/編集画面で関連嗜好を選択・保存できるようにした。
-- 完了: 関連APIレスポンスのパーサー/クライアントとSWR query/mutationを追加。
-- 完了: 関連機能のユニットテスト（API path, parser, client）を追加。
+- 関連候補は `GET /api/entities` から取得するため、件数増加時は取得コストが上がる。
+- 関連候補の高度な検索・ソートは v1 対象外。

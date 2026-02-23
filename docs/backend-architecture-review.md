@@ -1,468 +1,137 @@
-# バックエンド構成レビュー（2026-02-22）
+# バックエンド構成ガイド（2026-02-23）
 
-対象: `apps/api/src`  
-目的: メンテナンス性とバグ混入率の観点で、現行のディレクトリ戦略と命名規則を再評価し、全面的な再設計方針を提示する。
+対象: `apps/api/src`
 
-再開時の最短導線: `docs/backend-architecture-restart-guide.md` を先に確認する。
+## 1. 目的
 
-## 0. 進捗サマリー（2026-02-22）
+- 現行の責務分割と依存境界を共有する。
+- API 契約と運用ルールを、実装に追従した状態で保つ。
 
-### 0.1 実施チェックリスト
+## 2. ディレクトリ構成（現行）
 
-- [x] Phase 0: 契約テストの先行追加（`tests/contract`）
-- [x] Phase 0: 共通エラー形式と `requestId` の導入
-- [x] Phase 1: APIルートの機能別分割（auth/kind/tag/entity/maintenance）
-- [x] Phase 1: `index.ts` の完全分割（`app/create-app.ts`, `app/scheduled.ts` へ再配置）
-- [x] Phase 2: `modules/*` への再配置（auth/catalog/maintenance）
-- [x] Phase 2: 旧互換レイヤ（`usecases/*`, `repositories/*`, `lib/auth-client.ts`）の撤去
-- [x] Phase 3: 代表的な複数更新の `db.batch` 化
-- [x] Phase 3: D1/R2整合性の補償キュー + 手動実行API + cron実行
-- [x] Phase 3: `UnitOfWork` ヘルパー導入（D1 `batch` の共通化）
-- [ ] Phase 3: 整合性境界の完全統一（複数リソース跨りの最終統合）
-- [x] Phase 4: アーキテクチャテストによる依存境界の固定
-- [x] Phase 4: `domain` / `lib` の最終整理（責務再配置と縮退）
-- [x] 品質: 統合テスト（`tests/integration`）の追加
+- `app/`
+  - `create-app.ts`: ミドルウェア登録、`/api` ルーティング、SPA fallback 配線
+  - `scheduled.ts`: cron からの定期処理（画像クリーンアップ）
+- `routes/api/`
+  - HTTP 入出力と application 呼び出しに限定
+- `modules/`
+  - `auth`, `catalog`, `maintenance` の業務ロジック
+  - 各モジュールは `application` / `ports` / `infra` で分離
+- `shared/`
+  - HTTP 共通処理、バリデーション、D1 ユーティリティ
 
-- 実施済み（Phase 0 / 1）:
-  - `requestId` 付与とエラーレスポンス契約の統一を反映。
-    - `apps/api/src/shared/http/request-id.ts`
-    - `apps/api/src/shared/http/api-response.ts`
-    - `apps/api/src/shared/http/parse-json-body.ts`
-    - `apps/api/src/index.ts`
-  - APIルーター分割（auth/kind/tag/entity/maintenance）を反映。
-    - `apps/api/src/routes/api/*.ts`
-  - APIテスト基盤（Vitest）と契約テストを反映。
-    - `apps/api/vitest.config.ts`
-    - `apps/api/tests/contract/*`
-  - アプリ配線を `create-app` と `scheduled` に分離し、`index.ts` を最小化。
-    - `apps/api/src/app/create-app.ts`
-    - `apps/api/src/app/scheduled.ts`
-    - `apps/api/src/index.ts`
-  - HTTP入力スキーマを `domain` から `shared/validation` へ移設。
-    - `apps/api/src/shared/validation/request-schemas.ts`
-    - `apps/api/src/shared/http/parse-json-body.ts`
-    - `apps/api/src/routes/api/*.ts`
+`index.ts` はエントリポイントに限定し、責務集中を避ける構成です。
 
-- 実施済み（Phase 2: modules移行 + 互換レイヤ撤去）:
-  - `auth` / `catalog(entity,image,relation,kind,tag)` / `maintenance(image-cleanup)` を `modules/*` へ集約。
-    - `apps/api/src/modules/auth/*`
-    - `apps/api/src/modules/catalog/*`
-    - `apps/api/src/modules/maintenance/*`
-  - route 層は modules application のみを参照する構成へ統一。
-    - `apps/api/src/routes/api/*.ts`
-  - scheduled 実行も modules application 直呼び出しへ統一。
-    - `apps/api/src/index.ts`
-  - 旧互換レイヤ（`usecases/*` と `repositories/*`）を撤去。
-    - 削除: `apps/api/src/usecases/{auth,entities,entity-images,entity-relations,image-cleanup,kinds,tags}-usecase.ts`
-    - 削除: `apps/api/src/repositories/*.ts`
-    - 移設: `apps/api/src/shared/application/result.ts`（共通Result型）
-  - `domain` 配下の永続化レコード型を `shared/db` へ移設。
-    - 削除: `apps/api/src/domain/models.ts`
-    - 追加: `apps/api/src/shared/db/records.ts`
+## 3. API 契約
 
-- 実施済み（Phase 4: `domain` / `lib` 最終整理）:
-  - HTTPヘルパーを `lib` から `shared/http` へ移設し、`lib` を縮退。
-    - 削除: `apps/api/src/lib/cookies.ts`
-    - 削除: `apps/api/src/lib/path.ts`
-    - 追加: `apps/api/src/shared/http/auth-cookies.ts`
-    - 追加: `apps/api/src/shared/http/asset-path.ts`
-  - auth application の依存を `infra` 直参照から `ports` 経由へ整理。
-    - 追加: `apps/api/src/modules/auth/ports/auth-gateway.ts`
-    - 更新: `apps/api/src/modules/auth/application/*.ts`
-    - 更新: `apps/api/src/modules/auth/infra/auth-gateway-http.ts`
-  - kind application の依存を `infra` 直参照から `ports` 経由へ整理。
-    - 追加: `apps/api/src/modules/catalog/kind/ports/kind-repository.ts`
-    - 更新: `apps/api/src/modules/catalog/kind/application/list-kinds-query.ts`
-    - 更新: `apps/api/src/modules/catalog/kind/infra/kind-repository-d1.ts`
-    - 更新: `apps/api/src/routes/api/kind-routes.ts`
-  - tag application の依存を `infra` 直参照から `ports` 経由へ整理。
-    - 追加: `apps/api/src/modules/catalog/tag/ports/tag-repository.ts`
-    - 更新: `apps/api/src/modules/catalog/tag/application/*.ts`
-    - 更新: `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
-    - 更新: `apps/api/src/routes/api/tag-routes.ts`
-  - entity application から他モジュール infra への直依存を排除。
-    - 更新: `apps/api/src/modules/catalog/entity/application/create-entity-command.ts`
-    - 更新: `apps/api/src/modules/catalog/entity/application/update-entity-command.ts`
-    - 更新: `apps/api/src/modules/catalog/entity/application/entity-shared.ts`
-    - 更新: `apps/api/src/routes/api/entity-routes.ts`
-  - relation application の依存を `infra` 直参照から `ports` 経由へ整理。
-    - 追加: `apps/api/src/modules/catalog/entity/ports/entity-read-repository.ts`
-    - 追加: `apps/api/src/modules/catalog/relation/ports/relation-repository.ts`
-    - 更新: `apps/api/src/modules/catalog/entity/infra/entity-repository-d1.ts`
-    - 更新: `apps/api/src/modules/catalog/relation/application/*.ts`
-    - 更新: `apps/api/src/modules/catalog/relation/infra/relation-repository-d1.ts`
-    - 更新: `apps/api/src/routes/api/entity-routes.ts`
-  - image application から external infra への直依存を ports 経由へ整理。
-    - 追加: `apps/api/src/modules/maintenance/image-cleanup/ports/image-cleanup-task-repository.ts`
-    - 更新: `apps/api/src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1.ts`
-    - 更新: `apps/api/src/modules/catalog/image/application/*.ts`
-    - 更新: `apps/api/src/routes/api/entity-routes.ts`
-  - maintenance image-cleanup application の依存を `infra` 直参照から `ports` 経由へ整理。
-    - 更新: `apps/api/src/modules/maintenance/image-cleanup/application/*.ts`
-    - 更新: `apps/api/src/routes/api/maintenance-routes.ts`
-    - 更新: `apps/api/src/app/scheduled.ts`
-  - 回帰ガードとして legacy-layer architecture test を強化。
-    - 更新: `apps/api/tests/architecture/legacy-layer-removal.test.ts`
-  - auth application の依存境界テストを追加。
-    - 追加: `apps/api/tests/architecture/auth-application-port-boundary.test.ts`
-  - kind application の依存境界テストを追加。
-    - 追加: `apps/api/tests/architecture/kind-application-port-boundary.test.ts`
-  - tag application の依存境界テストを追加。
-    - 追加: `apps/api/tests/architecture/tag-application-port-boundary.test.ts`
-  - entity application の外部依存境界テストを追加。
-    - 追加: `apps/api/tests/architecture/entity-application-external-port-boundary.test.ts`
-  - relation application の依存境界テストを追加。
-    - 追加: `apps/api/tests/architecture/relation-application-port-boundary.test.ts`
-  - image application の外部依存境界テストを追加。
-    - 追加: `apps/api/tests/architecture/image-application-external-port-boundary.test.ts`
-  - maintenance application の依存境界テストを追加。
-    - 追加: `apps/api/tests/architecture/maintenance-application-port-boundary.test.ts`
-  - modules横断の外部`infra`依存を一括検知する architecture test を追加。
-    - 追加: `apps/api/tests/architecture/application-external-infra-boundary.test.ts`
+### 3.1 共通レスポンス
 
-- 実施済み（Phase 3: 整合性と運用品質）:
-  - `db.batch` による複数更新の整合性改善を modules infra に反映。
-    - `apps/api/src/modules/catalog/entity/infra/entity-repository-d1.ts`
-    - `apps/api/src/modules/catalog/image/infra/image-repository-d1.ts`
-    - `apps/api/src/modules/catalog/tag/infra/tag-repository-d1.ts`
-  - entity の作成/更新 + タグ差し替えを単一 `UnitOfWork` に統合。
-    - 追加: `insertEntityWithTagsInD1`
-    - 追加: `updateEntityWithTagsInD1`
-    - 更新: `apps/api/src/modules/catalog/entity/application/create-entity-command.ts`
-    - 更新: `apps/api/src/modules/catalog/entity/application/update-entity-command.ts`
-  - image のメタ削除 + 並び順詰めを単一 `UnitOfWork` に統合。
-    - 追加: `deleteEntityImageAndCollapseSortOrderInD1`
-    - 更新: `apps/api/src/modules/catalog/image/application/delete-entity-image-command.ts`
-    - 更新: `apps/api/src/modules/catalog/image/infra/image-repository-d1.ts`
-  - D1 `batch` の共通実行ヘルパーを導入。
-    - `apps/api/src/shared/db/unit-of-work.ts`
-  - D1/R2跨り削除の補償キューと手動/cron実行を反映。
-    - `apps/api/migrations/0008_create_image_cleanup_tasks.sql`
-    - `apps/api/src/modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1.ts`
-    - `apps/api/src/modules/maintenance/image-cleanup/application/*`
-    - `apps/api/src/routes/api/maintenance-routes.ts`
-    - `apps/api/src/index.ts`
+- 正常系: `{ ok: true, ...payload, requestId }`
+- 異常系: `{ ok: false, error: { code, message }, requestId }`
 
-- 実施済み（テストとガード）:
-  - modules application/infra のユニットテストを拡充。
-    - `apps/api/tests/unit/modules/**/*`
-    - `apps/api/tests/unit/repositories/*`
-  - 統合テストを追加（middleware + route + application + infra の貫通確認）。
-    - `apps/api/tests/integration/maintenance-image-cleanup.integration.test.ts`
-  - アーキテクチャ回帰ガードを追加。
-    - `apps/api/tests/architecture/route-usecase-boundary.test.ts`
-    - `apps/api/tests/architecture/legacy-layer-removal.test.ts`
-  - 現在の品質ゲート結果:
-    - `npm --workspace @shikouroku/api run check` 通過
-    - `npm --workspace @shikouroku/api run test` 通過（`41 files / 108 tests`）
+### 3.2 主要エンドポイント
 
-- Findingsへの反映状況:
-  - `Critical-1`（複数更新の整合性）: **一部解消**（代表的な複数更新を `db.batch` 化）
-  - `Critical-2`（D1/R2跨り整合性）: **大きく改善**（補償キュー + 手動実行API + cron定期実行）
-  - `High-1`（`index.ts`責務集中）: **大きく改善**（`app/create-app.ts` と `app/scheduled.ts` へ分割）
-  - `High-3`（エラーレスポンス不統一）: **一部解消**（JSONエラー契約を統一）
-  - `High-2`（層混線/命名不整合）: **大きく改善**（modules + infraへ移行し互換レイヤ撤去）
-  - `Medium-1`（validationMessageの保守性）: **一部解消**（辞書化 + テスト追加）
-  - `Medium-2`（認証URLハードコード）: **解消**
-  - `Medium-3`（APIテスト不足）: **進捗中**（契約/ユニット/境界/統合テストを追加、E2Eは未実装）
+- 認証
+  - `POST /api/login`
+  - `POST /api/logout`
+- マスタ
+  - `GET /api/kinds`
+  - `GET /api/tags`
+  - `POST /api/tags`
+  - `DELETE /api/tags/:id`
+- 嗜好（entity）
+  - `GET /api/entities`
+  - `GET /api/entities/:id`
+  - `POST /api/entities`
+  - `PATCH /api/entities/:id`
+- 関連嗜好
+  - `GET /api/entities/:id/related`
+  - `POST /api/entities/:id/related`
+  - `DELETE /api/entities/:id/related/:relatedEntityId`
+- 画像
+  - `GET /api/entities/:id/images`
+  - `POST /api/entities/:id/images`
+  - `PATCH /api/entities/:id/images/order`
+  - `DELETE /api/entities/:id/images/:imageId`
+  - `GET /api/entities/:id/images/:imageId/file`
+- メンテナンス
+  - `GET /api/maintenance/image-cleanup/tasks`
+  - `POST /api/maintenance/image-cleanup/run`
 
-## 1. Findings（重大度順）
+## 4. 整合性ポリシー
 
-注: この章の「根拠」ファイル参照は初回監査時点の記録を含みます。現行コードでは modules への再配置と互換レイヤ撤去により、一部パスは履歴参照です。
+### 4.1 D1 内の複数更新
 
-### Critical-1: 複数更新処理の整合性境界が弱く、部分成功でデータ不整合が残り得る
+- 複数SQLが必要な更新は `shared/db/unit-of-work.ts` の `runD1UnitOfWork` を使う。
+- 例: 画像削除 + sort_order 詰め、画像並び替え。
 
-- 根拠:
-  - `apps/api/src/usecases/entities-usecase.ts:145`（作成）
-  - `apps/api/src/usecases/entities-usecase.ts:179`（タグ関連の後続更新）
-  - `apps/api/src/usecases/entities-usecase.ts:195`（更新）
-  - `apps/api/src/usecases/entities-usecase.ts:231`（タグ更新）
-  - `apps/api/src/repositories/tag-repository.ts:32`（タグと関連削除）
-  - `apps/api/src/repositories/entity-image-repository.ts:117`（画像順序更新）
-- 問題:
-  - 1つのユースケース内で複数の永続化操作を実行しているが、失敗時の一貫性戦略が統一されていない。
-  - 一部は手動ロールバック、他はロールバックなしで、回復不能な中間状態を作りやすい。
-- 影響:
-  - タグ付けだけ失敗、順序だけ破損、関連テーブルのみ更新済みなどの障害が起きる。
+### 4.2 D1/R2 を跨ぐ更新
 
-### Critical-2: R2 と DB の更新順序が不安定で、画像メタデータと実体が乖離し得る
+- アップロード時: `R2 put -> D1 insert`。
+  - D1 insert 失敗時は R2 delete を試行し、失敗時は cleanup task を enqueue。
+- 削除時: `D1 metadata delete -> R2 delete`。
+  - R2 delete 失敗時は cleanup task を enqueue（enqueue 失敗時のみ 500）。
+- 補償処理
+  - 手動実行: `POST /api/maintenance/image-cleanup/run`
+  - 定期実行: cron `*/30 * * * *`（`scheduled.ts`）
 
-- 根拠:
-  - `apps/api/src/usecases/entity-images-usecase.ts:147`（アップロード失敗時のbest-effort削除）
-  - `apps/api/src/usecases/entity-images-usecase.ts:184`（DB削除）
-  - `apps/api/src/usecases/entity-images-usecase.ts:198`（R2削除）
-- 問題:
-  - DB先行削除後にR2削除が失敗すると、レスポンスはエラーだがDB側は削除済みになる。
-  - 逆順でも別の不整合が起きるため、明示的な整合性ポリシーが必要。
-- 影響:
-  - 孤立オブジェクト、参照切れURL、再試行での挙動不定が発生する。
+## 5. 実行環境とバインディング
 
-### High-1: `index.ts` に責務が集中し、変更衝突と回帰リスクが高い
+- `AUTH_BASE_URL`: 外部認証 API ベース URL
+- `DB`: D1
+- `ENTITY_IMAGES`: R2 バケット
+- `ASSETS`: フロント静的配信
 
-- 根拠:
-  - `apps/api/src/index.ts:44`（アプリ生成）
-  - `apps/api/src/index.ts:70`（認証ミドルウェア）
-  - `apps/api/src/index.ts:124`（ルート定義）
-  - `apps/api/src/index.ts:359`（SPA配信）
-  - `apps/api/src/index.ts` は 363行
-- 問題:
-  - ルーティング、認証、入力検証、レスポンス整形、SPAフォールバックが同居している。
-- 影響:
-  - 1箇所の変更が別責務へ波及しやすく、レビュー難度が上がる。
+設定元: `apps/api/wrangler.toml`
 
-### High-2: ドメイン・永続化・API境界の型が混線し、命名が責務を表していない
+## 6. 品質ゲート
 
-- 根拠:
-  - `apps/api/src/domain/models.ts:11`（DB由来の `*Row` を domain 配下に配置）
-  - `apps/api/src/usecases/entities-usecase.ts:24`（API返却型名が `EntityResponseRow`）
-  - `apps/api/src/usecases/entities-usecase.ts:1`（ユースケースが `domain/schemas` に依存）
-  - `apps/api/src/repositories/entity-repository.ts:147`（entity repository が tag責務も処理）
-- 問題:
-  - `domain` ディレクトリが実質「型置き場」になっており、概念境界が曖昧。
-  - `Row` / `Body` / `Response` の語が層と一致せず、誤用を招きやすい。
+- `npm --workspace @shikouroku/api run check`
+- `npm --workspace @shikouroku/api run test`
+- `npm --workspace @shikouroku/api run test:architecture`
+- `npm --workspace @shikouroku/api run test:integration`
 
-### High-3: エラーレスポンス契約が不統一で、クライアント実装と監視が複雑化
+境界回帰は `tests/architecture/*` で検知します（route 層の legacy 依存禁止、module 外 `infra` 直参照禁止など）。
 
-- 根拠:
-  - `apps/api/src/index.ts:132`（`error` キー）
-  - `apps/api/src/index.ts:149`（`message` キー）
-  - `apps/api/src/index.ts:46`（`status as ContentfulStatusCode` キャスト）
-- 問題:
-  - 同一API内でエラー形式が混在しており、型安全なハンドリングが難しい。
-  - ステータスキャストで不正値混入をコンパイル時に防げない。
+## 7. 残課題
 
-### Medium-1: 入力バリデーションのエラーメッセージが手作業if連鎖で保守コストが高い
+1. D1/R2 跨ぎ処理の「失敗時ポリシー」をユースケース単位で明文化し、統合テストを増やす。
+2. 認証を含む代表フローの E2E を追加し、運用回帰を早期検知する。
+3. メンテナンス API の運用指標（失敗率、残タスク数）を可視化する。
 
-- 根拠:
-  - `apps/api/src/domain/schemas.ts:34`
-  - `apps/api/src/domain/schemas.ts:36`
-  - `apps/api/src/shared/http/parse-json-body.ts:25`
-- 問題:
-  - フィールド追加時に `validationMessage` の更新漏れが起きやすい。
-  - スキーマ定義とメッセージ定義が分離し、追従コストが高い。
+## 8. 再開ガイド（`docs/backend-architecture-restart-guide.md` と統合）
 
-### Medium-2: 外部認証APIのエンドポイントがハードコードされ、環境切替が困難
+### 8.1 現在地（2026-02-23時点）
 
-- 根拠:
-  - `apps/api/src/modules/auth/infra/auth-gateway-http.ts:1`
-- 問題:
-  - ステージング・障害迂回・テストダブル差し替えが難しい。
+- 対象: `apps/api/src`
+- 品質ゲート最終結果:
+  - `npm --workspace @shikouroku/api run check` 通過
+  - `npm --workspace @shikouroku/api run test` 通過（`41 files / 108 tests`）
+- 改修進捗:
+  - Phase 0-2: 完了
+  - Phase 3: 進行中（未完了: 複数リソース跨りの整合性境界の最終統一）
+  - Phase 4: 実質完了（命名/依存/回帰ガード）
 
-### Medium-3: バックエンド品質ゲート（テスト/静的境界検査）が不足
+### 8.2 再開手順（毎回）
 
-- 根拠:
-  - `apps/api/package.json:6`（`test` / `lint` スクリプト不在）
-  - `package.json:12`
-  - `package.json:25`（品質ゲートがWeb中心）
-- 問題:
-  - ルーティング回帰、スキーマ破壊、SQL変更の退行を自動検知できない。
+1. `git status --short`
+2. `git log --oneline -n 12`
+3. `npm --workspace @shikouroku/api run check`
+4. `npm --workspace @shikouroku/api run test`
+5. 本章「8.3 次の優先タスク」から 1 件選んで着手
 
-## 2. 推奨ターゲット構成（大幅変更案）
+### 8.3 次の優先タスク
 
-方針: **モジュラモノリス + Vertical Slice + Ports & Adapters**  
-狙い: 「変更箇所の局所化」「責務の可視化」「不整合の起点削減」。
+- [ ] 複数リソース跨りの整合性境界を最終統一する（ユースケース単位で失敗ポリシーを固定）。
+- [ ] `uploadEntityImageCommand` の `R2 put -> D1 insert` 境界戦略を明文化し、異常系テストを追加する。
+- [ ] architecture test を段階的に厳格化し、ports 未経由の外部依存を検知する。
+- [ ] 認証 -> entity 作成 -> 画像操作 -> 関連付けの代表 E2E を追加する。
 
-```txt
-apps/api/src
-├─ main.ts
-├─ app
-│  ├─ create-app.ts
-│  ├─ router.ts
-│  ├─ middleware
-│  │  ├─ auth.middleware.ts
-│  │  ├─ request-id.middleware.ts
-│  │  ├─ error.middleware.ts
-│  │  └─ access-log.middleware.ts
-│  └─ http
-│     ├─ api-response.ts
-│     └─ problem-details.ts
-├─ modules
-│  ├─ auth
-│  │  ├─ auth.route.ts
-│  │  ├─ auth.controller.ts
-│  │  ├─ auth.schema.ts
-│  │  ├─ application
-│  │  │  ├─ login.command.ts
-│  │  │  ├─ refresh-token.command.ts
-│  │  │  └─ verify-token.query.ts
-│  │  ├─ ports
-│  │  │  └─ auth-gateway.port.ts
-│  │  └─ infra
-│  │     └─ auth-gateway.http.ts
-│  └─ catalog
-│     ├─ entity
-│     │  ├─ entity.route.ts
-│     │  ├─ entity.controller.ts
-│     │  ├─ entity.schema.ts
-│     │  ├─ entity.dto.ts
-│     │  ├─ application
-│     │  │  ├─ commands
-│     │  │  │  ├─ create-entity.command.ts
-│     │  │  │  ├─ update-entity.command.ts
-│     │  │  │  ├─ attach-image.command.ts
-│     │  │  │  ├─ delete-image.command.ts
-│     │  │  │  └─ reorder-images.command.ts
-│     │  │  └─ queries
-│     │  │     ├─ get-entity.query.ts
-│     │  │     ├─ list-entities.query.ts
-│     │  │     └─ list-related-entities.query.ts
-│     │  ├─ domain
-│     │  │  ├─ entity.ts
-│     │  │  ├─ entity-id.ts
-│     │  │  ├─ image.ts
-│     │  │  └─ catalog-error.ts
-│     │  ├─ ports
-│     │  │  ├─ entity-repository.port.ts
-│     │  │  ├─ tag-repository.port.ts
-│     │  │  ├─ relation-repository.port.ts
-│     │  │  ├─ image-repository.port.ts
-│     │  │  └─ image-storage.port.ts
-│     │  └─ infra
-│     │     ├─ d1
-│     │     │  ├─ entity-repository.d1.ts
-│     │     │  ├─ tag-repository.d1.ts
-│     │     │  ├─ relation-repository.d1.ts
-│     │     │  ├─ image-repository.d1.ts
-│     │     │  └─ records
-│     │     │     ├─ entity.record.ts
-│     │     │     ├─ tag.record.ts
-│     │     │     └─ image.record.ts
-│     │     └─ r2
-│     │        └─ image-storage.r2.ts
-│     ├─ kind
-│     │  ├─ kind.route.ts
-│     │  ├─ kind.controller.ts
-│     │  └─ application/list-kinds.query.ts
-│     └─ tag
-│        ├─ tag.route.ts
-│        ├─ tag.controller.ts
-│        ├─ tag.schema.ts
-│        └─ application
-│           ├─ create-tag.command.ts
-│           └─ delete-tag.command.ts
-├─ shared
-│  ├─ config
-│  │  ├─ env.ts
-│  │  └─ bindings.ts
-│  ├─ db
-│  │  ├─ unit-of-work.ts
-│  │  └─ transaction.ts
-│  ├─ errors
-│  │  ├─ app-error.ts
-│  │  └─ error-code.ts
-│  ├─ validation
-│  │  └─ zod-error-map.ts
-│  └─ utils
-│     └─ id.ts
-└─ tests
-   ├─ contract
-   ├─ integration
-   └─ unit
-```
+### 8.4 再開基準コミット
 
-## 3. 命名規約（推奨）
-
-### 3.1 ファイル/ディレクトリ
-
-- ディレクトリは `kebab-case`。
-- 役割サフィックスを必須化する。
-  - ルーティング: `*.route.ts`
-  - HTTP層: `*.controller.ts`, `*.schema.ts`, `*.dto.ts`
-  - アプリケーション層: `*.command.ts`, `*.query.ts`
-  - ポート: `*.port.ts`
-  - 実装アダプタ: `*.d1.ts`, `*.r2.ts`, `*.http.ts`
-  - 変換: `*.mapper.ts`
-- `models.ts`, `schemas.ts`, `utils.ts` のような汎用名は原則禁止する。
-
-### 3.2 型・クラス・関数
-
-- DB永続化型は `*Record`、API入出力は `*Dto`、ユースケース入力は `*Command` / `*Query`。
-- 例:
-  - `EntityRow` -> `EntityRecord`
-  - `EntityResponseRow` -> `EntityResponseDto`
-  - `EntityBody` -> `CreateEntityCommand` または `UpdateEntityCommand`
-- クラスを使う場合は「状態を持つアダプタ」に限定する。
-  - 例: `D1EntityRepository`, `R2ImageStorage`, `HttpAuthGateway`
-- ビジネスロジックは可能な限り副作用の少ない関数として実装する。
-
-## 4. 依存ルール（壊れにくさ優先）
-
-- `route/controller` は `application` のみ呼び出す。
-- `application` は `domain` と `ports` のみ参照する。
-- `infra` は `ports` を実装するが、`controller` を参照しない。
-- 他モジュールの `infra` 実装へ直接依存しない。
-- `shared` は横断機能のみ配置し、業務概念は入れない。
-
-## 5. バグ混入を減らすための必須設計ルール
-
-### 5.1 整合性
-
-- 1ユースケース1整合性境界を定義する。
-- 複数テーブル更新は `UnitOfWork` 経由で実行する。
-- R2とDBの跨り更新は「失敗時の最終状態」を事前定義する。
-  - 例: DB優先なら孤立オブジェクトの定期クリーンアップを実装する。
-
-### 5.2 エラー契約
-
-- エラー形式を全APIで統一する。
-- 推奨:
-  - `ok: false`
-  - `error.code`（機械判定用）
-  - `error.message`（人間向け）
-  - `error.requestId`（追跡用）
-
-### 5.3 検証
-
-- Zodスキーマごとにエラーメッセージを定義し、手動if連鎖を廃止する。
-- パース、検証、DTO変換をHTTP層に閉じ込める。
-
-### 5.4 品質ゲート
-
-- `apps/api` に `lint`, `test:unit`, `test:integration`, `test:contract` を追加する。
-- ルート・エラー契約・JSON形状を契約テストで固定する。
-- import境界ルール（layer/module）を静的検査でCIブロックする。
-
-## 6. 移行ロードマップ（チェックボックス）
-
-- [x] **Phase 0: 足場**
-  - [x] `tests/contract` を先行追加し、現行API契約を固定する。
-  - [x] 共通エラー形式と `requestId` を先に導入する。
-- [x] **Phase 1: 入口分割**
-  - [x] `index.ts` を `app/create-app.ts`, `app/scheduled.ts` に分割する。
-  - [x] ルートをモジュール単位へ移す。
-- [x] **Phase 2: カタログ領域再編**
-  - [x] `entities/tags/kinds/relations/images` を `modules/catalog/*` へ再配置する。
-  - [x] `Row/Body` 型を `Record/Dto/Command` へ改名する。
-- [ ] **Phase 3: 整合性強化**
-  - [x] D1 `batch` の `UnitOfWork` ヘルパーを導入する。
-  - [ ] 複数リソース跨りの整合性境界を統一する。
-  - [x] 画像操作の整合性ポリシーを確定し、再試行戦略を実装する（補償キュー + 定期実行）。
-- [ ] **Phase 4: ルール固定**
-  - [x] 命名規約・依存規約を architecture testで強制する。
-  - [x] `tests/integration` を追加し、主要フローの貫通テストを導入する。
-  - [x] `domain` / `lib` の最終整理と廃止範囲の確定。
-
-## 7. 命名変更の具体例
-
-- `apps/api/src/usecases/entities-usecase.ts`  
-  -> `apps/api/src/modules/catalog/entity/application/commands/create-entity.command.ts`  
-  -> `apps/api/src/modules/catalog/entity/application/commands/update-entity.command.ts`  
-  -> `apps/api/src/modules/catalog/entity/application/queries/list-entities.query.ts`
-
-- `apps/api/src/repositories/entity-repository.ts`  
-  -> `apps/api/src/modules/catalog/entity/infra/d1/entity-repository.d1.ts`
-
-- `apps/api/src/domain/models.ts`  
-  -> `apps/api/src/modules/catalog/entity/infra/d1/records/entity.record.ts` などへ分割
-
-- `apps/api/src/domain/schemas.ts`  
-  -> 各モジュールの `*.schema.ts` に分割
-
-- `apps/api/src/lib/auth-client.ts`（撤去済み）  
-  -> `apps/api/src/modules/auth/infra/auth-gateway-http.ts`
-
-## 8. 期待効果
-
-- 変更時の影響範囲が「モジュール + 役割」に限定され、レビューと保守が容易になる。
-- 命名が層責務を明示するため、誤った依存や型流用を減らせる。
-- 整合性境界とエラー契約を統一することで、障害時の再現・復旧が速くなる。
+- `4a09c33` refactor(api): batch image delete and sort-order collapse
+- `cd6871d` refactor(api): batch entity upsert and tag replacement in one unit of work
+- `b6c2367` test(api): add global guard for cross-module infra imports
+- `bdf8967` refactor(api): route maintenance cleanup application through ports
+- `f1c324b` refactor(api): inject external ports into image application
+- `cb3d82b` refactor(api): route relation application through ports
