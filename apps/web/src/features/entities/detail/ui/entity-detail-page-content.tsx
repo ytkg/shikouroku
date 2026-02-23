@@ -3,6 +3,8 @@ import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import { useImagePreviewNavigation } from "../model/use-image-preview-navigation";
 import { EntityDetailImageGallery } from "./entity-detail-image-gallery";
 import { EntityImagePreviewModal } from "./entity-image-preview-modal";
+import { EntityDetailRelatedSection } from "./entity-detail-related-section";
+import { EntityDetailSummarySection } from "./entity-detail-summary-section";
 import {
   getEntityDetailPath,
   getEntityEditPath,
@@ -45,11 +47,16 @@ export function EntityDetailPageContent() {
     });
   };
 
+  const moveToRelatedEntityDetail = (relatedEntityId: string) => {
+    navigate({
+      pathname: getEntityDetailPath(relatedEntityId),
+      search: location.search
+    });
+  };
+
   if (entityId && page.isLoading) {
     return <main className="w-full bg-background pt-20" />;
   }
-
-  const kindLabel = page.entity?.kind.label ?? "不明";
 
   return (
     <>
@@ -69,71 +76,20 @@ export function EntityDetailPageContent() {
             ) : (
               page.entity && (
                 <>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">ID</p>
-                    <p className="break-all text-xs">{page.entity.id}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">種別</p>
-                    <p className="text-sm">{kindLabel}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">メモ</p>
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {page.entity.description && page.entity.description.length > 0
-                        ? page.entity.description
-                        : "（メモなし）"}
-                    </p>
-                  </div>
-                  {page.entity.tags.length > 0 && (
-                    <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">タグ</p>
-                      <div className="flex flex-wrap gap-2">
-                        {page.entity.tags.map((tag) => (
-                          <button
-                            key={tag.id}
-                            type="button"
-                            className="rounded-full border px-2 py-0.5 text-xs transition-colors hover:bg-accent"
-                            onClick={() => moveToListWithTagFilter(tag.name)}
-                          >
-                            {tag.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <EntityDetailSummarySection
+                    entity={page.entity}
+                    onTagClick={moveToListWithTagFilter}
+                  />
                   <EntityDetailImageGallery
                     images={page.images}
                     imagesLoading={page.imagesLoading}
                     onSelectImage={imagePreview.openPreview}
                   />
-                  {(page.relatedLoading || page.relatedEntities.length > 0) && (
-                    <div className="space-y-2">
-                      <p className="text-xs text-muted-foreground">関連嗜好</p>
-                      {page.relatedLoading ? (
-                        <p className="text-sm">読み込み中...</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {page.relatedEntities.map((relatedEntity) => (
-                            <div key={relatedEntity.id} className="rounded-md border px-3 py-2">
-                              <button
-                                type="button"
-                                className="text-left text-sm hover:underline"
-                                onClick={() =>
-                                  navigate({
-                                    pathname: getEntityDetailPath(relatedEntity.id),
-                                    search: location.search
-                                  })
-                                }
-                              >
-                                {relatedEntity.name}（{relatedEntity.kind.label}）
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <EntityDetailRelatedSection
+                    relatedLoading={page.relatedLoading}
+                    relatedEntities={page.relatedEntities}
+                    onSelectRelatedEntity={moveToRelatedEntityDetail}
+                  />
                 </>
               )
             )}
