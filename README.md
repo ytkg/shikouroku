@@ -1,240 +1,241 @@
 # shikouroku
 
-Cloudflare Workers 1つで `API + React SPA` を同一ドメイン配信する最小構成です。
+Cloudflare Workers 1つで `API + React SPA` を同一ドメイン配信する構成です。  
+最終更新: 2026-02-23
 
-- Frontend: React + TypeScript + Vite (`apps/web`)
-- Backend: Cloudflare Workers + TypeScript + Hono (`apps/api`)
-- Static files: `apps/api/wrangler.toml` の `[assets] directory = "../web/dist"`
-- Auth: `https://auth.takagi.dev` を利用（JWTをHttpOnly Cookieで保持）
-- UI: Tailwind CSS + shadcn/ui（button/card/input/label/form）
-- DB: Cloudflare D1（`apps/api/wrangler.toml` の `DB` バインディング）
+## 技術スタック
+
+- Frontend: React 18 + TypeScript + Vite + SWR + Tailwind CSS + shadcn/ui (`apps/web`)
+- Backend: Cloudflare Workers + Hono + TypeScript (`apps/api`)
+- Data: Cloudflare D1 (`DB`) / Cloudflare R2 (`ENTITY_IMAGES`)
+- Auth: 外部認証API（`AUTH_BASE_URL`、既定値 `https://auth.takagi.dev`）
+
+## 主な機能
+
+- ログイン/ログアウト（access token + refresh token を HttpOnly Cookie 管理）
+- 嗜好データ（entity）の一覧・詳細・作成・更新
+- タグ管理、関連嗜好（entity relation）管理
+- 画像添付（一覧/追加/並び替え/削除/配信）
+- R2 削除失敗時の補償キュー（`image_cleanup_tasks`）と定期クリーンアップ（cron）
+
+画像アップロード制約:
+
+- MIME type: `image/jpeg`, `image/png`, `image/webp`
+- 最大サイズ: 5MB
+
+## リポジトリ構成
+
+- `apps/web`: React SPA
+- `apps/api`: Workers API + 静的配信 + cron
+- `docs`: 仕様・構成ガイド（`docs/README.md` を入口に利用）
 
 ## 前提
 
-- Node.js 20+
+- Node.js 20 以上
 - npm
 - Cloudflare アカウント
 
-## セットアップ
+## 初期セットアップ
+
+1. 依存をインストール
 
 ```bash
 npm install
 ```
 
-## Tailwind + shadcn/ui 導入コマンド（実施済み）
+2. D1 と R2 を作成（未作成の場合）
 
 ```bash
-npm --workspace @shikouroku/web install -D tailwindcss postcss autoprefixer @types/node
-npm --workspace @shikouroku/web install class-variance-authority clsx tailwind-merge lucide-react @radix-ui/react-slot @radix-ui/react-label react-hook-form
+npx wrangler d1 create shikouroku-prod
+npx wrangler d1 create shikouroku-dev
+npx wrangler r2 bucket create shikouroku-entity-images-prod
+npx wrangler r2 bucket create shikouroku-entity-images-dev
 ```
 
-追加した主なファイル:
+3. `apps/api/wrangler.toml` の `d1_databases` / `r2_buckets` / `vars` を環境に合わせて設定
 
-- `apps/web/tailwind.config.ts`
-- `apps/web/postcss.config.js`
-- `apps/web/components.json`
-- `apps/web/eslint.config.js`
-- `apps/web/src/shared/lib/utils.ts`
-- `apps/web/src/shared/ui/*`
-- `apps/web/src/shared/ui/form-controls/*`
-- `apps/web/src/features/auth/index.ts`
-- `apps/web/src/features/entities/index.ts`
+4. 開発DBにマイグレーション・シードを適用
 
-## フロントエンド構成（現行）
-
-`apps/web/src` は次の責務分割で管理しています。
-
-- `app`: ルーターやアプリ全体の構成
-- `pages`: ルーティング単位の薄い画面コンポーネント
-- `features`: ユースケース単位のUI/ロジック
-- `shared`: 共通UI・APIクライアント・ユーティリティ
-- `widgets`: レイアウト共通部品（ヘッダー・フッター）
+```bash
+npm run d1:migrate:dev
+npm run d1:seed:dev
+```
 
 ## ローカル開発
 
-### 推奨（並列起動）
+推奨（Web + API 並列起動）:
 
 ```bash
 npm run dev
 ```
 
-- Web: `http://localhost:5173` (Vite)
-- API: `http://127.0.0.1:8787` (Wrangler)
-- Web側は `/api` を Wrangler に proxy するため、フロントから同一オリジン感覚で API を呼び出せます。
-- API は `wrangler dev --remote` で起動し、`preview_database_id`（開発DB）を参照します。
-- 事前に `npm run d1:migrate:dev` を実行してください（`--preview` で開発DBへ適用）。
-- 開発データを入れる場合は `npm run d1:seed:dev` を実行してください。
+- Web: `http://localhost:5173`（Vite）
+- API: `http://127.0.0.1:8787`（Wrangler）
+- Web は `/api` を `127.0.0.1:8787` にプロキシします。
+- API は `wrangler dev --remote` で起動し、`preview_database_id` / `preview_bucket_name` を参照します。
 
-### 本番相当（Workerで静的配信まで確認）
+本番相当（Worker 経由で SPA 配信も含めて確認）:
 
 ```bash
 npm run build
 npm --workspace @shikouroku/api run dev
 ```
 
-- `http://127.0.0.1:8787` で SPA と API を同一オリジンで確認できます。
-
-## 認証フロー
-
-- 未ログインで `/` にアクセスすると Worker が `/login` へ `302` リダイレクト
-- ログイン成功で `/` へ遷移
-- ログイン済みで `/login` にアクセスすると `/` へ `302` リダイレクト
-- API は `/api/login` 以外を認証必須にし、未認証は `401`
-
-ログインは `auth.takagi.dev` の `POST /login` を使い、取得したJWTを `shikouroku_token` Cookie に保存します。  
-リクエスト時は `GET /verify` でトークン検証します。
-
-認証APIの接続先は `apps/api/wrangler.toml` の `[vars] AUTH_BASE_URL` で切り替え可能です。
-
-画像削除時にR2削除が失敗した場合、`image_cleanup_tasks` に補償タスクを積みます。  
-キュー一覧は `GET /api/maintenance/image-cleanup/tasks?limit=20`、手動実行は `POST /api/maintenance/image-cleanup/run?limit=20` です（認証必須）。
-加えて `wrangler.toml` の cron（`*/30 * * * *`）で定期クリーンアップを実行します。
-
-## ビルド
+## 主要コマンド（ルート）
 
 ```bash
+npm run dev
 npm run build
-```
-
-- `apps/web/dist` を生成
-- API の型チェック実行
-
-## 品質チェック
-
-```bash
+npm run deploy
 npm run lint
 npm run test
 npm run test:api
+npm run test:integration:api
 npm run typecheck
+npm run quality:web
 npm run quality:api
 ```
 
-- `lint`: `apps/web/eslint.config.js` の依存境界・命名規約を検証
-- `test`: `apps/web/tests` のユニットテスト（Vitest）を実行
-- `test:api`: `apps/api/tests` の契約/ユニットテスト（Vitest）を実行
-- `npm --workspace @shikouroku/api run test:architecture`: APIアーキテクチャテストを実行
-- `typecheck`: ワークスペース全体の型チェックを実行
-- `quality:api`: APIの `check + test` を連続実行
-- CI:
-  - `.github/workflows/web-quality.yml` で `lint` / `test` / `typecheck` を実行
-  - `.github/workflows/api-quality.yml` で `quality:api` を実行
-
-## D1 セットアップ
-
-1. D1 DB を作成（production / development）
-
-```bash
-npx wrangler d1 create shikouroku-prod
-npx wrangler d1 create shikouroku-dev
-```
-
-2. `apps/api/wrangler.toml` を次の方針で設定
-
-```toml
-[[d1_databases]]
-binding = "DB"
-database_name = "shikouroku-prod"
-database_id = "PROD_DATABASE_ID"
-preview_database_id = "DEV_DATABASE_ID"
-```
-
-3. マイグレーション適用（開発DB = `preview_database_id`）
+DB運用コマンド:
 
 ```bash
 npm run d1:migrate:dev
-```
-
-4. シードデータ投入（開発DB = `preview_database_id`）
-
-```bash
-npm run d1:seed:dev
-```
-
-5. マイグレーション適用（本番DB = `database_id`）
-
-```bash
 npm run d1:migrate:prod
+npm run d1:seed:dev
+npm run d1:seed:prod
+npm run d1:tables:dev
+npm run d1:tables:prod
 ```
 
-## ER図
+補足:
 
-```mermaid
-erDiagram
-  kinds ||--o{ entities : kind_id
-  entities ||--o{ entity_tags : entity_id
-  tags ||--o{ entity_tags : tag_id
-  entities ||--o{ entity_relations : entity_id_low
-  entities ||--o{ entity_relations : entity_id_high
-  entities ||--o{ entity_images : entity_id
+- `npm run test`: Web 側 Vitest 一式
+- `npm run test:api`: API 側 Vitest 一式
+- `npm run quality:web`: `lint + test:unit + test:architecture + typecheck`
+- `npm run quality:api`: API の `check + test`
 
-  kinds {
-    INTEGER id PK
-    TEXT label
-    TEXT created_at
-    TEXT updated_at
-  }
+## API の共通仕様
 
-  entities {
-    TEXT id PK
-    INTEGER kind_id FK
-    TEXT name
-    TEXT description
-    INTEGER is_wishlist
-    TEXT created_at
-    TEXT updated_at
-  }
+- 正常系: `{ ok: true, ...payload, requestId }`
+- 異常系: `{ ok: false, error: { code, message }, requestId }`
+- `/api/login` 以外の `/api/*` は認証必須
 
-  tags {
-    INTEGER id PK
-    TEXT name "UNIQUE"
-    TEXT created_at
-    TEXT updated_at
-  }
+## 主要エンドポイント
 
-  entity_tags {
-    TEXT entity_id FK
-    INTEGER tag_id FK
-    TEXT created_at
-    TEXT updated_at
-  }
+- 認証
+  - `POST /api/login`
+  - `POST /api/logout`
+- マスタ
+  - `GET /api/kinds`
+  - `GET /api/tags`
+  - `POST /api/tags`
+  - `DELETE /api/tags/:id`
+- entity
+  - `GET /api/entities`
+  - `GET /api/entities/:id`
+  - `POST /api/entities`
+  - `PATCH /api/entities/:id`
+- 関連嗜好
+  - `GET /api/entities/:id/related`
+  - `POST /api/entities/:id/related`
+  - `DELETE /api/entities/:id/related/:relatedEntityId`
+- 画像
+  - `GET /api/entities/:id/images`
+  - `POST /api/entities/:id/images`（multipart/form-data）
+  - `PATCH /api/entities/:id/images/order`
+  - `DELETE /api/entities/:id/images/:imageId`
+  - `GET /api/entities/:id/images/:imageId/file`
+- メンテナンス
+  - `GET /api/maintenance/image-cleanup/tasks?limit=20`
+  - `POST /api/maintenance/image-cleanup/run?limit=20`
 
-  entity_relations {
-    TEXT entity_id_low FK
-    TEXT entity_id_high FK
-    TEXT created_at
-  }
+## API 利用例（curl）
 
-  entity_images {
-    TEXT id PK
-    TEXT entity_id FK
-    TEXT object_key "UNIQUE"
-    TEXT file_name
-    TEXT mime_type
-    INTEGER file_size
-    INTEGER sort_order
-    TEXT created_at
-  }
+`shikouroku_token` / `shikouroku_refresh_token` は `Secure` Cookie のため、以下は HTTPS 環境を前提にしています。
 
-  image_cleanup_tasks {
-    INTEGER id PK
-    TEXT object_key "UNIQUE"
-    TEXT reason
-    TEXT last_error
-    INTEGER retry_count
-    TEXT created_at
-    TEXT updated_at
-  }
+```bash
+export BASE_URL="https://<your-worker-domain>"
+export COOKIE_JAR="./.tmp/shikouroku.cookies"
+mkdir -p .tmp
 ```
 
-- `entities` は `(kind_id, name)` の複合ユニーク制約があります。
-- `entity_tags` は `(entity_id, tag_id)` の複合主キーです。
-- `entity_relations` は `(entity_id_low, entity_id_high)` の複合主キーで、`entity_id_low <> entity_id_high` 制約があります。
-- `entity_images` は `(entity_id, sort_order)` の複合ユニーク制約があります。
-- `image_cleanup_tasks` は外部キーを持たない補償処理キューです。
+1. ログイン（Cookie保存）
 
-## デプロイ（Workers一本）
+```bash
+curl -sS -c "$COOKIE_JAR" \
+  -X POST "$BASE_URL/api/login" \
+  -H "content-type: application/json" \
+  --data '{"username":"<username>","password":"<password>"}'
+```
 
-初回のみ Cloudflare ログイン:
+2. 一覧取得（認証付き）
+
+```bash
+curl -sS -b "$COOKIE_JAR" "$BASE_URL/api/kinds"
+curl -sS -b "$COOKIE_JAR" "$BASE_URL/api/tags"
+curl -sS -b "$COOKIE_JAR" "$BASE_URL/api/entities?limit=20"
+```
+
+3. タグ作成
+
+```bash
+curl -sS -b "$COOKIE_JAR" \
+  -X POST "$BASE_URL/api/tags" \
+  -H "content-type: application/json" \
+  --data '{"name":"Coffee"}'
+```
+
+4. entity 作成（`kindId` は既存ID）
+
+```bash
+curl -sS -b "$COOKIE_JAR" \
+  -X POST "$BASE_URL/api/entities" \
+  -H "content-type: application/json" \
+  --data '{
+    "kindId": 1,
+    "name": "Sample",
+    "description": "sample entity",
+    "isWishlist": false,
+    "tagIds": [1]
+  }'
+```
+
+5. 画像アップロード（multipart/form-data）
+
+```bash
+curl -sS -b "$COOKIE_JAR" \
+  -X POST "$BASE_URL/api/entities/<entityId>/images" \
+  -F "file=@./sample.png;type=image/png"
+```
+
+6. cleanup タスク確認 / 実行
+
+```bash
+curl -sS -b "$COOKIE_JAR" "$BASE_URL/api/maintenance/image-cleanup/tasks?limit=20"
+curl -sS -b "$COOKIE_JAR" -X POST "$BASE_URL/api/maintenance/image-cleanup/run?limit=20"
+```
+
+7. ログアウト
+
+```bash
+curl -sS -b "$COOKIE_JAR" -X POST "$BASE_URL/api/logout"
+```
+
+## データモデル（概要）
+
+- `kinds`
+- `entities`（`(kind_id, name)` ユニーク）
+- `tags`
+- `entity_tags`（`(entity_id, tag_id)` 複合主キー）
+- `entity_relations`（`(entity_id_low, entity_id_high)` 複合主キー）
+- `entity_images`（`(entity_id, sort_order)` ユニーク）
+- `image_cleanup_tasks`（R2 補償処理キュー）
+
+詳細なDDLは `apps/api/migrations` を参照してください。
+
+## デプロイ
+
+初回のみ:
 
 ```bash
 npx wrangler login
@@ -246,15 +247,48 @@ npx wrangler login
 npm run deploy
 ```
 
-これで 1 つの Workers サービス `shikouroku` に以下がまとまってデプロイされます。
+`shikouroku` Worker に以下がデプロイされます。
 
 - `/api/*`: Hono API
-- `/` とその他パス: `apps/web/dist` の静的ファイル（SPA fallback あり）
+- `/` および他パス: `apps/web/dist` の静的配信（SPA fallback）
+- cron: `*/30 * * * *` で画像クリーンアップ実行
 
-## 動作確認
+## 運用チェックリスト
 
-1. `npm run dev` を実行
-2. `http://localhost:5173` を開く
-3. ログイン画面が表示される
-4. ログイン後に一覧画面が表示され、データ取得できる
-5. `npm run build` が成功する
+### リリース前
+
+1. `npm run quality:web`
+2. `npm run quality:api`
+3. （マイグレーション追加時）`npm run d1:migrate:prod`
+4. `npm run build`
+
+### リリース実行
+
+1. `npm run deploy`
+2. 必要に応じて `npm run d1:seed:prod`
+
+### リリース後確認
+
+1. `/login` -> `/` の遷移と認証状態を確認
+2. `GET /api/entities` が `ok: true` で応答することを確認
+3. 画像の追加/削除が成功することを確認
+4. `GET /api/maintenance/image-cleanup/tasks?limit=20` の残タスク件数を確認
+
+### 定期運用（週次目安）
+
+1. cleanup 残タスクが増えていないか確認
+2. 必要時に `POST /api/maintenance/image-cleanup/run?limit=20` を実行
+3. 障害調査時は `npx wrangler tail` で Worker ログを確認
+
+## CI
+
+- `.github/workflows/web-quality.yml`: `npm run quality:web`
+- `.github/workflows/api-quality.yml`: `npm run quality:api`
+
+## 関連ドキュメント
+
+- `docs/README.md`（ドキュメント入口）
+- `docs/backend-architecture-review.md`
+- `docs/frontend-architecture-review.md`
+- `docs/image-attachment-feature-spec.md`
+- `docs/preference-feature-spec.md`
