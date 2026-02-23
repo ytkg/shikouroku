@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
+import { ModalShell } from "@/shared/ui/modal-shell";
 
 export function EntityDetailPageContent() {
   const location = useLocation();
@@ -115,11 +116,6 @@ export function EntityDetailPageContent() {
     }
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setSelectedImageId(null);
-        return;
-      }
-
       if (event.key === "ArrowLeft") {
         showPreviousImage();
         return;
@@ -287,48 +283,46 @@ export function EntityDetailPageContent() {
         </Button>
       </main>
       {selectedImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
+        <ModalShell
+          open={selectedImage !== null}
+          onOpenChange={(open) => {
+            if (!open) {
               setSelectedImageId(null);
             }
           }}
-          role="dialog"
-          aria-modal="true"
-          aria-label="画像プレビュー"
+          ariaLabel="画像プレビュー"
+          overlayClassName="bg-black/60"
+          contentClassName="max-w-4xl p-3"
         >
-          <div className="w-full max-w-4xl rounded-lg border bg-background p-3 shadow-lg">
-            <div className="mb-2 flex items-center justify-end gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setSelectedImageId(null)}>
-                閉じる
-              </Button>
-            </div>
-            <div className="relative flex justify-center" onPointerUp={switchImageByPreviewAreaPointer}>
-              <img
-                src={selectedImage.url}
-                alt={selectedImage.fileName}
-                className="max-h-[80vh] w-auto max-w-full rounded object-contain"
-              />
-              {canMoveToPreviousImage && (
-                <div
-                  className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-3xl text-white/50"
-                  aria-hidden="true"
-                >
-                  ←
-                </div>
-              )}
-              {canMoveToNextImage && (
-                <div
-                  className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-3xl text-white/50"
-                  aria-hidden="true"
-                >
-                  →
-                </div>
-              )}
-            </div>
+          <div className="mb-2 flex items-center justify-end gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setSelectedImageId(null)}>
+              閉じる
+            </Button>
           </div>
-        </div>
+          <div className="relative flex justify-center" onPointerUp={switchImageByPreviewAreaPointer}>
+            <img
+              src={selectedImage.url}
+              alt={selectedImage.fileName}
+              className="max-h-[80vh] w-auto max-w-full rounded object-contain"
+            />
+            {canMoveToPreviousImage && (
+              <div
+                className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-3xl text-white/50"
+                aria-hidden="true"
+              >
+                ←
+              </div>
+            )}
+            {canMoveToNextImage && (
+              <div
+                className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-3xl text-white/50"
+                aria-hidden="true"
+              >
+                →
+              </div>
+            )}
+          </div>
+        </ModalShell>
       )}
     </>
   );
