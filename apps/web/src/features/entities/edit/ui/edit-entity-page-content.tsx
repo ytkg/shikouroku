@@ -61,7 +61,7 @@ export function EditEntityPageContent() {
                 onOpenTagDialog={() => form.setTagDialogOpen(true)}
                 onOpenRelatedDialog={() => form.setRelatedDialogOpen(true)}
                 kindRequired={false}
-                beforeRelatedContent={
+                imageFieldContent={
                   <EntityImageEditorField
                     images={form.images}
                     failedImageFilesCount={form.failedImageFiles.length}

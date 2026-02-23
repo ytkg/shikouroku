@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import type { Entity, Kind, Tag } from "@/entities/entity";
-import { Button } from "@/shared/ui/button";
-import { Checkbox, Select, Textarea } from "@/shared/ui/form-controls";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
+import { Checkbox } from "@/shared/ui/form-controls";
+import { EntityBasicFields } from "./entity-basic-fields";
+import { EntityRelatedField } from "./entity-related-field";
+import { EntityTagField } from "./entity-tag-field";
 
 type RelatedCandidate = Pick<Entity, "id" | "name" | "kind">;
 
@@ -21,6 +21,7 @@ type EntityFormFieldsProps = {
   onWishlistChange: (checked: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onOpenTagDialog: () => void;
+  imageFieldContent?: ReactNode;
   beforeRelatedContent?: ReactNode;
   relatedCandidates?: RelatedCandidate[];
   selectedRelatedEntityIds?: string[];
@@ -42,6 +43,7 @@ export function EntityFormFields({
   onWishlistChange,
   onToggleTag,
   onOpenTagDialog,
+  imageFieldContent,
   beforeRelatedContent,
   relatedCandidates,
   selectedRelatedEntityIds,
@@ -52,86 +54,33 @@ export function EntityFormFields({
     relatedCandidates !== undefined &&
     selectedRelatedEntityIds !== undefined &&
     onOpenRelatedDialog !== undefined;
-  const relatedCandidatesSafe = relatedCandidates ?? [];
-  const selectedRelatedEntityIdsSafe = selectedRelatedEntityIds ?? [];
-  const relatedLabelById = new Map(
-    relatedCandidatesSafe.map((candidate) => [
-      candidate.id,
-      `${candidate.name}（${candidate.kind.label}）`
-    ])
-  );
+  const betweenTagAndRelatedContent = imageFieldContent ?? beforeRelatedContent;
 
   return (
     <>
-      <div className="space-y-2">
-        <Label htmlFor="kind">種別</Label>
-        <Select
-          id="kind"
-          value={kindId}
-          onChange={(event) => onKindIdChange(event.target.value)}
-          required={kindRequired}
-        >
-          {kinds.map((kind) => (
-            <option key={kind.id} value={kind.id}>
-              {kind.label}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="name">名前</Label>
-        <Input id="name" value={name} onChange={(event) => onNameChange(event.target.value)} required />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="description">メモ</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(event) => onDescriptionChange(event.target.value)}
-        />
-      </div>
-      <div className="space-y-2">
-        <div className="flex items-center justify-between gap-2">
-          <Label>タグ</Label>
-          <Button type="button" size="sm" variant="outline" onClick={onOpenTagDialog}>
-            タグを編集
-          </Button>
-        </div>
-        {tags.length === 0 ? (
-          <p className="text-sm text-muted-foreground">タグが登録されていません。</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <label key={tag.id} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
-                <Checkbox
-                  checked={selectedTagIds.includes(tag.id)}
-                  onChange={(event) => onToggleTag(tag.id, event.target.checked)}
-                />
-                {tag.name}
-              </label>
-            ))}
-          </div>
-        )}
-      </div>
-      {beforeRelatedContent}
+      <EntityBasicFields
+        kinds={kinds}
+        kindId={kindId}
+        name={name}
+        description={description}
+        onKindIdChange={onKindIdChange}
+        onNameChange={onNameChange}
+        onDescriptionChange={onDescriptionChange}
+        kindRequired={kindRequired}
+      />
+      <EntityTagField
+        tags={tags}
+        selectedTagIds={selectedTagIds}
+        onToggleTag={onToggleTag}
+        onOpenTagDialog={onOpenTagDialog}
+      />
+      {betweenTagAndRelatedContent}
       {hasRelatedEditor && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label>関連嗜好</Label>
-            <Button type="button" size="sm" variant="outline" onClick={onOpenRelatedDialog}>
-              関連を編集
-            </Button>
-          </div>
-          {selectedRelatedEntityIdsSafe.length > 0 && (
-            <div className="space-y-2">
-              {selectedRelatedEntityIdsSafe.map((entityId) => (
-                <div key={entityId} className="rounded-md border px-3 py-2">
-                  <p className="text-sm">{relatedLabelById.get(entityId) ?? entityId}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <EntityRelatedField
+          relatedCandidates={relatedCandidates}
+          selectedRelatedEntityIds={selectedRelatedEntityIds}
+          onOpenRelatedDialog={onOpenRelatedDialog}
+        />
       )}
       <label className="flex items-center gap-2 text-sm">
         <Checkbox

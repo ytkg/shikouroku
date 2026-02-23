@@ -57,7 +57,7 @@ export function CreateEntityPageContent() {
               onToggleTag={form.onToggleTag}
               onOpenTagDialog={() => form.setTagDialogOpen(true)}
               onOpenRelatedDialog={() => form.setRelatedDialogOpen(true)}
-              beforeRelatedContent={
+              imageFieldContent={
                 <EntityImageUploadField
                   selectedImageFiles={form.selectedImageFiles}
                   failedImageFilesCount={form.failedImageFiles.length}

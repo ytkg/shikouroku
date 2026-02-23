@@ -24,6 +24,10 @@ const entityFormFieldsPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/shared/ui/entity-form-fields.tsx"
 );
+const entityRelatedFieldPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/shared/ui/entity-related-field.tsx"
+);
 
 describe("entity empty sections", () => {
   it("詳細画面はタグ/画像/関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {
@@ -39,10 +43,12 @@ describe("entity empty sections", () => {
   });
 
   it("追加/編集フォームは関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {
-    const source = fs.readFileSync(entityFormFieldsPath, "utf-8");
+    const formSource = fs.readFileSync(entityFormFieldsPath, "utf-8");
+    const relatedSource = fs.readFileSync(entityRelatedFieldPath, "utf-8");
 
-    expect(source).not.toContain("（関連なし）");
-    expect(source).toContain("selectedRelatedEntityIdsSafe.length > 0 &&");
+    expect(formSource).toContain("<EntityRelatedField");
+    expect(relatedSource).not.toContain("（関連なし）");
+    expect(relatedSource).toContain("selectedRelatedEntityIds.length > 0 &&");
   });
 
   it("詳細タグクリックで一覧へ戻り、タグ検索条件をURLへ設定する", () => {
