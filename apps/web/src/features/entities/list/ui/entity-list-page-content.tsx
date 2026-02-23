@@ -219,7 +219,7 @@ export function EntityListPageContent() {
               >
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
                       <h3 className="text-base font-semibold">{entity.name}</h3>
                       {entity.isWishlist && (
                         <span className="rounded-full border px-2 py-0.5 text-xs">気になる</span>

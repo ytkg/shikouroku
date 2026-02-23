@@ -10,7 +10,6 @@ import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle
@@ -153,8 +152,12 @@ export function EntityDetailPageContent() {
       <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-4 pt-20">
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>{page.entity?.name ?? "嗜好 詳細"}</CardTitle>
-            <CardDescription>{page.entity?.isWishlist ? "気になるに登録済み" : ""}</CardDescription>
+            <div className="flex items-center gap-2">
+              <CardTitle>{page.entity?.name ?? "嗜好 詳細"}</CardTitle>
+              {page.entity?.isWishlist && (
+                <span className="rounded-full border px-2 py-0.5 text-xs">気になる</span>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {page.error ? (
