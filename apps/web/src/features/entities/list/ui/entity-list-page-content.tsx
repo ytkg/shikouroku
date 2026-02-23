@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useEntityListPage } from "../model/use-entity-list-page";
 import { ENTITY_SEARCH_FIELDS } from "@/entities/entity";
 import { getEntityDetailPath } from "@/shared/config/route-paths";
@@ -10,7 +10,6 @@ import { useInfiniteLoadTrigger } from "./use-infinite-load-trigger";
 
 export function EntityListPageContent() {
   const location = useLocation();
-  const navigate = useNavigate();
   const page = useEntityListPage();
   const [isSearchOptionsOpen, setIsSearchOptionsOpen] = useState(false);
   const canUseIntersectionObserver = typeof IntersectionObserver !== "undefined";
@@ -64,12 +63,8 @@ export function EntityListPageContent() {
             <EntityListResultCard
               key={entity.id}
               entity={entity}
-              onClick={(entityId) =>
-                navigate({
-                  pathname: getEntityDetailPath(entityId),
-                  search: location.search
-                })
-              }
+              detailPath={getEntityDetailPath(entity.id)}
+              detailSearch={location.search}
               onTagClick={page.applyTagFilter}
             />
           ))
