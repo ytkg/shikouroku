@@ -50,4 +50,12 @@ describe("create entity image selection", () => {
 
     expect(source).not.toContain("submitResult");
   });
+
+  it("登録成功時は作成したエンティティの詳細画面へ遷移する", () => {
+    const source = fs.readFileSync(createPagePath, "utf-8");
+
+    expect(source).toContain("const createdEntityId = await form.submit();");
+    expect(source).toContain("if (createdEntityId) {");
+    expect(source).toContain("navigate(getEntityDetailPath(createdEntityId));");
+  });
 });

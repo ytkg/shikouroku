@@ -50,7 +50,7 @@ type CreateEntityResult = {
   retryFailedImageUploads: () => Promise<void>;
   onTagCreated: (tag: Tag) => void;
   onTagDeleted: (tagId: number) => void;
-  submit: () => Promise<void>;
+  submit: () => Promise<string | null>;
 };
 
 function toKindId(value: string): number | null {
@@ -149,11 +149,11 @@ export function useCreateEntityForm(): CreateEntityResult {
     return failed;
   };
 
-  const submit = async () => {
+  const submit = async (): Promise<string | null> => {
     const parsedKindId = toKindId(kindId);
     if (parsedKindId === null) {
       setError(errorMessages.kindRequired);
-      return;
+      return null;
     }
 
     setError(null);
@@ -184,11 +184,13 @@ export function useCreateEntityForm(): CreateEntityResult {
       setIsWishlist(false);
       setSelectedTagIds([]);
       setSelectedRelatedEntityIds([]);
+      return entity.id;
     } catch (e) {
       if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-        return;
+        return null;
       }
       setError(toErrorMessage(e));
+      return null;
     } finally {
       setSubmitLoading(false);
     }

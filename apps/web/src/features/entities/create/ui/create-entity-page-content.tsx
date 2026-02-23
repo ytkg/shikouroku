@@ -4,7 +4,7 @@ import { useCreateEntityForm } from "../model/use-create-entity-form";
 import { TagEditDialog } from "../../manage-tags";
 import { RelatedEntityEditDialog } from "../../manage-related";
 import { EntityFormFields } from "../../shared/ui/entity-form-fields";
-import { routePaths } from "@/shared/config/route-paths";
+import { getEntityDetailPath, routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import {
   Card,
@@ -32,7 +32,10 @@ export function CreateEntityPageContent() {
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await form.submit();
+    const createdEntityId = await form.submit();
+    if (createdEntityId) {
+      navigate(getEntityDetailPath(createdEntityId));
+    }
   };
 
   if (form.loading) {
