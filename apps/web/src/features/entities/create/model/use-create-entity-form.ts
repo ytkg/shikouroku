@@ -37,7 +37,6 @@ type CreateEntityResult = {
   retryingFailedImages: boolean;
   loading: boolean;
   error: string | null;
-  submitResult: Entity | null;
   setKindId: (value: string) => void;
   setName: (value: string) => void;
   setDescription: (value: string) => void;
@@ -78,7 +77,6 @@ export function useCreateEntityForm(): CreateEntityResult {
   const [submitLoading, setSubmitLoading] = useState(false);
   const [retryingFailedImages, setRetryingFailedImages] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitResult, setSubmitResult] = useState<Entity | null>(null);
   const { data: kinds = [], error: kindsError, isLoading: kindsLoading } = useKindsQuery();
   const { data: tags = [], error: tagsError, isLoading: tagsLoading } = useTagsQuery();
   const {
@@ -160,7 +158,6 @@ export function useCreateEntityForm(): CreateEntityResult {
 
     setError(null);
     setSubmitLoading(true);
-    setSubmitResult(null);
     try {
       const entity = await createEntity({
         kindId: parsedKindId,
@@ -182,7 +179,6 @@ export function useCreateEntityForm(): CreateEntityResult {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
       }
 
-      setSubmitResult(entity);
       setName("");
       setDescription("");
       setIsWishlist(false);
@@ -238,7 +234,6 @@ export function useCreateEntityForm(): CreateEntityResult {
     retryingFailedImages,
     loading: kindsLoading || tagsLoading || entitiesLoading,
     error,
-    submitResult,
     setKindId,
     setName,
     setDescription,

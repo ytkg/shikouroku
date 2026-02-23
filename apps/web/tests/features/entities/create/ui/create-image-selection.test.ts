@@ -38,4 +38,16 @@ describe("create entity image selection", () => {
     expect(source).not.toContain("const onSelectImageFiles = (files: FileList | null)");
     expect(source).not.toContain("...Array.from(files)");
   });
+
+  it("新規登録画面のソースに登録結果ブロックが存在しない", () => {
+    const source = fs.readFileSync(createPagePath, "utf-8");
+
+    expect(source).not.toContain("登録結果");
+  });
+
+  it("フォームモデルのソースに submitResult が存在しない", () => {
+    const source = fs.readFileSync(createFormPath, "utf-8");
+
+    expect(source).not.toContain("submitResult");
+  });
 });

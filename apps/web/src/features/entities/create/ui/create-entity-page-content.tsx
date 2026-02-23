@@ -128,12 +128,6 @@ export function CreateEntityPageContent() {
             </div>
           </form>
           {form.error && <p className="text-sm text-destructive">{form.error}</p>}
-          <div className="space-y-2">
-            <Label>登録結果</Label>
-            <pre className="overflow-auto rounded-md border bg-muted p-3 text-sm">
-              {form.submitResult ? JSON.stringify(form.submitResult, null, 2) : "まだ登録していません"}
-            </pre>
-          </div>
         </CardContent>
       </Card>
       <Button variant="outline" onClick={() => navigate(routePaths.home)}>
