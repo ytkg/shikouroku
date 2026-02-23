@@ -31,4 +31,14 @@ describe("entity empty sections", () => {
     expect(source).not.toContain("（関連なし）");
     expect(source).toContain("selectedRelatedEntityIdsSafe.length > 0 &&");
   });
+
+  it("詳細タグクリックで一覧へ戻り、タグ検索条件をURLへ設定する", () => {
+    const source = fs.readFileSync(detailPagePath, "utf-8");
+
+    expect(source).toContain("const nextSearchParams = new URLSearchParams(location.search);");
+    expect(source).toContain("nextSearchParams.set(\"q\", normalizedTagName);");
+    expect(source).toContain("nextSearchParams.set(\"fields\", \"tags\");");
+    expect(source).toContain("nextSearchParams.set(\"match\", \"exact\");");
+    expect(source).toContain("onClick={() => moveToListWithTagFilter(tag.name)}");
+  });
 });

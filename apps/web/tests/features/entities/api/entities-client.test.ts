@@ -87,6 +87,34 @@ describe("entities.client", () => {
     );
   });
 
+  it("fetchEntitiesPageはタグのみ検索を fields=tags で送信する", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          page: {
+            limit: 20,
+            hasMore: false,
+            nextCursor: null,
+            total: 0
+          },
+          entities: []
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        }
+      )
+    );
+
+    await fetchEntitiesPage({
+      q: "design",
+      fields: ["tags"]
+    });
+
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("/api/entities?limit=20&q=design&fields=tags");
+  });
+
   it("fetchKindsは不正なレスポンス形をApiError(INVALID_API_RESPONSE)として扱う", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(JSON.stringify({ ok: true, kinds: [{ id: "1", label: "book" }] }), {

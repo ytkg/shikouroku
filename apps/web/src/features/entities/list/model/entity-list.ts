@@ -188,6 +188,12 @@ export function setEntitySearchFieldsParam(
   return true;
 }
 
+export function setEntityTagFilterParams(searchParams: URLSearchParams, tagName: string): void {
+  setEntitySearchQueryParam(searchParams, tagName);
+  setEntitySearchFieldsParam(searchParams, ["tags"]);
+  setEntitySearchMatchParam(searchParams, "exact");
+}
+
 export function parseEntityKindFilter(value: string | null | undefined): number | null {
   if (!value) {
     return null;

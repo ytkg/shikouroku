@@ -44,4 +44,11 @@ describe("entity list page content infinite scroll", () => {
     expect(source).not.toContain("if (page.isLoading && page.entities.length === 0)");
     expect(source).toContain('{page.isLoading ? "読み込み中..." : "表示できる登録がありません。"}');
   });
+
+  it("一覧タグクリック時は詳細遷移を止めてタグ検索を適用する", () => {
+    const source = fs.readFileSync(pageContentPath, "utf-8");
+
+    expect(source).toContain("event.stopPropagation();");
+    expect(source).toContain("page.applyTagFilter(tag.name);");
+  });
 });

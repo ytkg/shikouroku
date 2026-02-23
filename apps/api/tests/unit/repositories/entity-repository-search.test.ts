@@ -58,4 +58,42 @@ describe("entity repository search", () => {
     expect(sql).not.toContain("LIKE ? COLLATE NOCASE");
     expect(bind).toHaveBeenCalledWith("prefix-check");
   });
+
+  it("tags field search builds tag EXISTS clause for list and count queries", async () => {
+    const { db, prepare, bind } = createMockDb();
+
+    await listEntitiesWithKindsFromD1(db, {
+      limit: 20,
+      cursorCreatedAt: null,
+      cursorId: null,
+      kindId: null,
+      wishlist: "include",
+      q: "arch",
+      match: "exact",
+      fields: ["tags"]
+    });
+
+    const listSql = prepare.mock.calls[0]?.[0] as string;
+    expect(listSql).toContain("FROM entity_tags et");
+    expect(listSql).toContain("INNER JOIN tags t ON t.id = et.tag_id");
+    expect(listSql).toContain("t.name = ? COLLATE NOCASE");
+    expect(bind).toHaveBeenCalledWith("arch", 20);
+
+    prepare.mockClear();
+    bind.mockClear();
+
+    await countEntitiesWithKindsFromD1(db, {
+      kindId: null,
+      wishlist: "include",
+      q: "arch",
+      match: "partial",
+      fields: ["tags"]
+    });
+
+    const countSql = prepare.mock.calls[0]?.[0] as string;
+    expect(countSql).toContain("FROM entity_tags et");
+    expect(countSql).toContain("INNER JOIN tags t ON t.id = et.tag_id");
+    expect(countSql).toContain("INSTR(LOWER(t.name), LOWER(?)) > 0");
+    expect(bind).toHaveBeenCalledWith("arch");
+  });
 });

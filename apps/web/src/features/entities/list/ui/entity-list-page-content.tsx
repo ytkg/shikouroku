@@ -225,9 +225,17 @@ export function EntityListPageContent() {
                     {entity.tags.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {entity.tags.map((tag) => (
-                          <span key={tag.id} className="rounded-full border px-2 py-0.5 text-xs">
+                          <button
+                            key={tag.id}
+                            type="button"
+                            className="rounded-full border px-2 py-0.5 text-xs transition-colors hover:bg-accent"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              page.applyTagFilter(tag.name);
+                            }}
+                          >
                             {tag.name}
-                          </span>
+                          </button>
                         ))}
                       </div>
                     )}

@@ -14,6 +14,7 @@ import {
   setEntitySearchFieldsParam,
   setEntitySearchMatchParam,
   setEntitySearchQueryParam,
+  setEntityTagFilterParams,
   toggleEntitySearchFieldSelection,
   toEntityListCriteriaKey,
   toKindTab,
@@ -103,6 +104,20 @@ describe("entity-list model", () => {
     });
   });
 
+  it("parseEntityListSearchCriteria は q+fields=tags をタグ検索条件として復元する", () => {
+    const criteria = parseEntityListSearchCriteria(new URLSearchParams("q=design&fields=tags"));
+
+    expect(criteria).toEqual({
+      rawQuery: "design",
+      kindId: null,
+      wishlistFilter: "exclude",
+      selectedKindTab: "all",
+      match: "partial",
+      selectedFields: ["tags"],
+      isAllFieldsSelected: false
+    });
+  });
+
   it("toEntityListCriteriaKey は検索条件から安定したキーを作る", () => {
     const criteria = parseEntityListSearchCriteria(
       new URLSearchParams("q=code&wishlist=only&match=exact&fields=body")
@@ -155,5 +170,16 @@ describe("entity-list model", () => {
     const partialParams = new URLSearchParams();
     expect(setEntitySearchFieldsParam(partialParams, ["tags", "title"])).toBe(true);
     expect(partialParams.toString()).toBe("fields=title%2Ctags");
+  });
+
+  it("setEntityTagFilterParams は q/fields/match をタグ検索向けに更新する", () => {
+    const searchParams = new URLSearchParams("kindId=2&wishlist=only");
+    setEntityTagFilterParams(searchParams, "design");
+
+    expect(searchParams.get("kindId")).toBe("2");
+    expect(searchParams.get("wishlist")).toBe("only");
+    expect(searchParams.get("q")).toBe("design");
+    expect(searchParams.get("fields")).toBe("tags");
+    expect(searchParams.get("match")).toBe("exact");
   });
 });

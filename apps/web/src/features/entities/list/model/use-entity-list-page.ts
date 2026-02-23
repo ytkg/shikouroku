@@ -16,6 +16,7 @@ import {
   setEntitySearchFieldsParam,
   setEntitySearchMatchParam,
   setEntitySearchQueryParam,
+  setEntityTagFilterParams,
   toggleEntitySearchFieldSelection,
   toEntityListCriteriaKey,
   type EntityKindTab
@@ -47,6 +48,7 @@ type EntityListPageResult = {
   setMatch: (match: EntitySearchMatch) => void;
   setSelectedFields: (fields: EntitySearchField[]) => void;
   toggleField: (field: EntitySearchField) => void;
+  applyTagFilter: (tagName: string) => void;
   loadMore: () => Promise<void>;
 };
 
@@ -204,6 +206,15 @@ export function useEntityListPage(): EntityListPageResult {
     [isAllFieldsSelected, selectedFields, setSelectedFields]
   );
 
+  const applyTagFilter = useCallback(
+    (tagName: string) => {
+      updateSearchParams((nextSearchParams) => {
+        setEntityTagFilterParams(nextSearchParams, tagName);
+      });
+    },
+    [updateSearchParams]
+  );
+
   const loadMore = useCallback(async () => {
     if (!hasMore || !nextCursor || isLoadingMore) {
       return;
@@ -258,6 +269,7 @@ export function useEntityListPage(): EntityListPageResult {
     setMatch,
     setSelectedFields,
     toggleField,
+    applyTagFilter,
     loadMore
   };
 }

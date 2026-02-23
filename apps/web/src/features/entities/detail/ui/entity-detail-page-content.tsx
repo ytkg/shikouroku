@@ -34,6 +34,25 @@ export function EntityDetailPageContent() {
   const canMoveToNextImage =
     selectedImageIndex >= 0 && selectedImageIndex < page.images.length - 1;
 
+  const moveToListWithTagFilter = (tagName: string) => {
+    const normalizedTagName = tagName.trim();
+    if (normalizedTagName.length === 0) {
+      navigate(routePaths.home);
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(location.search);
+    nextSearchParams.set("q", normalizedTagName);
+    nextSearchParams.set("fields", "tags");
+    nextSearchParams.set("match", "exact");
+    const nextSearch = nextSearchParams.toString();
+
+    navigate({
+      pathname: routePaths.home,
+      search: nextSearch.length > 0 ? `?${nextSearch}` : ""
+    });
+  };
+
   const showPreviousImage = () => {
     if (!canMoveToPreviousImage) {
       return;
@@ -150,9 +169,14 @@ export function EntityDetailPageContent() {
                       <p className="text-xs text-muted-foreground">タグ</p>
                       <div className="flex flex-wrap gap-2">
                         {page.entity.tags.map((tag) => (
-                          <span key={tag.id} className="rounded-full border px-2 py-0.5 text-xs">
+                          <button
+                            key={tag.id}
+                            type="button"
+                            className="rounded-full border px-2 py-0.5 text-xs transition-colors hover:bg-accent"
+                            onClick={() => moveToListWithTagFilter(tag.name)}
+                          >
                             {tag.name}
-                          </span>
+                          </button>
                         ))}
                       </div>
                     </div>
