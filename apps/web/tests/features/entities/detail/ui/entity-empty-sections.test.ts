@@ -41,4 +41,12 @@ describe("entity empty sections", () => {
     expect(source).toContain("nextSearchParams.set(\"match\", \"exact\");");
     expect(source).toContain("onClick={() => moveToListWithTagFilter(tag.name)}");
   });
+
+  it("画像プレビューの左右矢印は押せる方向のみ表示する実装になっている", () => {
+    const source = fs.readFileSync(detailPagePath, "utf-8");
+
+    expect(source).toContain("{canMoveToPreviousImage && (");
+    expect(source).toContain("{canMoveToNextImage && (");
+    expect(source).toContain("onPointerUp={switchImageByPreviewAreaPointer}");
+  });
 });

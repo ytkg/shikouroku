@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type PointerEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import {
@@ -78,6 +78,24 @@ export function EntityDetailPageContent() {
 
     setSelectedImageId(nextImage.id);
   }, [canMoveToNextImage, page.images, selectedImageIndex]);
+
+  const switchImageByPreviewAreaPointer = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.pointerType === "mouse" && event.button !== 0) {
+        return;
+      }
+
+      const previewRect = event.currentTarget.getBoundingClientRect();
+      const isLeftSide = event.clientX < previewRect.left + previewRect.width / 2;
+      if (isLeftSide) {
+        showPreviousImage();
+        return;
+      }
+
+      showNextImage();
+    },
+    [showNextImage, showPreviousImage]
+  );
 
   useEffect(() => {
     if (!selectedImageId) {
@@ -282,34 +300,32 @@ export function EntityDetailPageContent() {
         >
           <div className="w-full max-w-4xl rounded-lg border bg-background p-3 shadow-lg">
             <div className="mb-2 flex items-center justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={showPreviousImage}
-                disabled={!canMoveToPreviousImage}
-              >
-                前へ
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={showNextImage}
-                disabled={!canMoveToNextImage}
-              >
-                次へ
-              </Button>
               <Button type="button" variant="outline" size="sm" onClick={() => setSelectedImageId(null)}>
                 閉じる
               </Button>
             </div>
-            <div className="flex justify-center">
+            <div className="relative flex justify-center" onPointerUp={switchImageByPreviewAreaPointer}>
               <img
                 src={selectedImage.url}
                 alt={selectedImage.fileName}
                 className="max-h-[80vh] w-auto max-w-full rounded object-contain"
               />
+              {canMoveToPreviousImage && (
+                <div
+                  className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-3xl text-white/50"
+                  aria-hidden="true"
+                >
+                  ←
+                </div>
+              )}
+              {canMoveToNextImage && (
+                <div
+                  className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-3xl text-white/50"
+                  aria-hidden="true"
+                >
+                  →
+                </div>
+              )}
             </div>
           </div>
         </div>
