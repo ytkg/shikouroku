@@ -41,6 +41,8 @@ type EntityListPageResult = {
   totalCount: number;
   hasMore: boolean;
   setQuery: (query: string) => void;
+  startQueryComposition: () => void;
+  endQueryComposition: () => void;
   setSelectedKindTab: (tab: EntityKindTab) => void;
   setMatch: (match: EntitySearchMatch) => void;
   setSelectedFields: (fields: EntitySearchField[]) => void;
@@ -63,6 +65,7 @@ export function useEntityListPage(): EntityListPageResult {
   const criteriaKey = useMemo(() => toEntityListCriteriaKey(criteria), [criteria]);
 
   const [queryInput, setQueryInput] = useState(rawQuery);
+  const [isQueryComposing, setIsQueryComposing] = useState(false);
   const [entities, setEntities] = useState<Entity[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -98,6 +101,10 @@ export function useEntityListPage(): EntityListPageResult {
   }, [rawQuery]);
 
   useEffect(() => {
+    if (isQueryComposing) {
+      return;
+    }
+
     if (queryInput === rawQuery) {
       return;
     }
@@ -114,7 +121,7 @@ export function useEntityListPage(): EntityListPageResult {
     return () => {
       clearTimeout(timer);
     };
-  }, [queryInput, rawQuery, updateSearchParams]);
+  }, [isQueryComposing, queryInput, rawQuery, updateSearchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -245,6 +252,8 @@ export function useEntityListPage(): EntityListPageResult {
     totalCount,
     hasMore,
     setQuery: setQueryInput,
+    startQueryComposition: () => setIsQueryComposing(true),
+    endQueryComposition: () => setIsQueryComposing(false),
     setSelectedKindTab,
     setMatch,
     setSelectedFields,

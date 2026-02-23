@@ -27,4 +27,14 @@ describe("entity list page content infinite scroll", () => {
     expect(source).toContain("canUseIntersectionObserver ? (");
     expect(source).toContain("{page.isLoadingMore ? \"読み込み中...\" : \"もっと見る\"}");
   });
+
+  it("検索入力のIME変換中は確定イベントでのみ検索更新する", () => {
+    const source = fs.readFileSync(pageContentPath, "utf-8");
+
+    expect(source).toContain("onCompositionStart={page.startQueryComposition}");
+    expect(source).toContain("onCompositionEnd={page.endQueryComposition}");
+    expect(source).toContain("onBlur={page.endQueryComposition}");
+    expect(source).toContain("if (isSearchOptionsOpen) {");
+    expect(source).toContain("page.endQueryComposition();");
+  });
 });

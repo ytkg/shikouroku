@@ -74,6 +74,9 @@ export function EntityListPageContent() {
       aria-controls="entity-search-options"
       aria-label={isSearchOptionsOpen ? "検索条件を閉じる" : "検索条件を開く"}
       onClick={() => {
+        if (isSearchOptionsOpen) {
+          page.endQueryComposition();
+        }
         setIsSearchOptionsOpen((current) => !current);
       }}
     >
@@ -133,6 +136,9 @@ export function EntityListPageContent() {
                       id="entity-search-input"
                       value={page.query}
                       onChange={(event) => page.setQuery(event.target.value)}
+                      onCompositionStart={page.startQueryComposition}
+                      onCompositionEnd={page.endQueryComposition}
+                      onBlur={page.endQueryComposition}
                       placeholder="タイトル・本文・タグで検索"
                       autoComplete="off"
                     />
