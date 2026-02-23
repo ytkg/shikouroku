@@ -46,16 +46,16 @@ type ListEntitiesSearchInput = Pick<
 
 type ListEntitiesCursorInput = Pick<ListEntitiesWithKindsInput, "cursorCreatedAt" | "cursorId">;
 
-function toSearchPattern(query: string, match: EntitySearchMatch): string {
+function toCaseInsensitiveSearchCondition(column: string, match: EntitySearchMatch): string {
   if (match === "exact") {
-    return query;
+    return `${column} = ? COLLATE NOCASE`;
   }
 
   if (match === "prefix") {
-    return `${query}%`;
+    return `INSTR(LOWER(${column}), LOWER(?)) = 1`;
   }
 
-  return `%${query}%`;
+  return `INSTR(LOWER(${column}), LOWER(?)) > 0`;
 }
 
 function buildEntitySearchWhereClause(
@@ -87,18 +87,17 @@ function buildEntitySearchWhereClause(
   }
 
   if (search.q) {
-    const pattern = toSearchPattern(search.q, search.match);
-    const comparator = search.match === "exact" ? "= ? COLLATE NOCASE" : "LIKE ? COLLATE NOCASE";
+    const query = search.q;
     const searchClauses: string[] = [];
 
     if (search.fields.includes("title")) {
-      searchClauses.push(`e.name ${comparator}`);
-      bindings.push(pattern);
+      searchClauses.push(toCaseInsensitiveSearchCondition("e.name", search.match));
+      bindings.push(query);
     }
 
     if (search.fields.includes("body")) {
-      searchClauses.push(`COALESCE(e.description, '') ${comparator}`);
-      bindings.push(pattern);
+      searchClauses.push(toCaseInsensitiveSearchCondition("COALESCE(e.description, '')", search.match));
+      bindings.push(query);
     }
 
     if (search.fields.includes("tags")) {
@@ -108,10 +107,10 @@ function buildEntitySearchWhereClause(
            FROM entity_tags et
            INNER JOIN tags t ON t.id = et.tag_id
            WHERE et.entity_id = e.id
-             AND t.name ${comparator}
+             AND ${toCaseInsensitiveSearchCondition("t.name", search.match)}
          )`
       );
-      bindings.push(pattern);
+      bindings.push(query);
     }
 
     if (searchClauses.length > 0) {
