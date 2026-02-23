@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import {
@@ -53,7 +53,7 @@ export function EntityDetailPageContent() {
     });
   };
 
-  const showPreviousImage = () => {
+  const showPreviousImage = useCallback(() => {
     if (!canMoveToPreviousImage) {
       return;
     }
@@ -64,9 +64,9 @@ export function EntityDetailPageContent() {
     }
 
     setSelectedImageId(previousImage.id);
-  };
+  }, [canMoveToPreviousImage, page.images, selectedImageIndex]);
 
-  const showNextImage = () => {
+  const showNextImage = useCallback(() => {
     if (!canMoveToNextImage) {
       return;
     }
@@ -77,7 +77,7 @@ export function EntityDetailPageContent() {
     }
 
     setSelectedImageId(nextImage.id);
-  };
+  }, [canMoveToNextImage, page.images, selectedImageIndex]);
 
   useEffect(() => {
     if (!selectedImageId) {

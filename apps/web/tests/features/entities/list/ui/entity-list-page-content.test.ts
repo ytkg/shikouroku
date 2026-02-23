@@ -15,9 +15,9 @@ describe("entity list page content infinite scroll", () => {
 
     expect(source).toContain("const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);");
     expect(source).toContain("new IntersectionObserver(");
-    expect(source).toContain("if (!entry?.isIntersecting || autoLoadPendingRef.current || page.isLoadingMore)");
+    expect(source).toContain("if (!entry?.isIntersecting || autoLoadPendingRef.current || isLoadingMore)");
     expect(source).toContain("autoLoadPendingRef.current = true;");
-    expect(source).toContain("void page.loadMore();");
+    expect(source).toContain("void loadMore();");
   });
 
   it("IntersectionObserver 非対応時は手動のもっと見るボタンを表示する", () => {
