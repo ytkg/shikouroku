@@ -16,6 +16,10 @@ function createTestApp(): Hono<AppEnv> {
     return jsonError(c, 400, "BAD_INPUT", "bad input");
   });
 
+  app.get("/immutable", () => {
+    return Response.redirect("http://localhost/redirected", 302);
+  });
+
   return app;
 }
 
@@ -65,5 +69,18 @@ describe("api-response", () => {
     expect(response.status).toBe(200);
     expect(body.requestId).toMatch(/^[0-9a-f-]{36}$/i);
     expect(response.headers.get(REQUEST_ID_HEADER)).toBe(body.requestId);
+  });
+
+  it("adds request id header even when downstream response headers are immutable", async () => {
+    const app = createTestApp();
+    const response = await app.request("http://localhost/immutable", {
+      headers: {
+        [REQUEST_ID_HEADER]: "req-immutable"
+      }
+    });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("http://localhost/redirected");
+    expect(response.headers.get(REQUEST_ID_HEADER)).toBe("req-immutable");
   });
 });

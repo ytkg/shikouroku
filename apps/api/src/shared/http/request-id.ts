@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from "hono";
 import type { AppContext, AppEnv } from "../../app-env";
+import { toMutableResponse } from "./mutable-response";
 
 export const REQUEST_ID_HEADER = "X-Request-Id";
 
@@ -9,6 +10,7 @@ export const requestIdMiddleware: MiddlewareHandler<AppEnv> = async (c, next) =>
 
   c.set("requestId", requestId);
   await next();
+  c.res = toMutableResponse(c.res);
   c.res.headers.set(REQUEST_ID_HEADER, requestId);
 };
 

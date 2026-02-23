@@ -31,6 +31,7 @@ function createApp() {
   app.use("*", authSessionMiddleware);
   app.post("/api/login", (c) => c.json({ ok: true }));
   app.get("/api/protected", (c) => c.json({ ok: true }));
+  app.get("/api/immutable", () => Response.redirect("http://localhost/asset", 302));
   app.get("/login", (c) => c.text("login page"));
   app.get("/", (c) => c.text("home"));
   return app;
@@ -106,5 +107,30 @@ describe("authSessionMiddleware", () => {
 
     expect(response.status).toBe(404);
     expect(response.headers.get("location")).toBeNull();
+  });
+
+  it("appends cookies after token refresh even when downstream response headers are immutable", async () => {
+    const app = createApp();
+    verifyTokenQueryMock.mockResolvedValue(false);
+    refreshTokenCommandMock.mockResolvedValue({
+      ok: true,
+      data: { accessToken: "new-access", refreshToken: "new-refresh" }
+    });
+
+    const response = await app.request(
+      "http://localhost/api/immutable",
+      {
+        method: "GET",
+        headers: {
+          Cookie: "shikouroku_refresh_token=refresh-token"
+        }
+      },
+      TEST_ENV
+    );
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("http://localhost/asset");
+    expect(response.headers.get("set-cookie")).toContain("shikouroku_token=new-access");
+    expect(response.headers.get("set-cookie")).toContain("shikouroku_refresh_token=new-refresh");
   });
 });

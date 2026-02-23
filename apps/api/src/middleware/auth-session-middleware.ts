@@ -14,15 +14,20 @@ import { isStaticAssetPath } from "../shared/http/asset-path";
 import { refreshTokenCommand } from "../modules/auth/application/refresh-token-command";
 import { verifyTokenQuery } from "../modules/auth/application/verify-token-query";
 import { jsonError } from "../shared/http/api-response";
+import { toMutableResponse } from "../shared/http/mutable-response";
 
-function setAuthCookies(response: Response, accessToken: string, refreshToken: string): void {
-  response.headers.append("Set-Cookie", makeAccessTokenCookie(accessToken));
-  response.headers.append("Set-Cookie", makeRefreshTokenCookie(refreshToken));
+function setAuthCookies(response: Response, accessToken: string, refreshToken: string): Response {
+  const mutableResponse = toMutableResponse(response);
+  mutableResponse.headers.append("Set-Cookie", makeAccessTokenCookie(accessToken));
+  mutableResponse.headers.append("Set-Cookie", makeRefreshTokenCookie(refreshToken));
+  return mutableResponse;
 }
 
-function clearAuthCookies(response: Response): void {
-  response.headers.append("Set-Cookie", clearAccessTokenCookie());
-  response.headers.append("Set-Cookie", clearRefreshTokenCookie());
+function clearAuthCookies(response: Response): Response {
+  const mutableResponse = toMutableResponse(response);
+  mutableResponse.headers.append("Set-Cookie", clearAccessTokenCookie());
+  mutableResponse.headers.append("Set-Cookie", clearRefreshTokenCookie());
+  return mutableResponse;
 }
 
 export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
@@ -49,13 +54,12 @@ export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) 
 
     if (!hasValidToken) {
       const response = jsonError(c, 401, "UNAUTHORIZED", "unauthorized");
-      clearAuthCookies(response);
-      return response;
+      return clearAuthCookies(response);
     }
 
     await next();
     if (refreshedTokens) {
-      setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+      c.res = setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
     }
     return;
   }
@@ -63,19 +67,18 @@ export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) 
   if (pathname === "/login" && hasValidToken) {
     const response = c.redirect("/", 302);
     if (refreshedTokens) {
-      setAuthCookies(response, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+      return setAuthCookies(response, refreshedTokens.accessToken, refreshedTokens.refreshToken);
     }
     return response;
   }
 
   if (!hasValidToken && pathname !== "/login" && !isStaticAssetPath(pathname)) {
     const response = c.redirect("/login", 302);
-    clearAuthCookies(response);
-    return response;
+    return clearAuthCookies(response);
   }
 
   await next();
   if (refreshedTokens) {
-    setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+    c.res = setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
   }
 };
