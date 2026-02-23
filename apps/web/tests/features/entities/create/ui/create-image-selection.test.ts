@@ -8,6 +8,10 @@ const createPagePath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/create/ui/create-entity-page-content.tsx"
 );
+const imageUploadFieldPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/shared/ui/entity-image-upload-field.tsx"
+);
 const createFormPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/create/model/use-create-entity-form.ts"
@@ -15,13 +19,13 @@ const createFormPath = path.resolve(
 
 describe("create entity image selection", () => {
   it("入力クリア前に FileList を配列化してフォームへ渡す", () => {
-    const source = fs.readFileSync(createPagePath, "utf-8");
+    const source = fs.readFileSync(imageUploadFieldPath, "utf-8");
 
     expect(source).toContain(
       "const files = event.target.files ? Array.from(event.target.files) : [];"
     );
 
-    const selectCallIndex = source.indexOf("form.onSelectImageFiles(files);");
+    const selectCallIndex = source.indexOf("onSelectImageFiles(files);");
     const clearCallIndex = source.indexOf('event.target.value = "";');
 
     expect(selectCallIndex).toBeGreaterThan(-1);
@@ -54,6 +58,7 @@ describe("create entity image selection", () => {
   it("登録成功時は作成したエンティティの詳細画面へ遷移する", () => {
     const source = fs.readFileSync(createPagePath, "utf-8");
 
+    expect(source).toContain("<EntityImageUploadField");
     expect(source).toContain("const createdEntityId = await form.submit();");
     expect(source).toContain("if (createdEntityId) {");
     expect(source).toContain("navigate(getEntityDetailPath(createdEntityId));");
