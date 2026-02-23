@@ -1,0 +1,30 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const pageContentPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/list/ui/entity-list-page-content.tsx"
+);
+
+describe("entity list page content infinite scroll", () => {
+  it("IntersectionObserver で画面下部到達時に loadMore を自動実行する", () => {
+    const source = fs.readFileSync(pageContentPath, "utf-8");
+
+    expect(source).toContain("const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);");
+    expect(source).toContain("new IntersectionObserver(");
+    expect(source).toContain("if (!entry?.isIntersecting || autoLoadPendingRef.current || page.isLoadingMore)");
+    expect(source).toContain("autoLoadPendingRef.current = true;");
+    expect(source).toContain("void page.loadMore();");
+  });
+
+  it("IntersectionObserver 非対応時は手動のもっと見るボタンを表示する", () => {
+    const source = fs.readFileSync(pageContentPath, "utf-8");
+
+    expect(source).toContain("const canUseIntersectionObserver = typeof IntersectionObserver !== \"undefined\";");
+    expect(source).toContain("canUseIntersectionObserver ? (");
+    expect(source).toContain("{page.isLoadingMore ? \"読み込み中...\" : \"もっと見る\"}");
+  });
+});

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEntityListPage } from "../model/use-entity-list-page";
@@ -26,8 +26,45 @@ export function EntityListPageContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const page = useEntityListPage();
+  const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
+  const autoLoadPendingRef = useRef(false);
   const [isSearchOptionsOpen, setIsSearchOptionsOpen] = useState(false);
   const selectedFieldSet = useMemo(() => new Set(page.selectedFields), [page.selectedFields]);
+  const canUseIntersectionObserver = typeof IntersectionObserver !== "undefined";
+
+  useEffect(() => {
+    if (!page.isLoadingMore) {
+      autoLoadPendingRef.current = false;
+    }
+  }, [page.isLoadingMore]);
+
+  useEffect(() => {
+    const triggerElement = loadMoreTriggerRef.current;
+    if (!canUseIntersectionObserver || !triggerElement || !page.hasMore || page.isLoading) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting || autoLoadPendingRef.current || page.isLoadingMore) {
+          return;
+        }
+
+        autoLoadPendingRef.current = true;
+        void page.loadMore();
+      },
+      {
+        rootMargin: "240px 0px"
+      }
+    );
+
+    observer.observe(triggerElement);
+    return () => {
+      observer.disconnect();
+    };
+  }, [canUseIntersectionObserver, page.hasMore, page.isLoading, page.isLoadingMore, page.loadMore]);
+
   const searchOptionsToggleButton = (
     <Button
       type="button"
@@ -216,15 +253,23 @@ export function EntityListPageContent() {
 
         {page.hasMore && (
           <div className="flex justify-center">
-            <Button
-              variant="outline"
-              onClick={() => {
-                void page.loadMore();
-              }}
-              disabled={page.isLoadingMore}
-            >
-              {page.isLoadingMore ? "読み込み中..." : "もっと見る"}
-            </Button>
+            <div ref={canUseIntersectionObserver ? loadMoreTriggerRef : undefined}>
+              {canUseIntersectionObserver ? (
+                <p className="text-sm text-muted-foreground">
+                  {page.isLoadingMore ? "読み込み中..." : "下へスクロールして続きを読み込む"}
+                </p>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    void page.loadMore();
+                  }}
+                  disabled={page.isLoadingMore}
+                >
+                  {page.isLoadingMore ? "読み込み中..." : "もっと見る"}
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </section>
