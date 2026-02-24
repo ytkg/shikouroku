@@ -23,15 +23,29 @@ export function EntityDetailRelatedSection({
       ) : (
         <div className="space-y-2">
           {relatedEntities.map((relatedEntity) => (
-            <div key={relatedEntity.id} className="rounded-lg border border-border/70 bg-card/80 px-3 py-2">
-              <button
-                type="button"
-                className="ui-body-text text-left hover:underline"
-                onClick={() => onSelectRelatedEntity(relatedEntity.id)}
-              >
+            <article
+              key={relatedEntity.id}
+              role="link"
+              tabIndex={0}
+              className="cursor-pointer rounded-lg border border-border/70 bg-card/80 px-3 py-2 transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              onClick={() => onSelectRelatedEntity(relatedEntity.id)}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) {
+                  return;
+                }
+
+                if (event.key !== "Enter" && event.key !== " ") {
+                  return;
+                }
+
+                event.preventDefault();
+                onSelectRelatedEntity(relatedEntity.id);
+              }}
+            >
+              <p className="ui-body-text text-left">
                 {relatedEntity.name}（{relatedEntity.kind.label}）
-              </button>
-            </div>
+              </p>
+            </article>
           ))}
         </div>
       )}
