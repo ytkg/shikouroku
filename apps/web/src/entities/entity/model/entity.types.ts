@@ -15,6 +15,10 @@ export type Entity = {
   description: string | null;
   isWishlist: boolean;
   tags: Tag[];
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
   firstImageUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;

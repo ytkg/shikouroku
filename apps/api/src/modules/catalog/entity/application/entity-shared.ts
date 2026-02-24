@@ -1,4 +1,5 @@
 import type {
+  EntityLocationRecord,
   EntityWithKindAndFirstImageRecord,
   EntityWithKindRecord,
   EntityWithTagsRecord,
@@ -13,6 +14,8 @@ export type UpsertEntityCommand = {
   description: string;
   isWishlist: boolean;
   tagIds: number[];
+  latitude?: number;
+  longitude?: number;
 };
 
 export type EntityResponseDto = {
@@ -22,6 +25,10 @@ export type EntityResponseDto = {
   description: string | null;
   is_wishlist: number;
   tags: TagRecord[];
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
   first_image_url?: string | null;
   created_at: string;
   updated_at: string;
@@ -58,7 +65,8 @@ function toImageFilePath(entityId: string, imageId: string): string {
 export function toEntityResponse(
   entity: EntityWithTagsRecord,
   kind: KindRecord,
-  firstImageId?: string | null
+  firstImageId?: string | null,
+  location?: Pick<EntityLocationRecord, "latitude" | "longitude"> | null
 ): EntityResponseDto {
   return {
     id: entity.id,
@@ -67,6 +75,14 @@ export function toEntityResponse(
     description: entity.description,
     is_wishlist: entity.is_wishlist,
     tags: entity.tags,
+    ...(location
+      ? {
+          location: {
+            latitude: location.latitude,
+            longitude: location.longitude
+          }
+        }
+      : {}),
     ...(firstImageId !== undefined
       ? {
           first_image_url: firstImageId ? toImageFilePath(entity.id, firstImageId) : null

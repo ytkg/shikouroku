@@ -20,6 +20,10 @@ describe("entities.response", () => {
         name: "Clean Code",
         description: null,
         is_wishlist: 1,
+        location: {
+          latitude: 35.68,
+          longitude: 139.77
+        },
         tags: [{ id: 10, name: "read" }],
         created_at: "2026-02-19T00:00:00Z"
       }
@@ -31,6 +35,10 @@ describe("entities.response", () => {
       name: "Clean Code",
       description: null,
       isWishlist: true,
+      location: {
+        latitude: 35.68,
+        longitude: 139.77
+      },
       tags: [{ id: 10, name: "read" }],
       createdAt: "2026-02-19T00:00:00Z",
       updatedAt: undefined

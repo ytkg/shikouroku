@@ -30,6 +30,8 @@ type CreateEntityResult = {
   kindId: string;
   name: string;
   description: string;
+  latitude: string;
+  longitude: string;
   isWishlist: boolean;
   selectedTagIds: number[];
   relatedCandidates: Entity[];
@@ -45,6 +47,8 @@ type CreateEntityResult = {
   setKindId: (value: string) => void;
   setName: (value: string) => void;
   setDescription: (value: string) => void;
+  setLatitude: (value: string) => void;
+  setLongitude: (value: string) => void;
   setIsWishlist: (value: boolean) => void;
   setTagDialogOpen: (open: boolean) => void;
   setRelatedDialogOpen: (open: boolean) => void;
@@ -66,11 +70,64 @@ function toKindId(value: string): number | null {
   return kindId;
 }
 
+const LOCATION_KIND_LABEL = "場所";
+
+type LocationInputResult =
+  | { ok: true; location: { latitude: number; longitude: number } | null }
+  | { ok: false; message: string };
+
+function toCoordinate(value: string): number | null {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    return null;
+  }
+
+  const coordinate = Number.parseFloat(normalized);
+  if (!Number.isFinite(coordinate)) {
+    return null;
+  }
+
+  return coordinate;
+}
+
+function parseLocationInput(latitude: string, longitude: string): LocationInputResult {
+  const hasLatitude = latitude.trim().length > 0;
+  const hasLongitude = longitude.trim().length > 0;
+  if (!hasLatitude && !hasLongitude) {
+    return { ok: true, location: null };
+  }
+  if (!hasLatitude || !hasLongitude) {
+    return { ok: false, message: "緯度と経度は両方入力してください。" };
+  }
+
+  const parsedLatitude = toCoordinate(latitude);
+  const parsedLongitude = toCoordinate(longitude);
+  if (parsedLatitude === null || parsedLongitude === null) {
+    return { ok: false, message: "緯度と経度は数値で入力してください。" };
+  }
+  if (parsedLatitude < -90 || parsedLatitude > 90) {
+    return { ok: false, message: "緯度は -90 から 90 の範囲で入力してください。" };
+  }
+  if (parsedLongitude < -180 || parsedLongitude > 180) {
+    return { ok: false, message: "経度は -180 から 180 の範囲で入力してください。" };
+  }
+
+  return {
+    ok: true,
+    location: {
+      latitude: parsedLatitude,
+      longitude: parsedLongitude
+    }
+  };
+}
+
 export function useCreateEntityForm(): CreateEntityResult {
   const ensureAuthorized = useAuthGuard();
   const [kindId, setKindId] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [isWishlist, setIsWishlist] = useState(false);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [selectedRelatedEntityIds, setSelectedRelatedEntityIds] = useState<string[]>([]);
@@ -160,6 +217,17 @@ export function useCreateEntityForm(): CreateEntityResult {
       setError(errorMessages.kindRequired);
       return null;
     }
+    const selectedKind = kinds.find((kind) => kind.id === parsedKindId);
+    const isLocationKind = selectedKind?.label === LOCATION_KIND_LABEL;
+    const parsedLocation = parseLocationInput(latitude, longitude);
+    if (!parsedLocation.ok) {
+      setError(parsedLocation.message);
+      return null;
+    }
+    if (!isLocationKind && parsedLocation.location) {
+      setError("緯度経度は「場所」のときのみ入力できます。");
+      return null;
+    }
 
     setError(null);
     setSubmitLoading(true);
@@ -169,7 +237,8 @@ export function useCreateEntityForm(): CreateEntityResult {
         name,
         description,
         isWishlist,
-        tagIds: selectedTagIds
+        tagIds: selectedTagIds,
+        ...(isLocationKind && parsedLocation.location ? parsedLocation.location : {})
       });
 
       for (const relatedEntityId of selectedRelatedEntityIds) {
@@ -203,6 +272,8 @@ export function useCreateEntityForm(): CreateEntityResult {
 
       setName("");
       setDescription("");
+      setLatitude("");
+      setLongitude("");
       setIsWishlist(false);
       setSelectedTagIds([]);
       setSelectedRelatedEntityIds([]);
@@ -264,6 +335,8 @@ export function useCreateEntityForm(): CreateEntityResult {
     kindId,
     name,
     description,
+    latitude,
+    longitude,
     isWishlist,
     selectedTagIds,
     relatedCandidates,
@@ -279,6 +352,8 @@ export function useCreateEntityForm(): CreateEntityResult {
     setKindId,
     setName,
     setDescription,
+    setLatitude,
+    setLongitude,
     setIsWishlist,
     setTagDialogOpen,
     setRelatedDialogOpen,

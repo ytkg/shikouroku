@@ -21,6 +21,8 @@ export type CreateEntityInput = {
   description: string;
   isWishlist: boolean;
   tagIds: number[];
+  latitude?: number;
+  longitude?: number;
 };
 
 export type UpdateEntityInput = {
@@ -29,6 +31,8 @@ export type UpdateEntityInput = {
   description: string;
   isWishlist: boolean;
   tagIds: number[];
+  latitude?: number;
+  longitude?: number;
 };
 
 export const ENTITY_SEARCH_FIELDS = ["title", "body", "tags"] as const;

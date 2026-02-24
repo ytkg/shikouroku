@@ -48,6 +48,8 @@ export function CreateEntityPageContent() {
               kindId={form.kindId}
               name={form.name}
               description={form.description}
+              latitude={form.latitude}
+              longitude={form.longitude}
               isWishlist={form.isWishlist}
               selectedTagIds={form.selectedTagIds}
               relatedCandidates={form.relatedCandidates}
@@ -55,6 +57,8 @@ export function CreateEntityPageContent() {
               onKindIdChange={form.setKindId}
               onNameChange={form.setName}
               onDescriptionChange={form.setDescription}
+              onLatitudeChange={form.setLatitude}
+              onLongitudeChange={form.setLongitude}
               onWishlistChange={form.setIsWishlist}
               onToggleTag={form.onToggleTag}
               onOpenTagDialog={() => form.setTagDialogOpen(true)}

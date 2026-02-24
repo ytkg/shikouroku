@@ -3,6 +3,7 @@ import { useAuthStatus } from "@/features/auth";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import { useImagePreviewNavigation } from "../model/use-image-preview-navigation";
 import { EntityDetailImageGallery } from "./entity-detail-image-gallery";
+import { EntityDetailLocationSection } from "./entity-detail-location-section";
 import { EntityDetailPageSkeleton } from "./entity-detail-page-skeleton";
 import { EntityImagePreviewModal } from "./entity-image-preview-modal";
 import { EntityDetailRelatedSection } from "./entity-detail-related-section";
@@ -88,6 +89,12 @@ export function EntityDetailPageContent() {
                     imagesLoading={page.imagesLoading}
                     onSelectImage={imagePreview.openPreview}
                   />
+                  {page.entity.location && (
+                    <EntityDetailLocationSection
+                      latitude={page.entity.location.latitude}
+                      longitude={page.entity.location.longitude}
+                    />
+                  )}
                   <EntityDetailRelatedSection
                     relatedLoading={page.relatedLoading}
                     relatedEntities={page.relatedEntities}

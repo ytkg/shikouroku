@@ -4,6 +4,7 @@ vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1
   countEntitiesWithKindsFromD1: vi.fn(),
   fetchEntityWithTagsFromD1: vi.fn(),
   fetchTagsByEntityIdsFromD1: vi.fn(),
+  findEntityLocationByEntityIdFromD1: vi.fn(),
   findEntityIdByKindAndNameFromD1: vi.fn(),
   findEntityWithKindByIdFromD1: vi.fn(),
   insertEntityWithTagsInD1: vi.fn(),
@@ -19,6 +20,7 @@ import {
   countEntitiesWithKindsFromD1,
   fetchEntityWithTagsFromD1,
   fetchTagsByEntityIdsFromD1,
+  findEntityLocationByEntityIdFromD1,
   findEntityIdByKindAndNameFromD1,
   findEntityWithKindByIdFromD1,
   insertEntityWithTagsInD1,
@@ -31,6 +33,7 @@ const countExistingTagsByIdsMock = vi.fn();
 const countEntitiesWithKindsFromD1Mock = vi.mocked(countEntitiesWithKindsFromD1);
 const fetchEntityWithTagsFromD1Mock = vi.mocked(fetchEntityWithTagsFromD1);
 const fetchTagsByEntityIdsFromD1Mock = vi.mocked(fetchTagsByEntityIdsFromD1);
+const findEntityLocationByEntityIdFromD1Mock = vi.mocked(findEntityLocationByEntityIdFromD1);
 const findEntityIdByKindAndNameFromD1Mock = vi.mocked(findEntityIdByKindAndNameFromD1);
 const findEntityWithKindByIdFromD1Mock = vi.mocked(findEntityWithKindByIdFromD1);
 const insertEntityWithTagsInD1Mock = vi.mocked(insertEntityWithTagsInD1);
@@ -109,6 +112,49 @@ describe("entity module application", () => {
     });
   });
 
+  it("getEntityQuery returns location when entity has location data", async () => {
+    findEntityWithKindByIdFromD1Mock.mockResolvedValue({
+      id: "entity-1",
+      kind_id: 1,
+      kind_label: "場所",
+      name: "Tokyo",
+      description: null,
+      is_wishlist: 0,
+      created_at: "2026-01-01",
+      updated_at: "2026-01-01"
+    } as any);
+    fetchTagsByEntityIdsFromD1Mock.mockResolvedValue(new Map());
+    findEntityLocationByEntityIdFromD1Mock.mockResolvedValue({
+      entity_id: "entity-1",
+      latitude: 35.68,
+      longitude: 139.77,
+      created_at: "2026-01-01",
+      updated_at: "2026-01-01"
+    } as any);
+
+    const result = await getEntityQuery({} as D1Database, "entity-1");
+
+    expect(result).toEqual({
+      ok: true,
+      data: {
+        entity: {
+          id: "entity-1",
+          kind: { id: 1, label: "場所" },
+          name: "Tokyo",
+          description: null,
+          is_wishlist: 0,
+          tags: [],
+          location: {
+            latitude: 35.68,
+            longitude: 139.77
+          },
+          created_at: "2026-01-01",
+          updated_at: "2026-01-01"
+        }
+      }
+    });
+  });
+
   it("createEntityCommand returns failure when entity/tag batch insert fails", async () => {
     const db = {} as D1Database;
     const randomUUIDSpy = vi.spyOn(crypto, "randomUUID").mockReturnValue("entity-new");
@@ -151,6 +197,27 @@ describe("entity module application", () => {
     });
   });
 
+  it("createEntityCommand returns 400 when location is sent for non-location kind", async () => {
+    findKindByIdMock.mockResolvedValue({ id: 2, label: "商品" } as any);
+
+    const result = await createEntityCommand({} as D1Database, kindRepository, tagRepository, {
+      kindId: 2,
+      name: "DDD",
+      description: "",
+      isWishlist: false,
+      tagIds: [],
+      latitude: 35.68,
+      longitude: 139.77
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      status: 400,
+      message: "latitude and longitude are allowed only for location kind"
+    });
+    expect(insertEntityWithTagsInD1Mock).not.toHaveBeenCalled();
+  });
+
   it("updateEntityCommand returns conflict when another entity has same kind/name", async () => {
     findKindByIdMock.mockResolvedValue({ id: 1, label: "Book" } as any);
     findEntityIdByKindAndNameFromD1Mock.mockResolvedValue({ id: "entity-other" } as any);
@@ -189,6 +256,27 @@ describe("entity module application", () => {
       status: 404,
       message: "entity not found"
     });
+  });
+
+  it("updateEntityCommand returns 400 when location is sent for non-location kind", async () => {
+    findKindByIdMock.mockResolvedValue({ id: 2, label: "商品" } as any);
+
+    const result = await updateEntityCommand({} as D1Database, kindRepository, tagRepository, "entity-1", {
+      kindId: 2,
+      name: "DDD",
+      description: "",
+      isWishlist: false,
+      tagIds: [],
+      latitude: 35.68,
+      longitude: 139.77
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      status: 400,
+      message: "latitude and longitude are allowed only for location kind"
+    });
+    expect(updateEntityWithTagsInD1Mock).not.toHaveBeenCalled();
   });
 
   it("updateEntityCommand returns entity after successful update", async () => {

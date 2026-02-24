@@ -34,6 +34,14 @@ export type EntityTagRecord = {
 
 export type EntityWithTagsRecord = EntityRecord & { tags: TagRecord[] };
 
+export type EntityLocationRecord = {
+  entity_id: string;
+  latitude: number;
+  longitude: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type EntityImageRecord = {
   id: string;
   entity_id: string;

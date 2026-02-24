@@ -16,6 +16,10 @@ const detailSummarySectionPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/detail/ui/entity-detail-summary-section.tsx"
 );
+const detailLocationSectionPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/detail/ui/entity-detail-location-section.tsx"
+);
 const detailRelatedSectionPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/detail/ui/entity-detail-related-section.tsx"
@@ -42,6 +46,7 @@ describe("entity empty sections", () => {
     const detailSource = fs.readFileSync(detailPagePath, "utf-8");
     const imageGallerySource = fs.readFileSync(detailImageGalleryPath, "utf-8");
     const summarySource = fs.readFileSync(detailSummarySectionPath, "utf-8");
+    const locationSource = fs.readFileSync(detailLocationSectionPath, "utf-8");
     const relatedSource = fs.readFileSync(detailRelatedSectionPath, "utf-8");
 
     expect(detailSource).not.toContain("（タグなし）");
@@ -50,9 +55,12 @@ describe("entity empty sections", () => {
     expect(relatedSource).not.toContain("（関連なし）");
     expect(imageGallerySource).not.toContain("（画像なし）");
     expect(summarySource).toContain("entity.tags.length > 0 &&");
+    expect(locationSource).toContain("緯度:");
+    expect(locationSource).toContain("経度:");
     expect(relatedSource).toContain("!relatedLoading && relatedEntities.length === 0");
     expect(detailSource).toContain("<EntityDetailSummarySection");
     expect(detailSource).toContain("<EntityDetailImageGallery");
+    expect(detailSource).toContain("<EntityDetailLocationSection");
     expect(detailSource).toContain("<EntityDetailRelatedSection");
     expect(detailSource).toContain("const { data: isAuthenticated } = useAuthStatus();");
     expect(detailSource).toContain("isAuthenticated ? <Button onClick={() => navigate(editPath)}>編集</Button> : undefined");

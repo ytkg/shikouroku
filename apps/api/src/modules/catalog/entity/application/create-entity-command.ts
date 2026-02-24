@@ -16,6 +16,8 @@ import {
   type UpsertEntityCommand
 } from "./entity-shared";
 
+const LOCATION_KIND_LABEL = "場所";
+
 export async function createEntityCommand(
   db: D1Database,
   kindRepository: Pick<KindRepository, "findKindById">,
@@ -27,6 +29,11 @@ export async function createEntityCommand(
   const kind = await kindRepository.findKindById(body.kindId);
   if (!kind) {
     return fail(400, "kind not found");
+  }
+
+  const hasLocation = body.latitude !== undefined && body.longitude !== undefined;
+  if (hasLocation && kind.label !== LOCATION_KIND_LABEL) {
+    return fail(400, "latitude and longitude are allowed only for location kind");
   }
 
   const duplicated = await findEntityIdByKindAndNameFromD1(db, body.kindId, body.name);
@@ -47,7 +54,8 @@ export async function createEntityCommand(
       kindId: body.kindId,
       name: body.name,
       description: toDescription(body.description),
-      isWishlistFlag: toWishlistFlag(body.isWishlist)
+      isWishlistFlag: toWishlistFlag(body.isWishlist),
+      ...(hasLocation ? { latitude: body.latitude, longitude: body.longitude } : {})
     },
     normalizedTagIds
   );

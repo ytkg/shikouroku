@@ -74,6 +74,14 @@ function parseTag(value: unknown, path: string): Tag {
   };
 }
 
+function parseLocation(value: unknown, path: string): { latitude: number; longitude: number } {
+  const location = expectObject(value, path);
+  return {
+    latitude: expectNumber(location.latitude, `${path}.latitude`),
+    longitude: expectNumber(location.longitude, `${path}.longitude`)
+  };
+}
+
 function parseEntity(value: unknown, path: string): Entity {
   const entity = expectObject(value, path);
   const tagsValue = entity.tags;
@@ -81,6 +89,7 @@ function parseEntity(value: unknown, path: string): Entity {
     entity.first_image_url,
     `${path}.first_image_url`
   );
+  const location = entity.location === undefined ? undefined : parseLocation(entity.location, `${path}.location`);
   const tags =
     tagsValue === undefined
       ? []
@@ -95,6 +104,7 @@ function parseEntity(value: unknown, path: string): Entity {
     description: expectNullableString(entity.description, `${path}.description`),
     isWishlist: expectWishlistFlag(entity.is_wishlist, `${path}.is_wishlist`),
     tags,
+    ...(location !== undefined ? { location } : {}),
     ...(firstImageUrl !== undefined ? { firstImageUrl } : {}),
     createdAt: expectOptionalString(entity.created_at, `${path}.created_at`),
     updatedAt: expectOptionalString(entity.updated_at, `${path}.updated_at`)

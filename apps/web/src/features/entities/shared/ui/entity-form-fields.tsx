@@ -1,11 +1,13 @@
 import type { ReactNode } from "react";
 import type { Entity, Kind, Tag } from "@/entities/entity";
 import { EntityBasicFields } from "./entity-basic-fields";
+import { EntityLocationFields } from "./entity-location-fields";
 import { EntityRelatedField } from "./entity-related-field";
 import { EntityTagField } from "./entity-tag-field";
 import { SelectablePillCheckbox } from "./selectable-pill-checkbox";
 
 type RelatedCandidate = Pick<Entity, "id" | "name" | "kind">;
+const LOCATION_KIND_LABEL = "場所";
 
 type EntityFormFieldsProps = {
   kinds: Kind[];
@@ -13,11 +15,15 @@ type EntityFormFieldsProps = {
   kindId: string;
   name: string;
   description: string;
+  latitude: string;
+  longitude: string;
   isWishlist: boolean;
   selectedTagIds: number[];
   onKindIdChange: (value: string) => void;
   onNameChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
+  onLatitudeChange: (value: string) => void;
+  onLongitudeChange: (value: string) => void;
   onWishlistChange: (checked: boolean) => void;
   onToggleTag: (tagId: number, checked: boolean) => void;
   onOpenTagDialog: () => void;
@@ -34,11 +40,15 @@ export function EntityFormFields({
   kindId,
   name,
   description,
+  latitude,
+  longitude,
   isWishlist,
   selectedTagIds,
   onKindIdChange,
   onNameChange,
   onDescriptionChange,
+  onLatitudeChange,
+  onLongitudeChange,
   onWishlistChange,
   onToggleTag,
   onOpenTagDialog,
@@ -52,6 +62,8 @@ export function EntityFormFields({
     relatedCandidates !== undefined &&
     selectedRelatedEntityIds !== undefined &&
     onOpenRelatedDialog !== undefined;
+  const selectedKind = kinds.find((kind) => String(kind.id) === kindId);
+  const showLocationFields = selectedKind?.label === LOCATION_KIND_LABEL;
 
   return (
     <>
@@ -72,6 +84,14 @@ export function EntityFormFields({
         onOpenTagDialog={onOpenTagDialog}
       />
       {imageFieldContent}
+      {showLocationFields && (
+        <EntityLocationFields
+          latitude={latitude}
+          longitude={longitude}
+          onLatitudeChange={onLatitudeChange}
+          onLongitudeChange={onLongitudeChange}
+        />
+      )}
       {hasRelatedEditor && (
         <EntityRelatedField
           relatedCandidates={relatedCandidates}

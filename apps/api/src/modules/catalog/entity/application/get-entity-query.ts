@@ -1,5 +1,6 @@
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
+  findEntityLocationByEntityIdFromD1,
   fetchTagsByEntityIdsFromD1,
   findEntityWithKindByIdFromD1
 } from "../infra/entity-repository-d1";
@@ -15,11 +16,14 @@ export async function getEntityQuery(
   }
 
   const tagsByEntity = await fetchTagsByEntityIdsFromD1(db, [id]);
+  const location = await findEntityLocationByEntityIdFromD1(db, id);
 
   return success({
     entity: toEntityResponse(
       toEntityWithTagsRecord(entity, tagsByEntity.get(id) ?? []),
-      { id: entity.kind_id, label: entity.kind_label }
+      { id: entity.kind_id, label: entity.kind_label },
+      undefined,
+      location
     )
   });
 }

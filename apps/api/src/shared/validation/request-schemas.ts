@@ -14,7 +14,21 @@ export const entityBodySchema = z.object({
   name: z.string().trim().min(1),
   description: z.string().trim().optional().default(""),
   isWishlist: z.boolean().optional().default(false),
-  tagIds: z.array(z.number().int().positive()).optional().default([])
+  tagIds: z.array(z.number().int().positive()).optional().default([]),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional()
+}).superRefine((value, ctx) => {
+  const hasLatitude = value.latitude !== undefined;
+  const hasLongitude = value.longitude !== undefined;
+  if (hasLatitude === hasLongitude) {
+    return;
+  }
+
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: [hasLatitude ? "longitude" : "latitude"],
+    message: "latitude and longitude must be provided together"
+  });
 });
 
 export const relatedEntityBodySchema = z.object({
@@ -35,6 +49,8 @@ const VALIDATION_MESSAGE_MAP: Record<string, string> = {
   kindId: "kindId is required",
   name: "name is required",
   tagIds: "tagIds is invalid",
+  latitude: "latitude is invalid",
+  longitude: "longitude is invalid",
   relatedEntityId: "relatedEntityId is required",
   orderedImageIds: "orderedImageIds is invalid",
   username: "username is required",

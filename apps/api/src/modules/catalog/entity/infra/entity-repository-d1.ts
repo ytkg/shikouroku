@@ -1,4 +1,5 @@
 import type {
+  EntityLocationRecord,
   EntityRecord,
   EntityTagRecord,
   EntityWithKindAndFirstImageRecord,
@@ -15,6 +16,8 @@ export type InsertEntityInput = {
   name: string;
   description: string | null;
   isWishlistFlag: number;
+  latitude?: number;
+  longitude?: number;
 };
 
 export type UpdateEntityInput = {
@@ -23,6 +26,8 @@ export type UpdateEntityInput = {
   name: string;
   description: string | null;
   isWishlistFlag: number;
+  latitude?: number;
+  longitude?: number;
 };
 
 type EntitySearchMatch = "partial" | "prefix" | "exact";
@@ -221,6 +226,23 @@ export async function findEntityWithKindByIdFromD1(
   return entity ?? null;
 }
 
+export async function findEntityLocationByEntityIdFromD1(
+  db: D1Database,
+  entityId: string
+): Promise<EntityLocationRecord | null> {
+  const location = await db
+    .prepare(
+      `SELECT entity_id, latitude, longitude, created_at, updated_at
+       FROM entity_locations
+       WHERE entity_id = ?
+       LIMIT 1`
+    )
+    .bind(entityId)
+    .first<EntityLocationRecord>();
+
+  return location ?? null;
+}
+
 export async function fetchEntitiesWithKindsByIdsFromD1(
   db: D1Database,
   ids: string[]
@@ -282,6 +304,20 @@ export async function insertEntityWithTagsInD1(
     ),
     ...tagIds.map((tagId) => db.prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)").bind(input.id, tagId))
   ];
+  if (input.latitude !== undefined && input.longitude !== undefined) {
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO entity_locations (entity_id, latitude, longitude)
+           VALUES (?, ?, ?)
+           ON CONFLICT(entity_id) DO UPDATE SET
+             latitude = excluded.latitude,
+             longitude = excluded.longitude,
+             updated_at = CURRENT_TIMESTAMP`
+        )
+        .bind(input.id, input.latitude, input.longitude)
+    );
+  }
 
   const results = await runD1UnitOfWork(db, statements);
   return results ? isSuccessfulD1UnitOfWork(results) : false;
@@ -322,8 +358,23 @@ export async function updateEntityWithTagsInD1(
       )
       .bind(input.kindId, input.name, input.description, input.isWishlistFlag, input.id),
     db.prepare("DELETE FROM entity_tags WHERE entity_id = ?").bind(input.id),
-    ...tagIds.map((tagId) => db.prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)").bind(input.id, tagId))
+    ...tagIds.map((tagId) => db.prepare("INSERT INTO entity_tags (entity_id, tag_id) VALUES (?, ?)").bind(input.id, tagId)),
+    db.prepare("DELETE FROM entity_locations WHERE entity_id = ?").bind(input.id)
   ];
+  if (input.latitude !== undefined && input.longitude !== undefined) {
+    statements.push(
+      db
+        .prepare(
+          `INSERT INTO entity_locations (entity_id, latitude, longitude)
+           VALUES (?, ?, ?)
+           ON CONFLICT(entity_id) DO UPDATE SET
+             latitude = excluded.latitude,
+             longitude = excluded.longitude,
+             updated_at = CURRENT_TIMESTAMP`
+        )
+        .bind(input.id, input.latitude, input.longitude)
+    );
+  }
 
   const results = await runD1UnitOfWork(db, statements);
   if (!results || !isSuccessfulD1UnitOfWork(results)) {

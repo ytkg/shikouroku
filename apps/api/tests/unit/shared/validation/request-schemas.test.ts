@@ -34,6 +34,34 @@ describe("validationMessage", () => {
     expect(validationMessage(parsed.error)).toBe("tagIds is invalid");
   });
 
+  it("maps known latitude field errors", () => {
+    const parsed = entityBodySchema.safeParse({
+      kindId: 1,
+      name: "Entity",
+      latitude: "bad"
+    });
+    expect(parsed.success).toBe(false);
+    if (parsed.success) {
+      return;
+    }
+
+    expect(validationMessage(parsed.error)).toBe("latitude is invalid");
+  });
+
+  it("fails when only latitude is provided", () => {
+    const parsed = entityBodySchema.safeParse({
+      kindId: 1,
+      name: "Entity",
+      latitude: 35.6
+    });
+    expect(parsed.success).toBe(false);
+    if (parsed.success) {
+      return;
+    }
+
+    expect(validationMessage(parsed.error)).toBe("longitude is invalid");
+  });
+
   it("returns default message for unknown field errors", () => {
     const schema = z.object({
       nested: z.object({

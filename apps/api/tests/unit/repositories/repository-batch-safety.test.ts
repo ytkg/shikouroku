@@ -64,8 +64,9 @@ describe("repository batch safety", () => {
     expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(3);
   });
 
-  it("updateEntityWithTagsInD1 executes update and tag replacement in a single batch", async () => {
+  it("updateEntityWithTagsInD1 executes update, tag replacement and location cleanup in a single batch", async () => {
     const { db, batch } = createMockDb([
+      { success: true, meta: {} },
       { success: true, meta: {} },
       { success: true, meta: {} },
       { success: true, meta: {} }
@@ -85,7 +86,35 @@ describe("repository batch safety", () => {
 
     expect(result).toBe("updated");
     expect(batch).toHaveBeenCalledTimes(1);
-    expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(3);
+    expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(4);
+  });
+
+  it("updateEntityWithTagsInD1 recreates location when coordinates are provided", async () => {
+    const { db, batch } = createMockDb([
+      { success: true, meta: {} },
+      { success: true, meta: {} },
+      { success: true, meta: {} },
+      { success: true, meta: {} },
+      { success: true, meta: {} }
+    ]);
+
+    const result = await updateEntityWithTagsInD1(
+      db,
+      {
+        id: "entity-1",
+        kindId: 1,
+        name: "DDD",
+        description: null,
+        isWishlistFlag: 0,
+        latitude: 35.68,
+        longitude: 139.77
+      },
+      [10]
+    );
+
+    expect(result).toBe("updated");
+    expect(batch).toHaveBeenCalledTimes(1);
+    expect((batch.mock.calls[0]?.[0] as unknown[]).length).toBe(5);
   });
 
   it("updateEntityWithTagsInD1 returns not_found without batch when entity is missing", async () => {
