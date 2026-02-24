@@ -4,11 +4,16 @@ import { loginBodySchema } from "../../shared/validation/request-schemas";
 import { parseJsonBody } from "../../shared/http/parse-json-body";
 import { loginCommand } from "../../modules/auth/application/login-command";
 import { createHttpAuthGateway } from "../../modules/auth/infra/auth-gateway-http";
+import { shouldUseSecureCookies } from "../../shared/http/auth-cookies";
 import { jsonOk } from "../../shared/http/api-response";
 import { clearAuthCookies, setAuthCookies, useCaseError } from "./shared";
 
 export function createAuthRoutes(): Hono<AppEnv> {
   const auth = new Hono<AppEnv>();
+
+  auth.get("/auth/me", (c) => {
+    return jsonOk(c, { authenticated: true });
+  });
 
   auth.post("/login", async (c) => {
     const parsedBody = await parseJsonBody(c, loginBodySchema);
@@ -23,13 +28,15 @@ export function createAuthRoutes(): Hono<AppEnv> {
     }
 
     const response = jsonOk(c, {});
-    setAuthCookies(response, result.data.accessToken, result.data.refreshToken);
+    const secure = shouldUseSecureCookies(c.req.raw);
+    setAuthCookies(response, result.data.accessToken, result.data.refreshToken, secure);
     return response;
   });
 
   auth.post("/logout", (c) => {
     const response = jsonOk(c, {});
-    clearAuthCookies(response);
+    const secure = shouldUseSecureCookies(c.req.raw);
+    clearAuthCookies(response, secure);
     return response;
   });
 

@@ -30,9 +30,13 @@ function createApp() {
   const app = new Hono<AppEnv>();
   app.use("*", authSessionMiddleware);
   app.post("/api/login", (c) => c.json({ ok: true }));
-  app.get("/api/protected", (c) => c.json({ ok: true }));
+  app.get("/api/kinds", (c) => c.json({ ok: true }));
+  app.get("/api/maintenance/image-cleanup/tasks", (c) => c.json({ ok: true }));
+  app.post("/api/entities", (c) => c.json({ ok: true }));
   app.get("/api/immutable", () => Response.redirect("http://localhost/asset", 302));
   app.get("/login", (c) => c.text("login page"));
+  app.get("/entities/new", (c) => c.text("new entity page"));
+  app.get("/entities/:id/edit", (c) => c.text("edit entity page"));
   app.get("/", (c) => c.text("home"));
   return app;
 }
@@ -53,12 +57,23 @@ describe("authSessionMiddleware", () => {
     await expect(response.json()).resolves.toEqual({ ok: true });
   });
 
-  it("returns 401 for protected api without valid token", async () => {
+  it("allows anonymous read api without valid token", async () => {
     const app = createApp();
     verifyTokenQueryMock.mockResolvedValue(false);
     refreshTokenCommandMock.mockResolvedValue({ ok: false, status: 401, message: "Invalid refresh token" });
 
-    const response = await app.request("http://localhost/api/protected", { method: "GET" }, TEST_ENV);
+    const response = await app.request("http://localhost/api/kinds", { method: "GET" }, TEST_ENV);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true });
+  });
+
+  it("returns 401 for write api without valid token", async () => {
+    const app = createApp();
+    verifyTokenQueryMock.mockResolvedValue(false);
+    refreshTokenCommandMock.mockResolvedValue({ ok: false, status: 401, message: "Invalid refresh token" });
+
+    const response = await app.request("http://localhost/api/entities", { method: "POST" }, TEST_ENV);
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toMatchObject({
@@ -69,6 +84,27 @@ describe("authSessionMiddleware", () => {
       }
     });
     expect(response.headers.get("set-cookie")).toContain("shikouroku_token=");
+  });
+
+  it("returns 401 for maintenance read api without valid token", async () => {
+    const app = createApp();
+    verifyTokenQueryMock.mockResolvedValue(false);
+    refreshTokenCommandMock.mockResolvedValue({ ok: false, status: 401, message: "Invalid refresh token" });
+
+    const response = await app.request(
+      "http://localhost/api/maintenance/image-cleanup/tasks",
+      { method: "GET" },
+      TEST_ENV
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      ok: false,
+      error: {
+        code: "UNAUTHORIZED",
+        message: "unauthorized"
+      }
+    });
   });
 
   it("redirects authenticated user from /login to /", async () => {
@@ -90,13 +126,23 @@ describe("authSessionMiddleware", () => {
     expect(response.headers.get("location")).toBe("/");
   });
 
-  it("redirects unauthenticated dotted route path to /login", async () => {
+  it("redirects unauthenticated new page to /login with returnTo", async () => {
     const app = createApp();
 
-    const response = await app.request("http://localhost/profile.v2/edit", { method: "GET" }, TEST_ENV);
+    const response = await app.request("http://localhost/entities/new?draft=true", { method: "GET" }, TEST_ENV);
 
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("/login");
+    expect(response.headers.get("location")).toBe("/login?returnTo=%2Fentities%2Fnew%3Fdraft%3Dtrue");
+    expect(response.headers.get("set-cookie")).toContain("shikouroku_token=");
+  });
+
+  it("redirects unauthenticated edit page to /login with returnTo", async () => {
+    const app = createApp();
+
+    const response = await app.request("http://localhost/entities/entity-1/edit", { method: "GET" }, TEST_ENV);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("/login?returnTo=%2Fentities%2Fentity-1%2Fedit");
     expect(response.headers.get("set-cookie")).toContain("shikouroku_token=");
   });
 

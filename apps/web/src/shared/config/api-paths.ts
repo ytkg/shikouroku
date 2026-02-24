@@ -1,11 +1,13 @@
 import { encodePathSegment } from "@/shared/lib/url";
 
 export const apiPaths = {
+  authMe: "/api/auth/me",
   login: "/api/login",
   logout: "/api/logout",
   kinds: "/api/kinds",
   tags: "/api/tags",
-  entities: "/api/entities"
+  entities: "/api/entities",
+  maintenanceImageCleanupTasks: "/api/maintenance/image-cleanup/tasks"
 } as const;
 
 export function getTagPath(tagId: number): string {
@@ -38,4 +40,10 @@ export function getEntityImageFilePath(entityId: string, imageId: string): strin
 
 export function getEntityImageOrderPath(entityId: string): string {
   return `${getEntityImagesPath(entityId)}/order`;
+}
+
+export function getMaintenanceImageCleanupTasksPath(limit: number): string {
+  const params = new URLSearchParams();
+  params.set("limit", String(limit));
+  return `${apiPaths.maintenanceImageCleanupTasks}?${params.toString()}`;
 }

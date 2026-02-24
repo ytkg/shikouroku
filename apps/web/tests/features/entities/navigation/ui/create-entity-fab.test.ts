@@ -19,8 +19,11 @@ describe("create entity fab", () => {
   it("FAB は /login・/entities/new・編集画面で非表示になり、/entities/new へ遷移する", () => {
     const source = fs.readFileSync(fabPath, "utf-8");
 
+    expect(source).toContain("const { data: isAuthenticated } = useAuthStatus();");
     expect(source).toContain("matchPath(routePaths.entityEditPattern, pathname)");
-    expect(source).toContain("pathname === routePaths.login || pathname === routePaths.newEntity || isEditPage");
+    expect(source).toContain("isAuthenticated !== true ||");
+    expect(source).toContain("pathname === routePaths.login ||");
+    expect(source).toContain("pathname === routePaths.newEntity ||");
     expect(source).toContain("return null;");
     expect(source).toContain("to={routePaths.newEntity}");
     expect(source).toContain("aria-label=\"嗜好を追加\"");

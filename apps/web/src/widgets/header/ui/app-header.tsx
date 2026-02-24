@@ -1,20 +1,21 @@
 import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { logout as logoutRequest } from "@/features/auth";
+import { Link, useNavigate } from "react-router-dom";
+import { logout as logoutRequest, useAuthStatus } from "@/features/auth";
+import { useAuthStatusActions } from "@/features/auth/model";
 import { routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 
 export function AppHeader() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { setUnauthenticated } = useAuthStatusActions();
   const drawerRef = useRef<HTMLDivElement | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerRendered, setDrawerRendered] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const showMenu = location.pathname !== routePaths.login;
+  const { data: isAuthenticated } = useAuthStatus();
 
   useEffect(() => {
     setMounted(true);
@@ -22,12 +23,6 @@ export function AppHeader() {
       setMounted(false);
     };
   }, []);
-
-  useEffect(() => {
-    if (!showMenu) {
-      setDrawerOpen(false);
-    }
-  }, [showMenu]);
 
   useEffect(() => {
     if (drawerOpen) {
@@ -127,6 +122,7 @@ export function AppHeader() {
   const logout = async () => {
     setDrawerOpen(false);
     await logoutRequest().catch(() => undefined);
+    await setUnauthenticated();
     navigate(routePaths.login, { replace: true });
   };
 
@@ -136,24 +132,21 @@ export function AppHeader() {
         <Link to={routePaths.home} className="text-lg font-semibold tracking-wide">
           <img src="/logo.png" alt="嗜好録" className="h-8 w-auto" />
         </Link>
-        {showMenu && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setDrawerOpen(true);
-            }}
-            aria-label="メニューを開く"
-            aria-haspopup="dialog"
-            aria-expanded={drawerOpen}
-            aria-controls="app-navigation-drawer"
-          >
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            setDrawerOpen(true);
+          }}
+          aria-label="メニューを開く"
+          aria-haspopup="dialog"
+          aria-expanded={drawerOpen}
+          aria-controls="app-navigation-drawer"
+        >
+          <Menu className="h-5 w-5" aria-hidden="true" />
+        </Button>
       </div>
-      {showMenu &&
-        drawerRendered &&
+      {drawerRendered &&
         mounted &&
         createPortal(
           <div
@@ -191,15 +184,30 @@ export function AppHeader() {
                 </Button>
               </div>
               <div className="flex flex-1 flex-col px-4 py-3">
-                <div className="mt-auto border-t pt-3">
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={logout}
-                  >
-                    ログアウト
-                  </Button>
-                </div>
+                {isAuthenticated ? (
+                  <div className="mt-auto border-t pt-3">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={logout}
+                    >
+                      ログアウト
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-auto border-t pt-3">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                      }}
+                    >
+                      <Link to={routePaths.login}>ログイン</Link>
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>,

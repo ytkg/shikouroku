@@ -1,4 +1,5 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useAuthStatus } from "@/features/auth";
 import { useEntityDetailPage } from "../model/use-entity-detail-page";
 import { useImagePreviewNavigation } from "../model/use-image-preview-navigation";
 import { EntityDetailImageGallery } from "./entity-detail-image-gallery";
@@ -24,6 +25,7 @@ export function EntityDetailPageContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { entityId } = useParams<{ entityId: string }>();
+  const { data: isAuthenticated } = useAuthStatus();
   const page = useEntityDetailPage(entityId);
   const imagePreview = useImagePreviewNavigation(page.images);
   const editPath = entityId ? getEntityEditPath(entityId) : routePaths.home;
@@ -102,7 +104,9 @@ export function EntityDetailPageContent() {
               一覧へ戻る
             </Button>
           }
-          rightAction={<Button onClick={() => navigate(editPath)}>編集</Button>}
+          rightAction={
+            isAuthenticated ? <Button onClick={() => navigate(editPath)}>編集</Button> : undefined
+          }
         />
       </main>
       <EntityImagePreviewModal

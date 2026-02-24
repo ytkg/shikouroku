@@ -16,16 +16,19 @@ import {
   getEntityPath,
   getEntityRelatedPath,
   getEntityRelationPath,
+  getMaintenanceImageCleanupTasksPath,
   getTagPath
 } from "@/shared/config/api-paths";
 
 describe("api-paths", () => {
   it("固定APIパス定数が期待値を持つ", () => {
+    expect(apiPaths.authMe).toBe("/api/auth/me");
     expect(apiPaths.login).toBe("/api/login");
     expect(apiPaths.logout).toBe("/api/logout");
     expect(apiPaths.kinds).toBe("/api/kinds");
     expect(apiPaths.tags).toBe("/api/tags");
     expect(apiPaths.entities).toBe("/api/entities");
+    expect(apiPaths.maintenanceImageCleanupTasks).toBe("/api/maintenance/image-cleanup/tasks");
   });
 
   it("動的APIパスを生成できる", () => {
@@ -37,6 +40,7 @@ describe("api-paths", () => {
     expect(getEntityImagePath("entity-1", "img-1")).toBe("/api/entities/entity-1/images/img-1");
     expect(getEntityImageFilePath("entity-1", "img-1")).toBe("/api/entities/entity-1/images/img-1/file");
     expect(getEntityImageOrderPath("entity-1")).toBe("/api/entities/entity-1/images/order");
+    expect(getMaintenanceImageCleanupTasksPath(20)).toBe("/api/maintenance/image-cleanup/tasks?limit=20");
   });
 
   it("entityIdの特殊文字をURLエンコードする", () => {

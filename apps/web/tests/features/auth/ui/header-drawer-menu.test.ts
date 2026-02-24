@@ -32,7 +32,11 @@ describe("header drawer menu", () => {
     const headerSource = fs.readFileSync(headerPath, "utf-8");
     const footerSource = fs.readFileSync(footerPath, "utf-8");
 
+    expect(headerSource).toContain("const { data: isAuthenticated } = useAuthStatus();");
+    expect(headerSource).not.toContain("const showMenu");
     expect(headerSource).toContain("mt-auto border-t pt-3");
+    expect(headerSource).toContain("{isAuthenticated ? (");
+    expect(headerSource).toContain("<Link to={routePaths.login}>ログイン</Link>");
     expect(headerSource).toContain("onClick={logout}");
     expect(headerSource).toContain("await logoutRequest().catch(() => undefined);");
     expect(headerSource).toContain("navigate(routePaths.login, { replace: true });");

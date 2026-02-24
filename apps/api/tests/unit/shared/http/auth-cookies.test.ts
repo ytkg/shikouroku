@@ -5,7 +5,8 @@ import {
   getAccessTokenFromCookie,
   getRefreshTokenFromCookie,
   makeAccessTokenCookie,
-  makeRefreshTokenCookie
+  makeRefreshTokenCookie,
+  shouldUseSecureCookies
 } from "../../../../src/shared/http/auth-cookies";
 
 describe("auth-cookies", () => {
@@ -53,5 +54,25 @@ describe("auth-cookies", () => {
     expect(clearRefreshTokenCookie()).toBe(
       "shikouroku_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0"
     );
+  });
+
+  it("builds non-secure auth cookies when secure=false", () => {
+    expect(makeAccessTokenCookie("access-token", false)).toBe(
+      "shikouroku_token=access-token; Path=/; HttpOnly; SameSite=Lax; Max-Age=900"
+    );
+    expect(makeRefreshTokenCookie("refresh-token", false)).toBe(
+      "shikouroku_refresh_token=refresh-token; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800"
+    );
+    expect(clearAccessTokenCookie(false)).toBe(
+      "shikouroku_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+    );
+    expect(clearRefreshTokenCookie(false)).toBe(
+      "shikouroku_refresh_token=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0"
+    );
+  });
+
+  it("chooses secure cookie by request protocol", () => {
+    expect(shouldUseSecureCookies(new Request("https://example.test"))).toBe(true);
+    expect(shouldUseSecureCookies(new Request("http://localhost:8787"))).toBe(false);
   });
 });

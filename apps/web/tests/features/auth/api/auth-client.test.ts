@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { login, logout } from "@/entities/auth";
+import { checkAuthenticated, login, logout } from "@/entities/auth";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
 
 afterEach(() => {
@@ -38,5 +38,27 @@ describe("auth.client", () => {
       status: 502,
       code: INVALID_API_RESPONSE_CODE
     });
+  });
+
+  it("checkAuthenticated は認証済みで true を返す", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ ok: true, authenticated: true }), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      })
+    );
+
+    await expect(checkAuthenticated()).resolves.toBe(true);
+  });
+
+  it("checkAuthenticated は401で false を返す", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ ok: false, error: { code: "UNAUTHORIZED", message: "unauthorized" } }), {
+        status: 401,
+        headers: { "content-type": "application/json" }
+      })
+    );
+
+    await expect(checkAuthenticated()).resolves.toBe(false);
   });
 });

@@ -8,30 +8,37 @@ import {
   getAccessTokenFromCookie,
   getRefreshTokenFromCookie,
   makeAccessTokenCookie,
-  makeRefreshTokenCookie
+  makeRefreshTokenCookie,
+  shouldUseSecureCookies
 } from "../shared/http/auth-cookies";
 import { isStaticAssetPath } from "../shared/http/asset-path";
 import { refreshTokenCommand } from "../modules/auth/application/refresh-token-command";
 import { verifyTokenQuery } from "../modules/auth/application/verify-token-query";
 import { jsonError } from "../shared/http/api-response";
 import { toMutableResponse } from "../shared/http/mutable-response";
+import {
+  buildLoginPathWithReturnTo,
+  canAccessApiWithoutAuth,
+  isAuthRequiredSpaPath
+} from "./auth-session-rules";
 
-function setAuthCookies(response: Response, accessToken: string, refreshToken: string): Response {
+function setAuthCookies(response: Response, accessToken: string, refreshToken: string, secure: boolean): Response {
   const mutableResponse = toMutableResponse(response);
-  mutableResponse.headers.append("Set-Cookie", makeAccessTokenCookie(accessToken));
-  mutableResponse.headers.append("Set-Cookie", makeRefreshTokenCookie(refreshToken));
+  mutableResponse.headers.append("Set-Cookie", makeAccessTokenCookie(accessToken, secure));
+  mutableResponse.headers.append("Set-Cookie", makeRefreshTokenCookie(refreshToken, secure));
   return mutableResponse;
 }
 
-function clearAuthCookies(response: Response): Response {
+function clearAuthCookies(response: Response, secure: boolean): Response {
   const mutableResponse = toMutableResponse(response);
-  mutableResponse.headers.append("Set-Cookie", clearAccessTokenCookie());
-  mutableResponse.headers.append("Set-Cookie", clearRefreshTokenCookie());
+  mutableResponse.headers.append("Set-Cookie", clearAccessTokenCookie(secure));
+  mutableResponse.headers.append("Set-Cookie", clearRefreshTokenCookie(secure));
   return mutableResponse;
 }
 
 export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) => {
   const pathname = c.req.path;
+  const secure = shouldUseSecureCookies(c.req.raw);
   const authGateway = createHttpAuthGateway(c.env.AUTH_BASE_URL);
   const accessToken = getAccessTokenFromCookie(c.req.raw);
   const refreshToken = getRefreshTokenFromCookie(c.req.raw);
@@ -47,19 +54,14 @@ export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) 
   }
 
   if (pathname.startsWith("/api/")) {
-    if (pathname === "/api/login") {
-      await next();
-      return;
-    }
-
-    if (!hasValidToken) {
+    if (!hasValidToken && !canAccessApiWithoutAuth(c.req.method, pathname)) {
       const response = jsonError(c, 401, "UNAUTHORIZED", "unauthorized");
-      return clearAuthCookies(response);
+      return clearAuthCookies(response, secure);
     }
 
     await next();
     if (refreshedTokens) {
-      c.res = setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+      c.res = setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken, secure);
     }
     return;
   }
@@ -67,18 +69,18 @@ export const authSessionMiddleware: MiddlewareHandler<AppEnv> = async (c, next) 
   if (pathname === "/login" && hasValidToken) {
     const response = c.redirect("/", 302);
     if (refreshedTokens) {
-      return setAuthCookies(response, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+      return setAuthCookies(response, refreshedTokens.accessToken, refreshedTokens.refreshToken, secure);
     }
     return response;
   }
 
-  if (!hasValidToken && pathname !== "/login" && !isStaticAssetPath(pathname)) {
-    const response = c.redirect("/login", 302);
-    return clearAuthCookies(response);
+  if (!hasValidToken && isAuthRequiredSpaPath(pathname) && !isStaticAssetPath(pathname)) {
+    const response = c.redirect(buildLoginPathWithReturnTo(c.req.url), 302);
+    return clearAuthCookies(response, secure);
   }
 
   await next();
   if (refreshedTokens) {
-    c.res = setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken);
+    c.res = setAuthCookies(c.res, refreshedTokens.accessToken, refreshedTokens.refreshToken, secure);
   }
 };

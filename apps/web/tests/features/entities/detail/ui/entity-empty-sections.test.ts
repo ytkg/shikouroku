@@ -54,6 +54,8 @@ describe("entity empty sections", () => {
     expect(detailSource).toContain("<EntityDetailSummarySection");
     expect(detailSource).toContain("<EntityDetailImageGallery");
     expect(detailSource).toContain("<EntityDetailRelatedSection");
+    expect(detailSource).toContain("const { data: isAuthenticated } = useAuthStatus();");
+    expect(detailSource).toContain("isAuthenticated ? <Button onClick={() => navigate(editPath)}>編集</Button> : undefined");
   });
 
   it("追加/編集フォームは関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {

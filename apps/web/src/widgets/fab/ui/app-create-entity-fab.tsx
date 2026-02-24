@@ -1,12 +1,19 @@
 import { Plus } from "lucide-react";
 import { Link, matchPath, useLocation } from "react-router-dom";
+import { useAuthStatus } from "@/features/auth";
 import { routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 
 export function CreateEntityFab() {
   const { pathname } = useLocation();
+  const { data: isAuthenticated } = useAuthStatus();
   const isEditPage = Boolean(matchPath(routePaths.entityEditPattern, pathname));
-  if (pathname === routePaths.login || pathname === routePaths.newEntity || isEditPage) {
+  if (
+    isAuthenticated !== true ||
+    pathname === routePaths.login ||
+    pathname === routePaths.newEntity ||
+    isEditPage
+  ) {
     return null;
   }
 

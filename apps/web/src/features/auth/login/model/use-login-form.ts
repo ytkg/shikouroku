@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { login } from "@/entities/auth";
+import { useAuthStatusActions } from "../../model/use-auth-status-actions";
 import { ApiError } from "@/shared/api/api-error";
-import { routePaths } from "@/shared/config/route-paths";
+import { resolveReturnToPath } from "@/shared/config/route-paths";
 import { toErrorMessage } from "@/shared/lib/error-message";
 
 type LoginFormResult = {
@@ -16,7 +17,9 @@ type LoginFormResult = {
 };
 
 export function useLoginForm(): LoginFormResult {
+  const location = useLocation();
   const navigate = useNavigate();
+  const { setAuthenticated } = useAuthStatusActions();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,10 @@ export function useLoginForm(): LoginFormResult {
     setLoading(true);
     try {
       await login({ username, password });
-      navigate(routePaths.home, { replace: true });
+      await setAuthenticated();
+      const searchParams = new URLSearchParams(location.search);
+      const returnTo = resolveReturnToPath(searchParams.get("returnTo"));
+      navigate(returnTo, { replace: true });
     } catch (e) {
       if (e instanceof ApiError) {
         setError(e.message);
