@@ -27,7 +27,9 @@ export function EntityDetailRelatedSection({
               key={relatedEntity.id}
               role="link"
               tabIndex={0}
-              className="cursor-pointer rounded-lg border border-border/70 bg-card/80 px-3 py-2 transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className={`cursor-pointer rounded-lg border border-border/70 bg-card/80 transition-colors hover:bg-accent/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                relatedEntity.firstImageUrl ? "overflow-hidden p-0" : "px-3"
+              }`}
               onClick={() => onSelectRelatedEntity(relatedEntity.id)}
               onKeyDown={(event) => {
                 if (event.target !== event.currentTarget) {
@@ -42,12 +44,14 @@ export function EntityDetailRelatedSection({
                 onSelectRelatedEntity(relatedEntity.id);
               }}
             >
-              <div className="flex items-start gap-3">
-                <p className="ui-body-text min-w-0 flex-1 text-left">
-                  {relatedEntity.name}（{relatedEntity.kind.label}）
-                </p>
+              <div className="flex min-h-16 items-center gap-3">
+                <div className={`min-w-0 flex-1 ${relatedEntity.firstImageUrl ? "px-3" : ""}`}>
+                  <p className="ui-body-text text-left">
+                    {relatedEntity.name}（{relatedEntity.kind.label}）
+                  </p>
+                </div>
                 {relatedEntity.firstImageUrl && (
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border/70 bg-muted">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden border-l border-border/70 bg-muted">
                     <img
                       src={relatedEntity.firstImageUrl}
                       alt={`${relatedEntity.name}の画像サムネイル`}
