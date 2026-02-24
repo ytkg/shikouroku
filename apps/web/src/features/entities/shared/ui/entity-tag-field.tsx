@@ -25,11 +25,11 @@ export function EntityTagField({
         </Button>
       </div>
       {tags.length === 0 ? (
-        <p className="text-sm text-muted-foreground">タグが登録されていません。</p>
+        <p className="ui-body-text text-muted-foreground">タグが登録されていません。</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <label key={tag.id} className="flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm">
+            <label key={tag.id} className="ui-pill ui-pill-muted gap-2 px-3 py-1.5 text-sm">
               <Checkbox
                 checked={selectedTagIds.includes(tag.id)}
                 onChange={(event) => onToggleTag(tag.id, event.target.checked)}

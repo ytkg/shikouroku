@@ -43,8 +43,8 @@ export function TagListEditor({ tags, query, disabled, deletingTagId, onDelete }
       ) : (
         <div className="space-y-2">
           {visibleTags.map((tag) => (
-            <div key={tag.id} className="flex items-center justify-between gap-3 rounded-md border px-3 py-2">
-              <span className="text-sm">{tag.name}</span>
+            <div key={tag.id} className="flex items-center justify-between gap-3 rounded-lg border border-border/70 bg-card/80 px-3 py-2">
+              <span className="ui-body-text">{tag.name}</span>
               <Button
                 type="button"
                 size="sm"

@@ -37,8 +37,8 @@ export function EntityImageUploadField({
       {selectedImageFiles.length > 0 ? (
         <div className="space-y-2">
           {selectedImageFiles.map((file, index) => (
-            <div key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm">
-              <p className="truncate">
+            <div key={`${file.name}-${file.size}-${index}`} className="flex items-center justify-between gap-2 rounded-lg border border-border/70 bg-card/80 px-3 py-2 text-sm">
+              <p className="ui-body-text truncate">
                 {file.name} ({toFileSizeLabel(file.size)})
               </p>
               <Button type="button" size="sm" variant="outline" onClick={() => onRemoveSelectedImage(index)}>
@@ -51,7 +51,7 @@ export function EntityImageUploadField({
         <p className="text-sm text-muted-foreground">画像はまだ選択されていません。</p>
       )}
       {failedImageFilesCount > 0 && (
-        <div className="rounded-md border border-destructive/40 px-3 py-2 text-sm">
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
           <p className="text-destructive">{failedImageFilesCount}件の画像アップロードに失敗しました。</p>
           <div className="mt-2">
             <Button

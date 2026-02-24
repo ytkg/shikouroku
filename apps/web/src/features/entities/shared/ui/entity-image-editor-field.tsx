@@ -55,14 +55,14 @@ function SortableImageCard({
         transition,
         touchAction: "none"
       }}
-      className={`rounded-md border p-3 ${isDragging ? "opacity-70" : ""}`}
+      className={`rounded-lg border border-border/70 bg-card/85 p-3 ${isDragging ? "opacity-70" : ""}`}
       {...attributes}
       {...listeners}
     >
       <div className="flex items-start gap-3">
         <img src={image.url} alt={image.fileName} className="h-20 w-20 rounded-md object-cover" loading="lazy" />
         <div className="min-w-0 flex-1 space-y-1">
-          <p className="truncate text-sm font-medium">{image.fileName}</p>
+          <p className="ui-body-text truncate font-medium">{image.fileName}</p>
           <p className="text-xs text-muted-foreground">
             {image.mimeType} / {toFileSizeLabel(image.fileSize)}
           </p>
@@ -149,7 +149,7 @@ export function EntityImageEditorField({
       />
       {uploadingImages && <p className="text-sm text-muted-foreground">画像をアップロード中...</p>}
       {failedImageFilesCount > 0 && (
-        <div className="rounded-md border border-destructive/40 px-3 py-2 text-sm">
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
           <p className="text-destructive">{failedImageFilesCount}件の画像アップロードに失敗しました。</p>
           <div className="mt-2">
             <Button

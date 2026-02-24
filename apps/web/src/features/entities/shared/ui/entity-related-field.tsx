@@ -33,8 +33,8 @@ export function EntityRelatedField({
       {selectedRelatedEntityIds.length > 0 && (
         <div className="space-y-2">
           {selectedRelatedEntityIds.map((entityId) => (
-            <div key={entityId} className="rounded-md border px-3 py-2">
-              <p className="text-sm">{relatedLabelById.get(entityId) ?? entityId}</p>
+            <div key={entityId} className="rounded-lg border border-border/70 bg-card/80 px-3 py-2">
+              <p className="ui-body-text">{relatedLabelById.get(entityId) ?? entityId}</p>
             </div>
           ))}
         </div>

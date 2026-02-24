@@ -5,6 +5,10 @@ const config: Config = {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", "sans-serif"],
+        heading: ["Avenir Next", "Hiragino Kaku Gothic ProN", "Yu Gothic", "sans-serif"]
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -44,6 +48,10 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)"
+      },
+      boxShadow: {
+        panel: "0 10px 24px -20px hsl(var(--foreground) / 0.55)",
+        float: "0 14px 32px -20px hsl(var(--foreground) / 0.4)"
       }
     }
   },

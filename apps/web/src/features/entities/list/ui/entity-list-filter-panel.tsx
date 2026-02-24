@@ -63,14 +63,20 @@ export function EntityListFilterPanel({
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">種別</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant={selectedKindTab === "all" ? "default" : "outline"} onClick={() => onSelectKindTab("all")}>
+          <div className="flex flex-wrap gap-1.5">
+            <Button
+              size="sm"
+              className="h-8 whitespace-nowrap px-2 text-xs"
+              variant={selectedKindTab === "all" ? "default" : "outline"}
+              onClick={() => onSelectKindTab("all")}
+            >
               すべて
             </Button>
             {kinds.map((kind) => (
               <Button
                 key={kind.id}
                 size="sm"
+                className="h-8 whitespace-nowrap px-2 text-xs"
                 variant={selectedKindTab === toKindTab(kind.id) ? "default" : "outline"}
                 onClick={() => onSelectKindTab(toKindTab(kind.id))}
               >
@@ -79,6 +85,7 @@ export function EntityListFilterPanel({
             ))}
             <Button
               size="sm"
+              className="h-8 whitespace-nowrap px-2 text-xs"
               variant={selectedKindTab === "wishlist" ? "default" : "outline"}
               onClick={() => onSelectKindTab("wishlist")}
             >

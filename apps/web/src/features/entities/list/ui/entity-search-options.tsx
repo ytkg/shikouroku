@@ -50,6 +50,7 @@ export function EntitySearchOptions({
           <Label htmlFor="entity-search-input">キーワード</Label>
           <Input
             id="entity-search-input"
+            className="h-8 text-base md:text-xs"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
             onCompositionStart={onQueryCompositionStart}
@@ -59,9 +60,10 @@ export function EntitySearchOptions({
             autoComplete="off"
           />
         </div>
-        <div className="w-32 shrink-0 space-y-2">
+        <div className="w-28 shrink-0 space-y-2">
           <Select
             id="entity-search-match"
+            className="h-8 text-base md:text-xs"
             aria-label="一致条件"
             value={match}
             onChange={(event) => onMatchChange(event.target.value as EntitySearchMatch)}
@@ -79,13 +81,24 @@ export function EntitySearchOptions({
           <p className="text-sm font-medium">検索対象</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant={isAllFieldsSelected ? "default" : "outline"} onClick={onSelectAllFields}>
+          <Button
+            size="sm"
+            className="h-8 whitespace-nowrap px-2 text-xs"
+            variant={isAllFieldsSelected ? "default" : "outline"}
+            onClick={onSelectAllFields}
+          >
             すべて
           </Button>
           {ENTITY_SEARCH_FIELDS.map((field) => {
             const checked = !isAllFieldsSelected && selectedFieldSet.has(field);
             return (
-              <Button key={field} size="sm" variant={checked ? "default" : "outline"} onClick={() => onToggleField(field)}>
+              <Button
+                key={field}
+                size="sm"
+                className="h-8 whitespace-nowrap px-2 text-xs"
+                variant={checked ? "default" : "outline"}
+                onClick={() => onToggleField(field)}
+              >
                 {ENTITY_SEARCH_FIELD_LABELS[field]}
               </Button>
             );

@@ -47,15 +47,18 @@ describe("entity list page content infinite scroll", () => {
     expect(source).toContain('{page.isLoading ? "読み込み中..." : "表示できる登録がありません。"}');
   });
 
-  it("一覧カードはLink経由で遷移し、タグクリックは独立してタグ検索を適用する", () => {
+  it("一覧カードはカード全体クリックで遷移し、タグクリックは独立してタグ検索を適用する", () => {
     const source = fs.readFileSync(path.resolve(uiDirPath, "entity-list-result-card.tsx"), "utf-8");
 
-    expect(source).toContain("import { Link } from \"react-router-dom\";");
-    expect(source).toContain("<Link");
+    expect(source).toContain("import { useNavigate } from \"react-router-dom\";");
+    expect(source).toContain("role=\"link\"");
+    expect(source).toContain("onClick={moveToDetail}");
+    expect(source).toContain("onKeyDown={(event) => {");
     expect(source).toContain("focus-visible:ring-2");
     expect(source).toContain("detailPath");
     expect(source).toContain("detailSearch");
-    expect(source).toContain("onClick={() => onTagClick(tag.name)}");
+    expect(source).toContain("event.stopPropagation();");
+    expect(source).toContain("onTagClick(tag.name);");
   });
 
   it("一覧ページはカードへ詳細遷移先をpropsで渡し、navigate依存を持たない", () => {
@@ -66,10 +69,10 @@ describe("entity list page content infinite scroll", () => {
     expect(source).toContain("detailSearch={location.search}");
   });
 
-  it("カード内のタグ領域はLink外に配置され、イベント競合回避を構造で担保する", () => {
+  it("カード内のタグ領域はイベント制御で遷移競合を回避する", () => {
     const source = fs.readFileSync(path.resolve(uiDirPath, "entity-list-result-card.tsx"), "utf-8");
 
-    expect(source).not.toContain("event.stopPropagation()");
-    expect(source.indexOf("</Link>")).toBeLessThan(source.indexOf("{entity.tags.length > 0 && ("));
+    expect(source).toContain("event.stopPropagation();");
+    expect(source).toContain("onTagClick(tag.name);");
   });
 });

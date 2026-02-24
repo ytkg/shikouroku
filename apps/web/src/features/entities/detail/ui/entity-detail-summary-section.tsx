@@ -11,28 +11,28 @@ export function EntityDetailSummarySection({ entity, onTagClick }: EntityDetailS
   return (
     <>
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">ID</p>
-        <p className="break-all text-xs">{entity.id}</p>
+        <p className="ui-meta-text">ID</p>
+        <p className="break-all text-xs text-foreground/80">{entity.id}</p>
       </div>
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">種別</p>
-        <p className="text-sm">{kindLabel}</p>
+        <p className="ui-meta-text">種別</p>
+        <p className="ui-body-text">{kindLabel}</p>
       </div>
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">メモ</p>
-        <p className="whitespace-pre-wrap text-sm leading-relaxed">
+        <p className="ui-meta-text">メモ</p>
+        <p className="ui-body-text whitespace-pre-wrap">
           {entity.description && entity.description.length > 0 ? entity.description : "（メモなし）"}
         </p>
       </div>
       {entity.tags.length > 0 && (
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">タグ</p>
+          <p className="ui-meta-text">タグ</p>
           <div className="flex flex-wrap gap-2">
             {entity.tags.map((tag) => (
               <button
                 key={tag.id}
                 type="button"
-                className="rounded-full border px-2 py-0.5 text-xs transition-colors hover:bg-accent"
+                className="ui-pill ui-pill-interactive"
                 onClick={() => onTagClick(tag.name)}
               >
                 {tag.name}
