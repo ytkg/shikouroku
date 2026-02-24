@@ -5,13 +5,13 @@ import { RelatedEntityEditDialog } from "../../manage-related";
 import { EntityFormFields } from "../../shared/ui/entity-form-fields";
 import { EntityImageEditorField } from "../../shared/ui/entity-image-editor-field";
 import { EntityFormPageSkeleton } from "../../shared/ui/entity-form-page-skeleton";
+import { EntityPageActionRow } from "../../shared/ui/entity-page-action-row";
 import { getEntityDetailPath, routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
@@ -81,15 +81,19 @@ export function EditEntityPageContent() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-end gap-2">
+      </Card>
+      <EntityPageActionRow
+        leftAction={
+          <Button variant="outline" onClick={() => navigate(detailPath)}>
+            詳細へ戻る
+          </Button>
+        }
+        rightAction={
           <Button onClick={() => void onSave()} disabled={form.saving}>
             {form.saving ? "保存中..." : "保存"}
           </Button>
-        </CardFooter>
-      </Card>
-      <Button variant="outline" onClick={() => navigate(detailPath)}>
-        詳細へ戻る
-      </Button>
+        }
+      />
       <TagEditDialog
         open={form.tagDialogOpen}
         onOpenChange={form.setTagDialogOpen}

@@ -6,6 +6,7 @@ import { EntityDetailPageSkeleton } from "./entity-detail-page-skeleton";
 import { EntityImagePreviewModal } from "./entity-image-preview-modal";
 import { EntityDetailRelatedSection } from "./entity-detail-related-section";
 import { EntityDetailSummarySection } from "./entity-detail-summary-section";
+import { EntityPageActionRow } from "../../shared/ui/entity-page-action-row";
 import {
   getEntityDetailPath,
   getEntityEditPath,
@@ -15,7 +16,6 @@ import { Button } from "@/shared/ui/button";
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
@@ -95,13 +95,15 @@ export function EntityDetailPageContent() {
               )
             )}
           </CardContent>
-          <CardFooter className="flex justify-end gap-2">
-            <Button onClick={() => navigate(editPath)}>編集</Button>
-          </CardFooter>
         </Card>
-        <Button variant="outline" onClick={() => navigate(listPath)}>
-          一覧へ戻る
-        </Button>
+        <EntityPageActionRow
+          leftAction={
+            <Button variant="outline" onClick={() => navigate(listPath)}>
+              一覧へ戻る
+            </Button>
+          }
+          rightAction={<Button onClick={() => navigate(editPath)}>編集</Button>}
+        />
       </main>
       <EntityImagePreviewModal
         selectedImage={imagePreview.selectedImage}

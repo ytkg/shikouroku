@@ -1,5 +1,6 @@
-import { Card, CardContent, CardFooter, CardHeader } from "@/shared/ui/card";
+import { Card, CardContent, CardHeader } from "@/shared/ui/card";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { EntityPageActionRow } from "./entity-page-action-row";
 
 export function EntityFormPageSkeleton() {
   return (
@@ -22,11 +23,11 @@ export function EntityFormPageSkeleton() {
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-5 w-24" />
         </CardContent>
-        <CardFooter className="flex justify-end">
-          <Skeleton className="h-9 w-24" />
-        </CardFooter>
       </Card>
-      <Skeleton className="h-9 w-28" />
+      <EntityPageActionRow
+        leftAction={<Skeleton className="h-9 w-28" />}
+        rightAction={<Skeleton className="h-9 w-24" />}
+      />
     </main>
   );
 }

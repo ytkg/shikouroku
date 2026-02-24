@@ -6,6 +6,7 @@ import { RelatedEntityEditDialog } from "../../manage-related";
 import { EntityFormFields } from "../../shared/ui/entity-form-fields";
 import { EntityFormPageSkeleton } from "../../shared/ui/entity-form-page-skeleton";
 import { EntityImageUploadField } from "../../shared/ui/entity-image-upload-field";
+import { EntityPageActionRow } from "../../shared/ui/entity-page-action-row";
 import { getEntityDetailPath, routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import {
@@ -34,13 +35,13 @@ export function CreateEntityPageContent() {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-4 pt-20">
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>嗜好 新規登録</CardTitle>
-          <CardDescription>種別を選択して嗜好を登録します。</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <form className="space-y-4" onSubmit={onSubmit}>
+      <form className="w-full space-y-3" onSubmit={onSubmit}>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>嗜好 新規登録</CardTitle>
+            <CardDescription>種別を選択して嗜好を登録します。</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <EntityFormFields
               kinds={form.kinds}
               tags={form.tags}
@@ -69,18 +70,22 @@ export function CreateEntityPageContent() {
                 />
               }
             />
-            <div className="flex justify-end">
-              <Button type="submit" disabled={form.submitLoading}>
-                {form.submitLoading ? "登録中..." : "登録する"}
-              </Button>
-            </div>
-          </form>
-          {form.error && <p className="text-sm text-destructive">{form.error}</p>}
-        </CardContent>
-      </Card>
-      <Button variant="outline" onClick={() => navigate(routePaths.home)}>
-        一覧へ戻る
-      </Button>
+            {form.error && <p className="text-sm text-destructive">{form.error}</p>}
+          </CardContent>
+        </Card>
+        <EntityPageActionRow
+          leftAction={
+            <Button variant="outline" onClick={() => navigate(routePaths.home)}>
+              一覧へ戻る
+            </Button>
+          }
+          rightAction={
+            <Button type="submit" disabled={form.submitLoading}>
+              {form.submitLoading ? "登録中..." : "登録する"}
+            </Button>
+          }
+        />
+      </form>
       <TagEditDialog
         open={form.tagDialogOpen}
         onOpenChange={form.setTagDialogOpen}
