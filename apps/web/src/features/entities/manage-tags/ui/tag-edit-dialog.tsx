@@ -33,11 +33,13 @@ export function TagEditDialog({
       onOpenChange={onOpenChange}
       tags={tags}
       name={state.name}
+      query={state.query}
       creating={state.creating}
       deletingTagId={state.deletingTagId}
       canClose={state.canClose}
       error={state.error}
       onNameChange={state.setName}
+      onQueryChange={state.setQuery}
       onSubmit={state.onSubmit}
       onDelete={state.onDelete}
       onClose={state.onClose}

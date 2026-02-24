@@ -18,11 +18,13 @@ type UseTagEditDialogStateInput = {
 
 type UseTagEditDialogStateResult = {
   name: string;
+  query: string;
   error: string | null;
   creating: boolean;
   deletingTagId: number | null;
   canClose: boolean;
   setName: (name: string) => void;
+  setQuery: (query: string) => void;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   onDelete: (tag: Tag) => Promise<void>;
@@ -37,15 +39,14 @@ export function useTagEditDialogState({
 }: UseTagEditDialogStateInput): UseTagEditDialogStateResult {
   const { createTag, deleteTag } = useTagMutations();
   const [name, setName] = useState("");
+  const [query, setQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deletingTagId, setDeletingTagId] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!open) {
-      return;
-    }
     setName("");
+    setQuery("");
     setError(null);
     setCreating(false);
     setDeletingTagId(null);
@@ -122,11 +123,13 @@ export function useTagEditDialogState({
 
   return {
     name,
+    query,
     error,
     creating,
     deletingTagId,
     canClose,
     setName,
+    setQuery,
     onClose,
     onSubmit,
     onDelete

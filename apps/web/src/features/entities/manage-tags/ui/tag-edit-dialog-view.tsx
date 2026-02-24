@@ -12,10 +12,12 @@ type TagEditDialogViewProps = {
   canClose: boolean;
   tags: Tag[];
   name: string;
+  query: string;
   creating: boolean;
   deletingTagId: number | null;
   error: string | null;
   onNameChange: (name: string) => void;
+  onQueryChange: (query: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   onDelete: (tag: Tag) => Promise<void>;
   onClose: () => void;
@@ -27,10 +29,12 @@ export function TagEditDialogView({
   canClose,
   tags,
   name,
+  query,
   creating,
   deletingTagId,
   error,
   onNameChange,
+  onQueryChange,
   onSubmit,
   onDelete,
   onClose
@@ -73,8 +77,15 @@ export function TagEditDialogView({
       </form>
       <div className="mt-4 space-y-2">
         <p className="text-sm text-muted-foreground">登録済みタグ</p>
+        <Input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="タグを検索"
+          aria-label="タグを検索"
+        />
         <TagListEditor
           tags={tags}
+          query={query}
           disabled={!canClose}
           deletingTagId={deletingTagId}
           onDelete={onDelete}
