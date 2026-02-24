@@ -42,12 +42,32 @@ export function EntityListResultCard({
       }}
     >
       <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-center gap-2">
             <h3 className="ui-section-title">{entity.name}</h3>
             {entity.isWishlist && <span className="ui-pill">気になる</span>}
           </div>
-          <p className="ui-meta-text mt-1">種別: {entity.kind.label}</p>
+          <p className="ui-meta-text">種別: {entity.kind.label}</p>
+          {entity.description && (
+            <p className="ui-body-text overflow-hidden text-ellipsis whitespace-nowrap">{entity.description}</p>
+          )}
+          {entity.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {entity.tags.map((tag) => (
+                <button
+                  key={tag.id}
+                  type="button"
+                  className="ui-pill ui-pill-interactive"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onTagClick(tag.name);
+                  }}
+                >
+                  {tag.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {entity.firstImageUrl && (
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border/70 bg-muted">
@@ -60,26 +80,6 @@ export function EntityListResultCard({
           </div>
         )}
       </div>
-      {entity.description && (
-        <p className="ui-body-text mt-2 overflow-hidden text-ellipsis whitespace-nowrap">{entity.description}</p>
-      )}
-      {entity.tags.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {entity.tags.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              className="ui-pill ui-pill-interactive"
-              onClick={(event) => {
-                event.stopPropagation();
-                onTagClick(tag.name);
-              }}
-            >
-              {tag.name}
-            </button>
-          ))}
-        </div>
-      )}
     </article>
   );
 }
