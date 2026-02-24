@@ -65,6 +65,7 @@ describe("entity empty sections", () => {
     expect(formSource).toContain("<EntityRelatedField");
     expect(relatedSource).not.toContain("（関連なし）");
     expect(relatedSource).toContain("selectedRelatedEntityIds.length > 0 &&");
+    expect(relatedSource).toContain("firstImageUrl={candidate?.firstImageUrl}");
   });
 
   it("詳細タグクリックで一覧へ戻り、タグ検索条件をURLへ設定する", () => {

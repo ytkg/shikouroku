@@ -1,8 +1,9 @@
 import type { Entity } from "@/entities/entity";
+import { RelatedEntityCard } from "./related-entity-card";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 
-type RelatedCandidate = Pick<Entity, "id" | "name" | "kind">;
+type RelatedCandidate = Pick<Entity, "id" | "name" | "kind" | "firstImageUrl">;
 
 type EntityRelatedFieldProps = {
   relatedCandidates: RelatedCandidate[];
@@ -15,12 +16,7 @@ export function EntityRelatedField({
   selectedRelatedEntityIds,
   onOpenRelatedDialog
 }: EntityRelatedFieldProps) {
-  const relatedLabelById = new Map(
-    relatedCandidates.map((candidate) => [
-      candidate.id,
-      `${candidate.name}（${candidate.kind.label}）`
-    ])
-  );
+  const relatedCandidateById = new Map(relatedCandidates.map((candidate) => [candidate.id, candidate]));
 
   return (
     <div className="space-y-2">
@@ -32,11 +28,18 @@ export function EntityRelatedField({
       </div>
       {selectedRelatedEntityIds.length > 0 && (
         <div className="space-y-2">
-          {selectedRelatedEntityIds.map((entityId) => (
-            <div key={entityId} className="rounded-lg border border-border/70 bg-card/80 px-3 py-2">
-              <p className="ui-body-text">{relatedLabelById.get(entityId) ?? entityId}</p>
-            </div>
-          ))}
+          {selectedRelatedEntityIds.map((entityId) => {
+            const candidate = relatedCandidateById.get(entityId);
+            const label = candidate ? `${candidate.name}（${candidate.kind.label}）` : entityId;
+            return (
+              <RelatedEntityCard
+                key={entityId}
+                label={label}
+                firstImageUrl={candidate?.firstImageUrl}
+                imageAlt={candidate ? `${candidate.name}の画像サムネイル` : undefined}
+              />
+            );
+          })}
         </div>
       )}
     </div>
