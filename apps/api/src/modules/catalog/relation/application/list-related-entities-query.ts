@@ -1,4 +1,9 @@
-import type { EntityWithKindRecord, EntityWithTagsRecord, KindRecord, TagRecord } from "../../../../shared/db/records";
+import type {
+  EntityWithKindAndFirstImageRecord,
+  EntityWithTagsRecord,
+  KindRecord,
+  TagRecord
+} from "../../../../shared/db/records";
 import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import type { RelationRepository } from "../ports/relation-repository";
@@ -10,11 +15,19 @@ export type RelatedEntityResponseDto = {
   description: string | null;
   is_wishlist: number;
   tags: TagRecord[];
+  first_image_url: string | null;
   created_at: string;
   updated_at: string;
 };
 
-function toEntityWithTagsRecord(entity: EntityWithKindRecord, tags: TagRecord[]): EntityWithTagsRecord {
+function toImageFilePath(entityId: string, imageId: string): string {
+  return `/api/entities/${encodeURIComponent(entityId)}/images/${encodeURIComponent(imageId)}/file`;
+}
+
+function toEntityWithTagsRecord(
+  entity: EntityWithKindAndFirstImageRecord,
+  tags: TagRecord[]
+): EntityWithTagsRecord {
   return {
     id: entity.id,
     kind_id: entity.kind_id,
@@ -27,7 +40,11 @@ function toEntityWithTagsRecord(entity: EntityWithKindRecord, tags: TagRecord[])
   };
 }
 
-function toRelatedEntityResponseDto(entity: EntityWithTagsRecord, kind: KindRecord): RelatedEntityResponseDto {
+function toRelatedEntityResponseDto(
+  entity: EntityWithTagsRecord,
+  kind: KindRecord,
+  firstImageId: string | null
+): RelatedEntityResponseDto {
   return {
     id: entity.id,
     kind,
@@ -35,6 +52,7 @@ function toRelatedEntityResponseDto(entity: EntityWithTagsRecord, kind: KindReco
     description: entity.description,
     is_wishlist: entity.is_wishlist,
     tags: entity.tags,
+    first_image_url: firstImageId ? toImageFilePath(entity.id, firstImageId) : null,
     created_at: entity.created_at,
     updated_at: entity.updated_at
   };
@@ -69,7 +87,8 @@ export async function listRelatedEntitiesQuery(
     related.push(
       toRelatedEntityResponseDto(
         toEntityWithTagsRecord(relatedEntity, tagsByEntity.get(relatedEntity.id) ?? []),
-        { id: relatedEntity.kind_id, label: relatedEntity.kind_label }
+        { id: relatedEntity.kind_id, label: relatedEntity.kind_label },
+        relatedEntity.first_image_id
       )
     );
   }

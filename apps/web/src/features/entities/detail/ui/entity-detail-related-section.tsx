@@ -42,9 +42,21 @@ export function EntityDetailRelatedSection({
                 onSelectRelatedEntity(relatedEntity.id);
               }}
             >
-              <p className="ui-body-text text-left">
-                {relatedEntity.name}（{relatedEntity.kind.label}）
-              </p>
+              <div className="flex items-start gap-3">
+                <p className="ui-body-text min-w-0 flex-1 text-left">
+                  {relatedEntity.name}（{relatedEntity.kind.label}）
+                </p>
+                {relatedEntity.firstImageUrl && (
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-border/70 bg-muted">
+                    <img
+                      src={relatedEntity.firstImageUrl}
+                      alt={`${relatedEntity.name}の画像サムネイル`}
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+              </div>
             </article>
           ))}
         </div>

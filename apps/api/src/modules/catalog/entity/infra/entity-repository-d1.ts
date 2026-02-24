@@ -224,7 +224,7 @@ export async function findEntityWithKindByIdFromD1(
 export async function fetchEntitiesWithKindsByIdsFromD1(
   db: D1Database,
   ids: string[]
-): Promise<EntityWithKindRecord[]> {
+): Promise<EntityWithKindAndFirstImageRecord[]> {
   if (ids.length === 0) {
     return [];
   }
@@ -232,13 +232,28 @@ export async function fetchEntitiesWithKindsByIdsFromD1(
   const placeholders = ids.map(() => "?").join(", ");
   const result = await db
     .prepare(
-      `SELECT e.id, e.kind_id, k.label AS kind_label, e.name, e.description, e.is_wishlist, e.created_at, e.updated_at
+      `SELECT
+         e.id,
+         e.kind_id,
+         k.label AS kind_label,
+         e.name,
+         e.description,
+         e.is_wishlist,
+         e.created_at,
+         e.updated_at,
+         (
+           SELECT ei.id
+           FROM entity_images ei
+           WHERE ei.entity_id = e.id
+           ORDER BY ei.sort_order ASC, ei.created_at ASC
+           LIMIT 1
+         ) AS first_image_id
        FROM entities e
        INNER JOIN kinds k ON k.id = e.kind_id
        WHERE e.id IN (${placeholders})`
     )
     .bind(...ids)
-    .all<EntityWithKindRecord>();
+    .all<EntityWithKindAndFirstImageRecord>();
 
   return result.results ?? [];
 }

@@ -50,6 +50,7 @@ describe("relation module application", () => {
         name: "DDD",
         description: null,
         is_wishlist: 0,
+        first_image_id: "img-1",
         created_at: "2026-01-01",
         updated_at: "2026-01-01"
       }
@@ -82,6 +83,7 @@ describe("relation module application", () => {
               { id: 10, name: "architecture" },
               { id: 11, name: "design" }
             ],
+            first_image_url: "/api/entities/entity-2/images/img-1/file",
             created_at: "2026-01-01",
             updated_at: "2026-01-01"
           }
