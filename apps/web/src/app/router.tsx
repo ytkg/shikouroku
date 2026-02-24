@@ -8,7 +8,7 @@ import {
 } from "@/pages";
 import { routePaths } from "@/shared/config/route-paths";
 import { ToastViewport } from "@/shared/ui/toast-viewport";
-import { AppFooter, AppHeader } from "@/widgets";
+import { AppFooter, AppHeader, CreateEntityFab } from "@/widgets";
 
 export function AppRouter() {
   return (
@@ -24,6 +24,7 @@ export function AppRouter() {
           <Route path={routePaths.notFound} element={<Navigate to={routePaths.home} replace />} />
         </Routes>
       </div>
+      <CreateEntityFab />
       <ToastViewport />
       <AppFooter />
     </div>
