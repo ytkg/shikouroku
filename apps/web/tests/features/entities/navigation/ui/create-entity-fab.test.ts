@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const routerPath = path.resolve(currentDir, "../../../../../src/app/router.tsx");
 const headerPath = path.resolve(currentDir, "../../../../../src/widgets/header/ui/app-header.tsx");
-const fabPath = path.resolve(currentDir, "../../../../../src/widgets/fab/ui/create-entity-fab.tsx");
+const fabPath = path.resolve(currentDir, "../../../../../src/widgets/fab/ui/app-create-entity-fab.tsx");
 
 describe("create entity fab", () => {
   it("router に FAB を配置し、新規作成導線を常時表示する", () => {
