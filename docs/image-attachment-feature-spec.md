@@ -1,6 +1,9 @@
-# 画像添付機能 仕様 v1（実装済み / 2026-02-23）
+# 画像添付機能仕様
 
-対象: `apps/web` / `apps/api`
+- 更新日: 2026-02-23
+- 対象: `apps/web` / `apps/api`
+- 種別: 機能仕様
+- バージョン: v1（実装済み）
 
 ## 1. 機能概要
 
@@ -11,7 +14,7 @@
 
 ### 2.1 詳細画面
 
-- 画像が1件以上ある場合のみ `画像` セクションを表示。
+- 画像が 1 件以上ある場合のみ `画像` セクションを表示。
 - サムネイルは正方形表示。
 - クリックでモーダル表示し、`前へ/次へ` とキーボード（←/→/Esc）に対応。
 
@@ -45,7 +48,7 @@
 
 ### 3.1 エラー
 
-- `400`: multipart不正、`file` 欠落、`orderedImageIds` 不正
+- `400`: multipart 不正、`file` 欠落、`orderedImageIds` 不正
 - `401`: 未認証
 - `404`: entity/image/file 不在
 - `413`: サイズ上限超過（5MB）
@@ -71,7 +74,7 @@
 2. metadata 保存失敗時は R2 delete を試行し、失敗時は cleanup task enqueue。
 3. 削除時は metadata 削除と sort_order 詰めを D1 unit-of-work で実行。
 4. R2 delete 失敗時は cleanup task enqueue（enqueue 不能時は 500）。
-5. cleanup task は手動APIと cron で再実行する。
+5. cleanup task は手動 API と cron で再実行する。
 
 ## 6. テスト観点（現行）
 
@@ -79,7 +82,19 @@
 - upload/delete/reorder のユースケーステスト
 - maintenance cleanup の integration test
 
-## 7. 既知の制約
+## 7. やること
+
+- [ ] 画像件数の上限を定義する
+- [ ] サーバー側リサイズやサムネイル生成の要否を判断する
+- [ ] 非対応形式（GIF/HEIC/SVG）の扱い方針を決める
+
+## 8. やったこと
+
+- [x] 複数画像の追加/削除/並び替え/プレビューを実装した
+- [x] D1/R2 跨ぎ更新の補償として cleanup task を実装した
+- [x] 手動 API と cron による cleanup 再実行経路を実装した
+
+## 9. 既知の制約
 
 - 画像件数の上限は未設定。
 - サーバー側リサイズやサムネイル生成は未対応。

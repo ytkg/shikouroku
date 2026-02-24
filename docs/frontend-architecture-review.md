@@ -1,6 +1,8 @@
-# フロントエンド構成ガイド（2026-02-23）
+# フロントエンド構成ガイド
 
-対象: `apps/web/src`
+- 更新日: 2026-02-23
+- 対象: `apps/web/src`
+- 種別: 構成ガイド
 
 ## 1. 目的
 
@@ -29,9 +31,9 @@
 ## 4. API 層のルール
 
 - `fetch` 呼び出しは `shared/api/http.client.ts` に限定。
-- APIクライアントは `entities/*/api/*.client.ts` に配置。
+- API クライアントは `entities/*/api/*.client.ts` に配置。
 - レスポンス検証は対応する `*.response.ts` で実行。
-- APIパスとルートパスは `shared/config/api-paths.ts` / `shared/config/route-paths.ts` に集約。
+- API パスとルートパスは `shared/config/api-paths.ts` / `shared/config/route-paths.ts` に集約。
 
 ## 5. 主要画面の責務
 
@@ -55,8 +57,14 @@
 
 CI では上記を分離実行し、lint/ユニット/アーキテクチャ/型の回帰を個別に検知します。
 
-## 7. 残課題
+## 7. やること
 
-1. UI統合テスト（ルーティング + フォーム + API失敗系）の拡充。
-2. 主要画面の回帰検知を、ユニット中心から統合寄りへ段階的に移行。
-3. エラーメッセージ文言の運用ルール（UX文言と技術文言の分離）を明文化。
+- [ ] UI 統合テスト（ルーティング + フォーム + API 失敗系）を拡充する
+- [ ] 主要画面の回帰検知を、ユニット中心から統合寄りへ段階的に移行する
+- [ ] エラーメッセージ文言の運用ルール（UX 文言と技術文言の分離）を明文化する
+
+## 8. やったこと
+
+- [x] レイヤ構成（app/pages/widgets/features/entities/shared）を定義した
+- [x] アーキテクチャテストで依存境界の静的検査を運用している
+- [x] API 層の責務分割（http client / client / response）を明文化した

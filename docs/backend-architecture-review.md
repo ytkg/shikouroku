@@ -1,6 +1,8 @@
-# バックエンド構成ガイド（2026-02-23）
+# バックエンド構成ガイド
 
-対象: `apps/api/src`
+- 更新日: 2026-02-23
+- 対象: `apps/api/src`
+- 種別: 構成ガイド
 
 ## 1. 目的
 
@@ -62,7 +64,7 @@
 
 ### 4.1 D1 内の複数更新
 
-- 複数SQLが必要な更新は `shared/db/unit-of-work.ts` の `runD1UnitOfWork` を使う。
+- 複数 SQL が必要な更新は `shared/db/unit-of-work.ts` の `runD1UnitOfWork` を使う。
 - 例: 画像削除 + sort_order 詰め、画像並び替え。
 
 ### 4.2 D1/R2 を跨ぐ更新
@@ -120,18 +122,18 @@
 4. `npm --workspace @shikouroku/api run test`
 5. 本章「8.3 次の優先タスク」から 1 件選んで着手
 
-### 8.3 次の優先タスク
+### 8.3 やること（次の優先タスク）
 
 - [ ] 複数リソース跨りの整合性境界を最終統一する（ユースケース単位で失敗ポリシーを固定）。
 - [ ] `uploadEntityImageCommand` の `R2 put -> D1 insert` 境界戦略を明文化し、異常系テストを追加する。
 - [ ] architecture test を段階的に厳格化し、ports 未経由の外部依存を検知する。
 - [ ] 認証 -> entity 作成 -> 画像操作 -> 関連付けの代表 E2E を追加する。
 
-### 8.4 再開基準コミット
+### 8.4 やったこと（再開基準コミット）
 
-- `4a09c33` refactor(api): batch image delete and sort-order collapse
-- `cd6871d` refactor(api): batch entity upsert and tag replacement in one unit of work
-- `b6c2367` test(api): add global guard for cross-module infra imports
-- `bdf8967` refactor(api): route maintenance cleanup application through ports
-- `f1c324b` refactor(api): inject external ports into image application
-- `cb3d82b` refactor(api): route relation application through ports
+- [x] `4a09c33` refactor(api): batch image delete and sort-order collapse
+- [x] `cd6871d` refactor(api): batch entity upsert and tag replacement in one unit of work
+- [x] `b6c2367` test(api): add global guard for cross-module infra imports
+- [x] `bdf8967` refactor(api): route maintenance cleanup application through ports
+- [x] `f1c324b` refactor(api): inject external ports into image application
+- [x] `cb3d82b` refactor(api): route relation application through ports
