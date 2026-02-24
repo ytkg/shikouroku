@@ -79,7 +79,7 @@ export function EntityFormFields({
           onOpenRelatedDialog={onOpenRelatedDialog}
         />
       )}
-      <label className="ui-pill ui-pill-accent w-fit gap-2 px-3 py-1.5 text-sm">
+      <label className="ui-pill w-fit gap-2 px-3 py-1.5 text-sm">
         <Checkbox
           checked={isWishlist}
           onChange={(event) => onWishlistChange(event.target.checked)}

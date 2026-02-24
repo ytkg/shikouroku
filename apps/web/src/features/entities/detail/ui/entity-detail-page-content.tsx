@@ -67,7 +67,7 @@ export function EntityDetailPageContent() {
             <div className="flex items-center gap-2">
               <CardTitle>{page.entity?.name ?? "嗜好 詳細"}</CardTitle>
               {page.entity?.isWishlist && (
-                <span className="ui-pill ui-pill-accent">気になる</span>
+                <span className="ui-pill">気になる</span>
               )}
             </div>
           </CardHeader>

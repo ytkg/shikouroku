@@ -45,7 +45,7 @@ export function EntityListResultCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="ui-section-title">{entity.name}</h3>
-            {entity.isWishlist && <span className="ui-pill ui-pill-accent">気になる</span>}
+            {entity.isWishlist && <span className="ui-pill">気になる</span>}
           </div>
           <p className="ui-meta-text mt-1">種別: {entity.kind.label}</p>
         </div>
