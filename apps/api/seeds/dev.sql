@@ -27,15 +27,15 @@ ON CONFLICT(name) DO UPDATE SET
   updated_at = datetime('now');
 
 INSERT INTO entities (id, kind_id, name, description, is_wishlist, created_at, updated_at) VALUES
-  ('seed-kyoto-kissa', 1, '梅小路の喫茶店', 'レトロで静かな雰囲気。', 0, datetime('now'), datetime('now')),
-  ('seed-camp-chair', 2, '軽量チェア', '折りたたみしやすい屋外チェア。', 1, datetime('now'), datetime('now')),
-  ('seed-morning-sauna', 3, '朝サウナ体験', '90分コース。', 0, datetime('now'), datetime('now')),
-  ('seed-nakano-book-cafe', 1, '中野のブックカフェ', '静かに読書できる席が多い。', 0, datetime('now'), datetime('now')),
-  ('seed-tonkotsu-ramen', 2, '濃厚豚骨ラーメン', '香り強めで替玉前提。', 0, datetime('now'), datetime('now')),
-  ('seed-evening-river-run', 3, '夕方の川沿いラン', '30分の軽めランニング。', 1, datetime('now'), datetime('now')),
-  ('seed-kobe-aquarium', 1, '神戸の水族館', '夜の照明展示がきれい。', 0, datetime('now'), datetime('now')),
-  ('seed-hand-drip-set', 2, 'ハンドドリップセット', '軽量ミルとドリッパーのセット。', 0, datetime('now'), datetime('now')),
-  ('seed-pottery-workshop', 3, '陶芸ワークショップ', '手びねりで器を作る。', 0, datetime('now'), datetime('now'))
+  ('seed-kyoto-kissa', 1, '梅小路の喫茶店', 'レトロで静かな雰囲気。' || char(10) || '窓際席は朝の時間帯が特に落ち着く。', 0, datetime('now'), datetime('now')),
+  ('seed-camp-chair', 2, '軽量チェア', '折りたたみしやすい屋外チェア。' || char(10) || '背面ポケット付きで小物整理もしやすい。', 1, datetime('now'), datetime('now')),
+  ('seed-morning-sauna', 3, '朝サウナ体験', '90分コース。' || char(10) || '外気浴を2セット入れると整いやすい。', 0, datetime('now'), datetime('now')),
+  ('seed-nakano-book-cafe', 1, '中野のブックカフェ', '静かに読書できる席が多い。' || char(10) || '電源席が多く、長時間でも使いやすい。', 0, datetime('now'), datetime('now')),
+  ('seed-tonkotsu-ramen', 2, '濃厚豚骨ラーメン', '香り強めで替玉前提。' || char(10) || '卓上の辛味噌を少量入れると締まる。', 0, datetime('now'), datetime('now')),
+  ('seed-evening-river-run', 3, '夕方の川沿いラン', '30分の軽めランニング。' || char(10) || '日没前の区間は風が気持ちよく走りやすい。', 1, datetime('now'), datetime('now')),
+  ('seed-kobe-aquarium', 1, '神戸の水族館', '夜の照明展示がきれい。' || char(10) || 'クラゲ展示は滞在時間を長めに取りたい。', 0, datetime('now'), datetime('now')),
+  ('seed-hand-drip-set', 2, 'ハンドドリップセット', '軽量ミルとドリッパーのセット。' || char(10) || '出先でも安定して抽出しやすい構成。', 0, datetime('now'), datetime('now')),
+  ('seed-pottery-workshop', 3, '陶芸ワークショップ', '手びねりで器を作る。' || char(10) || '乾燥後の焼成で質感が大きく変わる。', 0, datetime('now'), datetime('now'))
 ON CONFLICT(id) DO UPDATE SET
   kind_id = excluded.kind_id,
   name = excluded.name,
@@ -149,7 +149,7 @@ generated_entities(id, kind_id, name, description, is_wishlist) AS (
     printf('seed-sample-%03d', sort_order),
     1,
     name,
-    printf('%sをゆっくり楽しむ。', name),
+    printf('%sをゆっくり楽しむ。%s混雑時間を避けると、より過ごしやすい。', name, char(10)),
     is_wishlist
   FROM place_names
   UNION ALL
@@ -157,7 +157,7 @@ generated_entities(id, kind_id, name, description, is_wishlist) AS (
     printf('seed-sample-%03d', sort_order + 30),
     2,
     name,
-    printf('%sを日常で使う。', name),
+    printf('%sを日常で使う。%s手入れ方法も合わせて試してみる。', name, char(10)),
     is_wishlist
   FROM product_names
   UNION ALL
@@ -165,7 +165,7 @@ generated_entities(id, kind_id, name, description, is_wishlist) AS (
     printf('seed-sample-%03d', sort_order + 60),
     3,
     name,
-    printf('%sに参加してみる。', name),
+    printf('%sに参加してみる。%s次回の参加条件もメモしておく。', name, char(10)),
     is_wishlist
   FROM experience_names
 )
