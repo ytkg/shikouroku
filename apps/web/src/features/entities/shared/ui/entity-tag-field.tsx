@@ -1,7 +1,7 @@
 import type { Tag } from "@/entities/entity";
 import { Button } from "@/shared/ui/button";
-import { Checkbox } from "@/shared/ui/form-controls";
 import { Label } from "@/shared/ui/label";
+import { SelectablePillCheckbox } from "./selectable-pill-checkbox";
 
 type EntityTagFieldProps = {
   tags: Tag[];
@@ -29,13 +29,13 @@ export function EntityTagField({
       ) : (
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => (
-            <label key={tag.id} className="ui-pill ui-pill-muted gap-2 px-3 py-1.5 text-sm">
-              <Checkbox
-                checked={selectedTagIds.includes(tag.id)}
-                onChange={(event) => onToggleTag(tag.id, event.target.checked)}
-              />
+            <SelectablePillCheckbox
+              key={tag.id}
+              checked={selectedTagIds.includes(tag.id)}
+              onCheckedChange={(checked) => onToggleTag(tag.id, checked)}
+            >
               {tag.name}
-            </label>
+            </SelectablePillCheckbox>
           ))}
         </div>
       )}

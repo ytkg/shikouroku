@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import type { Entity, Kind, Tag } from "@/entities/entity";
-import { Checkbox } from "@/shared/ui/form-controls";
 import { EntityBasicFields } from "./entity-basic-fields";
 import { EntityRelatedField } from "./entity-related-field";
 import { EntityTagField } from "./entity-tag-field";
+import { SelectablePillCheckbox } from "./selectable-pill-checkbox";
 
 type RelatedCandidate = Pick<Entity, "id" | "name" | "kind">;
 
@@ -79,13 +79,13 @@ export function EntityFormFields({
           onOpenRelatedDialog={onOpenRelatedDialog}
         />
       )}
-      <label className="ui-pill w-fit gap-2 px-3 py-1.5 text-sm">
-        <Checkbox
-          checked={isWishlist}
-          onChange={(event) => onWishlistChange(event.target.checked)}
-        />
+      <SelectablePillCheckbox
+        checked={isWishlist}
+        onCheckedChange={onWishlistChange}
+        className="w-fit"
+      >
         気になる
-      </label>
+      </SelectablePillCheckbox>
     </>
   );
 }
