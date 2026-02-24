@@ -47,13 +47,13 @@ export function EntityDetailImageGallery({
               <button
                 key={image.id}
                 type="button"
-                className="block rounded-md border p-1"
+                className="block w-full overflow-hidden rounded-lg border border-border/70 bg-muted"
                 onClick={() => onSelectImage(image.id)}
               >
                 <img
                   src={image.url}
                   alt={image.fileName}
-                  className="aspect-square w-full rounded object-cover"
+                  className="aspect-square h-full w-full object-cover"
                   loading="lazy"
                 />
               </button>
