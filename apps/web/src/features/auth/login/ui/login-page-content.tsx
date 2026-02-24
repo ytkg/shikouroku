@@ -2,7 +2,7 @@ import type { FormEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { useLoginForm } from "../model/use-login-form";
 import { Button } from "@/shared/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
@@ -19,7 +19,6 @@ export function LoginPageContent() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>ログイン</CardTitle>
-          <CardDescription>auth.takagi.dev の認証基盤を利用します。</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>
@@ -49,7 +48,7 @@ export function LoginPageContent() {
               {form.loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ログイン中...
+                  ログインしています...
                 </>
               ) : (
                 "ログイン"
