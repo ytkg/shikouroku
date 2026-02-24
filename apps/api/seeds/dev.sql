@@ -43,6 +43,15 @@ ON CONFLICT(id) DO UPDATE SET
   is_wishlist = excluded.is_wishlist,
   updated_at = datetime('now');
 
+INSERT INTO entity_locations (entity_id, latitude, longitude, created_at, updated_at) VALUES
+  ('seed-kyoto-kissa', 34.9875, 135.7517, datetime('now'), datetime('now')),
+  ('seed-nakano-book-cafe', 35.7074, 139.6658, datetime('now'), datetime('now')),
+  ('seed-kobe-aquarium', 34.6909, 135.1957, datetime('now'), datetime('now'))
+ON CONFLICT(entity_id) DO UPDATE SET
+  latitude = excluded.latitude,
+  longitude = excluded.longitude,
+  updated_at = datetime('now');
+
 WITH
 place_names(sort_order, name, is_wishlist) AS (
   VALUES
@@ -185,6 +194,21 @@ ON CONFLICT(id) DO UPDATE SET
   name = excluded.name,
   description = excluded.description,
   is_wishlist = excluded.is_wishlist,
+  updated_at = datetime('now');
+
+INSERT INTO entity_locations (entity_id, latitude, longitude, created_at, updated_at)
+SELECT
+  e.id,
+  35.60 + (CAST(substr(e.id, -3, 3) AS REAL) * 0.01),
+  139.40 + (CAST(substr(e.id, -3, 3) AS REAL) * 0.01),
+  datetime('now'),
+  datetime('now')
+FROM entities e
+WHERE e.kind_id = 1
+  AND e.id LIKE 'seed-sample-%'
+ON CONFLICT(entity_id) DO UPDATE SET
+  latitude = excluded.latitude,
+  longitude = excluded.longitude,
   updated_at = datetime('now');
 
 INSERT INTO entity_relations (entity_id_low, entity_id_high, created_at) VALUES
