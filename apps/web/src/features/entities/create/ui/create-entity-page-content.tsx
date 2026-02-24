@@ -34,7 +34,7 @@ export function CreateEntityPageContent() {
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-4 pt-20">
+    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-4 pt-16">
       <form className="w-full space-y-3" onSubmit={onSubmit}>
         <Card className="w-full">
           <CardHeader>

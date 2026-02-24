@@ -4,7 +4,7 @@ import { EntityPageActionRow } from "./entity-page-action-row";
 
 export function EntityFormPageSkeleton() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-4 pt-20">
+    <main className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 pb-4 pt-16">
       <Card className="w-full">
         <CardHeader className="space-y-2">
           <Skeleton className="h-7 w-40" />

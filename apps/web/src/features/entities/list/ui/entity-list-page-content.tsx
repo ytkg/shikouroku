@@ -21,7 +21,7 @@ export function EntityListPageContent() {
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-4 pt-20">
+    <main className="mx-auto flex w-full max-w-3xl items-start px-4 pb-4 pt-16">
       <section className="w-full space-y-3">
         <EntityListFilterPanel
           kinds={page.kinds}
