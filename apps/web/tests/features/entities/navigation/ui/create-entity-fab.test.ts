@@ -24,13 +24,13 @@ describe("create entity fab", () => {
     expect(source).toContain("return null;");
     expect(source).toContain("to={routePaths.newEntity}");
     expect(source).toContain("aria-label=\"嗜好を追加\"");
-    expect(source).toContain("env(safe-area-inset-bottom)");
+    expect(source).toContain("bottom-[calc(env(safe-area-inset-bottom)+3rem)]");
   });
 
   it("ヘッダーの既存新規追加ボタンを削除して導線をFABへ一本化する", () => {
     const source = fs.readFileSync(headerPath, "utf-8");
 
-    expect(source).not.toContain("size=\"icon\"");
+    expect(source).toContain("aria-label=\"メニューを開く\"");
     expect(source).not.toContain("routePaths.newEntity");
     expect(source).not.toContain("aria-label=\"新規登録\"");
   });

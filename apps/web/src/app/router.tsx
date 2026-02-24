@@ -14,7 +14,7 @@ export function AppRouter() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />
-      <div className="flex-1 pb-12">
+      <div className="flex-1 pb-8">
         <Routes>
           <Route path={routePaths.login} element={<LoginPage />} />
           <Route path={routePaths.newEntity} element={<NewEntityPage />} />
