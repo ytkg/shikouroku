@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import {
   EntityDetailPage,
   EntityEditPage,
@@ -11,6 +12,12 @@ import { ToastViewport } from "@/shared/ui/toast-viewport";
 import { AppFooter, AppHeader, CreateEntityFab } from "@/widgets";
 
 export function AppRouter() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.search]);
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <AppHeader />
