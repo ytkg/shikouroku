@@ -75,4 +75,12 @@ describe("entity list page content infinite scroll", () => {
     expect(source).toContain("event.stopPropagation();");
     expect(source).toContain("onTagClick(tag.name);");
   });
+
+  it("一覧カードのメモは行数に関係なく1行省略表示する", () => {
+    const source = fs.readFileSync(path.resolve(uiDirPath, "entity-list-result-card.tsx"), "utf-8");
+
+    expect(source).toContain("{entity.description && (");
+    expect(source).toContain("{entity.description}");
+    expect(source).toContain("overflow-hidden text-ellipsis whitespace-nowrap");
+  });
 });

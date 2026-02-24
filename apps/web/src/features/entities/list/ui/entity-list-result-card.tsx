@@ -61,7 +61,7 @@ export function EntityListResultCard({
         )}
       </div>
       {entity.description && (
-        <p className="ui-body-text mt-2 whitespace-pre-wrap">{entity.description}</p>
+        <p className="ui-body-text mt-2 overflow-hidden text-ellipsis whitespace-nowrap">{entity.description}</p>
       )}
       {entity.tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-2">
