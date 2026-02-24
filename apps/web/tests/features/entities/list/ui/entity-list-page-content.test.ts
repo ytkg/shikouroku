@@ -83,4 +83,14 @@ describe("entity list page content infinite scroll", () => {
     expect(source).toContain("{entity.description}");
     expect(source).toContain("overflow-hidden text-ellipsis whitespace-nowrap");
   });
+
+  it("一覧カードは気になる時に種別単体ラベルを出さず、『気になる+種別』へ切り替える", () => {
+    const source = fs.readFileSync(path.resolve(uiDirPath, "entity-list-result-card.tsx"), "utf-8");
+
+    expect(source).toContain("const displayedKindLabel = kindLabel.length > 0 ? kindLabel : \"未分類\";");
+    expect(source).toContain("const wishlistLabel = kindLabel.length > 0 ? `気になる${kindLabel}` : \"気になる項目\";");
+    expect(source).toContain("{entity.isWishlist ? (");
+    expect(source).toContain("<span className=\"ui-pill\">{wishlistLabel}</span>");
+    expect(source).toContain("<span className=\"ui-pill\">{displayedKindLabel}</span>");
+  });
 });

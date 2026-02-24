@@ -15,6 +15,9 @@ export function EntityListResultCard({
   onTagClick
 }: EntityListResultCardProps) {
   const navigate = useNavigate();
+  const kindLabel = entity.kind.label.trim();
+  const displayedKindLabel = kindLabel.length > 0 ? kindLabel : "未分類";
+  const wishlistLabel = kindLabel.length > 0 ? `気になる${kindLabel}` : "気になる項目";
   const moveToDetail = () => {
     navigate({
       pathname: detailPath,
@@ -45,9 +48,12 @@ export function EntityListResultCard({
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-center gap-2">
             <h3 className="ui-section-title">{entity.name}</h3>
-            {entity.isWishlist && <span className="ui-pill">気になる</span>}
+            {entity.isWishlist ? (
+              <span className="ui-pill">{wishlistLabel}</span>
+            ) : (
+              <span className="ui-pill">{displayedKindLabel}</span>
+            )}
           </div>
-          <p className="ui-meta-text">種別: {entity.kind.label}</p>
           {entity.description && (
             <p className="ui-body-text overflow-hidden text-ellipsis whitespace-nowrap">{entity.description}</p>
           )}
