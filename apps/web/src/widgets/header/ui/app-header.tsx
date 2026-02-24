@@ -2,8 +2,7 @@ import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
-import { logout as logoutRequest, useAuthStatus } from "@/features/auth";
-import { useAuthStatusActions } from "@/features/auth/model";
+import { logout as logoutRequest, useAuthStatus, useAuthStatusActions } from "@/features/auth";
 import { routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 
