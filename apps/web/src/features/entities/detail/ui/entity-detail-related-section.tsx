@@ -26,9 +26,7 @@ export function EntityDetailRelatedSection({
           {relatedEntities.map((relatedEntity) => (
             <RelatedEntityCard
               key={relatedEntity.id}
-              label={`${relatedEntity.name}（${relatedEntity.kind.label}）`}
-              firstImageUrl={relatedEntity.firstImageUrl}
-              imageAlt={`${relatedEntity.name}の画像サムネイル`}
+              entity={relatedEntity}
               interactive
               onSelect={() => onSelectRelatedEntity(relatedEntity.id)}
             />

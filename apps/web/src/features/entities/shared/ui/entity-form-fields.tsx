@@ -6,7 +6,7 @@ import { EntityRelatedField } from "./entity-related-field";
 import { EntityTagField } from "./entity-tag-field";
 import { SelectablePillCheckbox } from "./selectable-pill-checkbox";
 
-type RelatedCandidate = Pick<Entity, "id" | "name" | "kind">;
+type RelatedCandidate = Pick<Entity, "id" | "name" | "kind" | "isWishlist" | "description" | "tags" | "firstImageUrl">;
 const LOCATION_KIND_LABEL = "場所";
 
 type EntityFormFieldsProps = {

@@ -40,6 +40,10 @@ const entityRelatedFieldPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/shared/ui/entity-related-field.tsx"
 );
+const relatedCardPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/shared/ui/related-entity-card.tsx"
+);
 
 describe("entity empty sections", () => {
   it("詳細画面はタグ/画像/関連嗜好が空のとき『なし』文言を表示しない実装になっている", () => {
@@ -73,7 +77,8 @@ describe("entity empty sections", () => {
     expect(formSource).toContain("<EntityRelatedField");
     expect(relatedSource).not.toContain("（関連なし）");
     expect(relatedSource).toContain("selectedRelatedEntityIds.length > 0 &&");
-    expect(relatedSource).toContain("firstImageUrl={candidate?.firstImageUrl}");
+    expect(relatedSource).toContain("entity={candidate ?? fallbackEntity}");
+    expect(relatedSource).toContain("kind: { id: 0, label: \"未分類\" }");
   });
 
   it("詳細タグクリックで一覧へ戻り、タグ検索条件をURLへ設定する", () => {
@@ -96,5 +101,22 @@ describe("entity empty sections", () => {
     expect(previewModalSource).toContain("onPointerUp={onSwitchByPreviewAreaPointer}");
     expect(previewNavigationSource).toContain("if (event.key === \"ArrowLeft\")");
     expect(previewNavigationSource).toContain("if (event.key === \"ArrowRight\")");
+  });
+
+  it("関連嗜好カードはトップカード準拠の要素を描画し、詳細のみクリック遷移を持てる", () => {
+    const relatedCardSource = fs.readFileSync(relatedCardPath, "utf-8");
+    const detailRelatedSource = fs.readFileSync(detailRelatedSectionPath, "utf-8");
+    const relatedFieldSource = fs.readFileSync(entityRelatedFieldPath, "utf-8");
+
+    expect(relatedCardSource).toContain("entity: Pick<Entity,");
+    expect(relatedCardSource).toContain("entity.isWishlist ? (");
+    expect(relatedCardSource).toContain("気になる項目");
+    expect(relatedCardSource).toContain("entity.description && (");
+    expect(relatedCardSource).toContain("entity.tags.length > 0 &&");
+    expect(relatedCardSource).toContain("role=\"link\"");
+    expect(relatedCardSource).toContain("if (!interactive || !onSelect)");
+    expect(detailRelatedSource).toContain("interactive");
+    expect(detailRelatedSource).toContain("onSelect={() => onSelectRelatedEntity(relatedEntity.id)}");
+    expect(relatedFieldSource).not.toContain("interactive");
   });
 });

@@ -3,7 +3,7 @@ import { RelatedEntityCard } from "./related-entity-card";
 import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 
-type RelatedCandidate = Pick<Entity, "id" | "name" | "kind" | "firstImageUrl">;
+type RelatedCandidate = Pick<Entity, "id" | "name" | "kind" | "isWishlist" | "description" | "tags" | "firstImageUrl">;
 
 type EntityRelatedFieldProps = {
   relatedCandidates: RelatedCandidate[];
@@ -30,13 +30,19 @@ export function EntityRelatedField({
         <div className="space-y-2">
           {selectedRelatedEntityIds.map((entityId) => {
             const candidate = relatedCandidateById.get(entityId);
-            const label = candidate ? `${candidate.name}（${candidate.kind.label}）` : entityId;
+            const fallbackEntity: RelatedCandidate = {
+              id: entityId,
+              name: entityId,
+              kind: { id: 0, label: "未分類" },
+              isWishlist: false,
+              description: null,
+              tags: [],
+              firstImageUrl: null
+            };
             return (
               <RelatedEntityCard
                 key={entityId}
-                label={label}
-                firstImageUrl={candidate?.firstImageUrl}
-                imageAlt={candidate ? `${candidate.name}の画像サムネイル` : undefined}
+                entity={candidate ?? fallbackEntity}
               />
             );
           })}
