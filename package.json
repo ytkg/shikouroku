@@ -25,7 +25,8 @@
     "test:architecture": "npm --workspace @shikouroku/web run test:architecture",
     "test:unit": "npm --workspace @shikouroku/web run test:unit",
     "quality:web": "npm run lint && npm run test:unit && npm run test:architecture && npm run typecheck",
-    "quality:api": "npm --workspace @shikouroku/api run check && npm --workspace @shikouroku/api run test"
+    "quality:api": "npm --workspace @shikouroku/api run check && npm --workspace @shikouroku/api run test",
+    "quality:all": "npm run quality:web && npm run quality:api"
   },
   "devDependencies": {
     "npm-run-all": "^1.1.3",
