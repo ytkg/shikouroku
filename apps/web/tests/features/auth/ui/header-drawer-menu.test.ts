@@ -17,6 +17,9 @@ describe("header drawer menu", () => {
     expect(source).toContain("role=\"dialog\"");
     expect(source).toContain("aria-modal=\"true\"");
     expect(source).toContain("aria-label=\"メニュー\"");
+    expect(source).toContain("w-fit min-w-[11rem] max-w-[85vw]");
+    expect(source).toContain("flex flex-col items-stretch gap-1");
+    expect(source).toContain("w-full justify-start overflow-hidden text-ellipsis");
   });
 
   it("ドロワーは Esc・Tab・外側クリックに対応し、フォーカストラップを持つ", () => {

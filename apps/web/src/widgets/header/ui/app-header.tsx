@@ -161,7 +161,7 @@ export function AppHeader() {
             <div
               id="app-navigation-drawer"
               ref={drawerRef}
-              className={`absolute inset-y-0 right-0 flex w-[min(20rem,85vw)] flex-col border-l bg-background shadow-xl transition-transform duration-200 ${
+              className={`absolute inset-y-0 right-0 flex w-fit min-w-[11rem] max-w-[85vw] flex-col border-l bg-background shadow-xl transition-transform duration-200 ${
                 drawerVisible ? "translate-x-0" : "translate-x-full"
               }`}
               role="dialog"
@@ -183,11 +183,11 @@ export function AppHeader() {
                 </Button>
               </div>
               <div className="flex flex-1 flex-col px-4 py-3">
-                <nav aria-label="メニュー項目" className="space-y-1">
+                <nav aria-label="メニュー項目" className="flex flex-col items-stretch gap-1">
                   <Button
                     asChild
                     variant="ghost"
-                    className="w-full justify-start"
+                    className="w-full justify-start overflow-hidden text-ellipsis"
                     onClick={() => {
                       setDrawerOpen(false);
                     }}
@@ -197,7 +197,7 @@ export function AppHeader() {
                   <Button
                     asChild
                     variant="ghost"
-                    className="w-full justify-start"
+                    className="w-full justify-start overflow-hidden text-ellipsis"
                     onClick={() => {
                       setDrawerOpen(false);
                     }}
@@ -209,7 +209,7 @@ export function AppHeader() {
                   <div className="mt-auto border-t pt-3">
                     <Button
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="w-full justify-start overflow-hidden text-ellipsis"
                       onClick={logout}
                     >
                       ログアウト
@@ -220,7 +220,7 @@ export function AppHeader() {
                     <Button
                       asChild
                       variant="ghost"
-                      className="w-full justify-start"
+                      className="w-full justify-start overflow-hidden text-ellipsis"
                       onClick={() => {
                         setDrawerOpen(false);
                       }}
