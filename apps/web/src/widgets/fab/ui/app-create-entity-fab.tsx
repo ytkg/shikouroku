@@ -18,7 +18,7 @@ export function CreateEntityFab() {
   }
 
   return (
-    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+3rem)] right-4 z-[1100] sm:right-[max(1rem,calc((100vw-48rem)/2+1rem))]">
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+3rem)] right-4 z-50 sm:right-[max(1rem,calc((100vw-48rem)/2+1rem))]">
       <Button asChild size="icon" aria-label="嗜好を追加" className="h-12 w-12 rounded-full shadow-lg">
         <Link to={routePaths.newEntity}>
           <Plus className="h-4 w-4" />

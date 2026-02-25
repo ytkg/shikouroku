@@ -60,5 +60,5 @@ export function EntityDetailLocationMap({ latitude, longitude }: EntityDetailLoc
     markerRef.current?.setLatLng([latitude, longitude]);
   }, [latitude, longitude]);
 
-  return <div ref={mapContainerRef} className="h-64 w-full overflow-hidden rounded-md border" />;
+  return <div ref={mapContainerRef} className="isolate relative z-0 h-64 w-full overflow-hidden rounded-md border" />;
 }
