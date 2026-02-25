@@ -20,6 +20,7 @@ describe("api error response contract", () => {
     const response = await app.request(
       "http://localhost/api/tags",
       {
+        method: "POST",
         headers: {
           [REQUEST_ID_HEADER]: "req-unauthorized"
         }
