@@ -196,16 +196,46 @@ ON CONFLICT(id) DO UPDATE SET
   is_wishlist = excluded.is_wishlist,
   updated_at = datetime('now');
 
+WITH location_bases(base_idx, base_lat, base_lon) AS (
+  VALUES
+    (1, 43.0642, 141.3469),  -- 札幌
+    (2, 38.2682, 140.8694),  -- 仙台
+    (3, 36.5551, 139.8828),  -- 宇都宮
+    (4, 36.3911, 139.0608),  -- 前橋
+    (5, 35.8617, 139.6455),  -- さいたま
+    (6, 35.6564, 139.3390),  -- 八王子
+    (7, 36.6486, 138.1940),  -- 長野
+    (8, 35.4233, 136.7607),  -- 岐阜
+    (9, 35.0179, 135.8546),  -- 大津
+    (10, 34.6851, 135.8048), -- 奈良
+    (11, 34.6551, 133.9195), -- 岡山
+    (12, 32.8032, 130.7079)  -- 熊本
+),
+sample_entities AS (
+  SELECT
+    e.id,
+    CAST(substr(e.id, -3, 3) AS INTEGER) AS sample_no
+  FROM entities e
+  WHERE e.kind_id = 1
+    AND e.id LIKE 'seed-sample-%'
+),
+sample_locations AS (
+  SELECT
+    s.id AS entity_id,
+    b.base_lat + (((s.sample_no * 17 + s.sample_no * s.sample_no * 13) % 21) - 10) / 500.0 AS latitude,
+    b.base_lon + (((s.sample_no * 19 + s.sample_no * s.sample_no * 11) % 21) - 10) / 500.0 AS longitude
+  FROM sample_entities s
+  JOIN location_bases b ON b.base_idx = ((s.sample_no - 1) % 12) + 1
+)
 INSERT INTO entity_locations (entity_id, latitude, longitude, created_at, updated_at)
 SELECT
-  e.id,
-  35.60 + (CAST(substr(e.id, -3, 3) AS REAL) * 0.01),
-  139.40 + (CAST(substr(e.id, -3, 3) AS REAL) * 0.01),
+  entity_id,
+  latitude,
+  longitude,
   datetime('now'),
   datetime('now')
-FROM entities e
-WHERE e.kind_id = 1
-  AND e.id LIKE 'seed-sample-%'
+FROM sample_locations
+WHERE true
 ON CONFLICT(entity_id) DO UPDATE SET
   latitude = excluded.latitude,
   longitude = excluded.longitude,
