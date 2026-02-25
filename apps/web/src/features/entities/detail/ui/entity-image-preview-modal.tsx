@@ -1,6 +1,5 @@
 import { type PointerEvent } from "react";
 import type { EntityImage } from "@/entities/entity";
-import { Button } from "@/shared/ui/button";
 import { ModalShell } from "@/shared/ui/modal-shell";
 
 type EntityImagePreviewModalProps = {
@@ -34,11 +33,6 @@ export function EntityImagePreviewModal({
       overlayClassName="bg-black/60"
       contentClassName="max-w-4xl p-3"
     >
-      <div className="mb-2 flex items-center justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={onClose}>
-          閉じる
-        </Button>
-      </div>
       <div className="relative flex justify-center" onPointerUp={onSwitchByPreviewAreaPointer}>
         <img
           src={selectedImage.url}
