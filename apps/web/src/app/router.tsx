@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Navigate, Route, Routes, matchPath, useLocation } from "react-router-dom";
 import {
   EntityDetailPage,
   EntityEditPage,
@@ -9,12 +9,57 @@ import {
   NewEntityPage
 } from "@/pages";
 import { routePaths } from "@/shared/config/route-paths";
+import { useSeo } from "@/shared/lib/seo";
 import { ToastViewport } from "@/shared/ui/toast-viewport";
 import { AppFooter, AppHeader, CreateEntityFab } from "@/widgets";
 
 export function AppRouter() {
   const location = useLocation();
   const isMapPage = location.pathname === routePaths.map;
+  const isNewEntityPage = location.pathname === routePaths.newEntity;
+  const isLoginPage = location.pathname === routePaths.login;
+  const isEntityEditPage = Boolean(matchPath(routePaths.entityEditPattern, location.pathname));
+  const isEntityDetailPage =
+    !isNewEntityPage &&
+    !isEntityEditPage &&
+    Boolean(matchPath(routePaths.entityDetailPattern, location.pathname));
+
+  useSeo(
+    isEntityDetailPage
+      ? null
+      : isNewEntityPage
+        ? {
+            title: "嗜好の新規登録",
+            description: "新しい嗜好を登録し、タグや画像、位置情報を追加できます。",
+            path: routePaths.newEntity,
+            noIndex: true
+          }
+      : isLoginPage
+        ? {
+            title: "ログイン",
+            description: "嗜好を登録・編集するためのログインページです。",
+            path: routePaths.login,
+            noIndex: true
+          }
+        : isEntityEditPage
+        ? {
+            title: "嗜好の編集",
+            description: "嗜好の名称、説明、タグ、画像、位置情報を編集します。",
+            path: location.pathname,
+            noIndex: true
+          }
+        : location.pathname === routePaths.map
+          ? {
+              title: "嗜好マップ",
+              description: "位置情報付きの嗜好を地図で検索・確認できます。",
+              path: routePaths.map
+            }
+          : {
+              title: "嗜好一覧",
+              description: "嗜好を一覧表示し、タグや条件を使って素早く検索できます。",
+              path: routePaths.home
+            }
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });

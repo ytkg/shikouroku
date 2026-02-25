@@ -21,6 +21,7 @@ import {
   CardHeader,
   CardTitle
 } from "@/shared/ui/card";
+import { useSeo } from "@/shared/lib/seo";
 
 export function EntityDetailPageContent() {
   const location = useLocation();
@@ -31,6 +32,37 @@ export function EntityDetailPageContent() {
   const imagePreview = useImagePreviewNavigation(page.images);
   const editPath = entityId ? getEntityEditPath(entityId) : routePaths.home;
   const listPath = location.search.length > 0 ? `${routePaths.home}${location.search}` : routePaths.home;
+  const entityTitle = page.entity ? `${page.entity.name} (${page.entity.kind.label})` : "嗜好の詳細";
+  const entityDescription = page.entity?.description?.trim()
+    ? page.entity.description.trim()
+    : "登録された嗜好の詳細情報を確認できます。";
+
+  useSeo({
+    title: entityTitle,
+    description: entityDescription,
+    path: location.pathname,
+    ogType: "article",
+    jsonLd: page.entity
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Thing",
+          name: page.entity.name,
+          description: entityDescription,
+          keywords: page.entity.tags.map((tag) => tag.name).join(", "),
+          additionalType: page.entity.kind.label,
+          url: new URL(location.pathname, window.location.origin).toString(),
+          ...(page.entity.location
+            ? {
+                geo: {
+                  "@type": "GeoCoordinates",
+                  latitude: page.entity.location.latitude,
+                  longitude: page.entity.location.longitude
+                }
+              }
+            : {})
+        }
+      : undefined
+  });
 
   const moveToListWithTagFilter = (tagName: string) => {
     const normalizedTagName = tagName.trim();
