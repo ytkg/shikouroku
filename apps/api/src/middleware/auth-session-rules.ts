@@ -2,6 +2,7 @@ const ANONYMOUS_READ_API_PATTERNS = [
   /^\/api\/kinds$/,
   /^\/api\/tags$/,
   /^\/api\/entities$/,
+  /^\/api\/entities\/locations$/,
   /^\/api\/entities\/[^/]+$/,
   /^\/api\/entities\/[^/]+\/related$/,
   /^\/api\/entities\/[^/]+\/images$/,

@@ -11,6 +11,7 @@ import { getEntityQuery } from "../../modules/catalog/entity/application/get-ent
 import {
   listEntitiesQuery
 } from "../../modules/catalog/entity/application/list-entities-query";
+import { listEntityLocationsQuery } from "../../modules/catalog/entity/application/list-entity-locations-query";
 import { resolveEntityListQueryParams } from "../../modules/catalog/entity/application/entity-list-query-params";
 import { updateEntityCommand } from "../../modules/catalog/entity/application/update-entity-command";
 import { createD1EntityReadRepository } from "../../modules/catalog/entity/infra/entity-repository-d1";
@@ -52,6 +53,15 @@ export function createEntityRoutes(): Hono<AppEnv> {
     }
 
     return jsonOk(c, { entities: result.data.entities, page: result.data.page });
+  });
+
+  entities.get("/entities/locations", async (c) => {
+    const result = await listEntityLocationsQuery(c.env.DB);
+    if (!result.ok) {
+      return useCaseError(c, result.status, result.message);
+    }
+
+    return jsonOk(c, { locations: result.data.locations });
   });
 
   entities.get("/entities/:id", async (c) => {

@@ -183,6 +183,28 @@ export function AppHeader() {
                 </Button>
               </div>
               <div className="flex flex-1 flex-col px-4 py-3">
+                <nav aria-label="メニュー項目" className="space-y-1">
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      setDrawerOpen(false);
+                    }}
+                  >
+                    <Link to={routePaths.home}>一覧</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => {
+                      setDrawerOpen(false);
+                    }}
+                  >
+                    <Link to={routePaths.map}>地図</Link>
+                  </Button>
+                </nav>
                 {isAuthenticated ? (
                   <div className="mt-auto border-t pt-3">
                     <Button

@@ -1,6 +1,7 @@
-export type { Entity, EntityImage, Kind, Tag } from "./model";
+export type { Entity, EntityImage, EntityLocationPin, Kind, Tag } from "./model";
 export {
   ENTITIES_KEY,
+  ENTITY_LOCATIONS_KEY,
   KINDS_KEY,
   TAGS_KEY,
   entityKey,
@@ -9,6 +10,7 @@ export {
   isEntityImagesListKey,
   isEntityRelatedListKey,
   relatedEntitiesKey,
+  useEntityLocationsQuery,
   useEntitiesQuery,
   useEntityMutations,
   useEntityImagesQuery,
@@ -28,6 +30,7 @@ export {
   fetchEntities,
   fetchEntitiesPage,
   fetchEntityById,
+  fetchEntityLocations,
   fetchEntityImages,
   fetchKinds,
   fetchRelatedEntities,

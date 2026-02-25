@@ -1,5 +1,6 @@
 import type {
   EntityLocationRecord,
+  EntityLocationWithKindRecord,
   EntityRecord,
   EntityTagRecord,
   EntityWithKindAndFirstImageRecord,
@@ -163,6 +164,28 @@ export async function listEntitiesWithKindsFromD1(
     )
     .bind(...bindings, input.limit)
     .all<EntityWithKindAndFirstImageRecord>();
+
+  return result.results ?? [];
+}
+
+export async function listEntityLocationsWithKindsFromD1(
+  db: D1Database
+): Promise<EntityLocationWithKindRecord[]> {
+  const result = await db
+    .prepare(
+      `SELECT
+         e.id,
+         e.kind_id,
+         k.label AS kind_label,
+         e.name,
+         el.latitude,
+         el.longitude
+       FROM entity_locations el
+       INNER JOIN entities e ON e.id = el.entity_id
+       INNER JOIN kinds k ON k.id = e.kind_id
+       ORDER BY e.created_at DESC, e.id DESC`
+    )
+    .all<EntityLocationWithKindRecord>();
 
   return result.results ?? [];
 }

@@ -26,6 +26,15 @@ export type EntityWithKindAndFirstImageRecord = EntityWithKindRecord & {
   first_image_id: string | null;
 };
 
+export type EntityLocationWithKindRecord = {
+  id: string;
+  kind_id: number;
+  kind_label: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+
 export type EntityTagRecord = {
   entity_id: string;
   id: number;

@@ -1,4 +1,5 @@
 import {
+  parseEntityLocationsResponse,
   parseEntitiesPageResponse,
   parseEntityResponse,
   parseKindsResponse,
@@ -7,9 +8,9 @@ import {
   parseTagsResponse,
   type EntitiesPageResponse
 } from "./entities.response";
-import type { Entity, Kind, Tag } from "../model/entity.types";
+import type { Entity, EntityLocationPin, Kind, Tag } from "../model/entity.types";
 import { requestJson } from "@/shared/api/http.client";
-import { apiPaths, getEntityPath, getTagPath } from "@/shared/config/api-paths";
+import { apiPaths, getEntityLocationsPath, getEntityPath, getTagPath } from "@/shared/config/api-paths";
 
 export type CreateTagInput = {
   name: string;
@@ -167,6 +168,11 @@ export async function fetchEntities(): Promise<Entity[]> {
     seenCursors.add(page.page.nextCursor);
     cursor = page.page.nextCursor;
   }
+}
+
+export async function fetchEntityLocations(): Promise<EntityLocationPin[]> {
+  const json = await requestJson<unknown>(getEntityLocationsPath());
+  return parseEntityLocationsResponse(json).locations;
 }
 
 export async function fetchEntityById(entityId: string): Promise<Entity> {

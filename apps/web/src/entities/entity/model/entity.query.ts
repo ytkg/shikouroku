@@ -2,6 +2,7 @@ import useSWR from "swr";
 import {
   fetchEntities,
   fetchEntityById,
+  fetchEntityLocations,
   fetchKinds,
   fetchTags
 } from "../api/entities.client";
@@ -9,6 +10,7 @@ import { fetchEntityImages } from "../api/images.client";
 import { fetchRelatedEntities } from "../api/related.client";
 import {
   ENTITIES_KEY,
+  ENTITY_LOCATIONS_KEY,
   entityKey,
   entityImagesKey,
   KINDS_KEY,
@@ -18,6 +20,10 @@ import {
 
 export function useEntitiesQuery() {
   return useSWR(ENTITIES_KEY, fetchEntities);
+}
+
+export function useEntityLocationsQuery() {
+  return useSWR(ENTITY_LOCATIONS_KEY, fetchEntityLocations);
 }
 
 export function useEntityQuery(entityId: string | undefined) {

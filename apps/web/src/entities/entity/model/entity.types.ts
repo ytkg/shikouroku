@@ -24,6 +24,17 @@ export type Entity = {
   updatedAt?: string;
 };
 
+export type EntityLocationPin = {
+  id: string;
+  kind: Kind;
+  name: string;
+  tags: Tag[];
+  location: {
+    latitude: number;
+    longitude: number;
+  };
+};
+
 export type EntityImage = {
   id: string;
   entityId: string;

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchEntities, fetchEntitiesPage, fetchKinds } from "@/entities/entity";
+import { fetchEntities, fetchEntitiesPage, fetchEntityLocations, fetchKinds } from "@/entities/entity";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
 
 afterEach(() => {
@@ -127,5 +127,39 @@ describe("entities.client", () => {
       status: 502,
       code: INVALID_API_RESPONSE_CODE
     });
+  });
+
+  it("fetchEntityLocationsは地図用のlocation一覧を取得する", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          ok: true,
+          locations: [
+            {
+              id: "entity-1",
+              kind: { id: 1, label: "場所" },
+              name: "東京駅",
+              tags: [{ id: 10, name: "散歩" }],
+              location: { latitude: 35.681236, longitude: 139.767125 }
+            }
+          ]
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" }
+        }
+      )
+    );
+
+    await expect(fetchEntityLocations()).resolves.toEqual([
+      {
+        id: "entity-1",
+        kind: { id: 1, label: "場所" },
+        name: "東京駅",
+        tags: [{ id: 10, name: "散歩" }],
+        location: { latitude: 35.681236, longitude: 139.767125 }
+      }
+    ]);
+    expect(fetchSpy.mock.calls[0]?.[0]).toBe("/api/entities/locations");
   });
 });

@@ -9,6 +9,7 @@ describe("authSessionRules", () => {
   it("匿名許可APIを判定できる", () => {
     expect(canAccessApiWithoutAuth("POST", "/api/login")).toBe(true);
     expect(canAccessApiWithoutAuth("GET", "/api/entities")).toBe(true);
+    expect(canAccessApiWithoutAuth("GET", "/api/entities/locations")).toBe(true);
     expect(canAccessApiWithoutAuth("GET", "/api/entities/id-1/images/img-1/file")).toBe(true);
     expect(canAccessApiWithoutAuth("GET", "/api/maintenance/image-cleanup/tasks")).toBe(false);
     expect(canAccessApiWithoutAuth("POST", "/api/entities")).toBe(false);

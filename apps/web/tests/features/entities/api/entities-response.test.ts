@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError, INVALID_API_RESPONSE_CODE } from "@/shared/api/api-error";
 import {
+  parseEntityLocationsResponse,
   parseEntitiesPageResponse,
   parseEntitiesResponse,
   parseEntityResponse,
@@ -128,6 +129,33 @@ describe("entities.response", () => {
         ok: true
       })
     ).not.toThrow();
+  });
+
+  it("地図用locationレスポンスを検証できる", () => {
+    expect(
+      parseEntityLocationsResponse({
+        ok: true,
+        locations: [
+          {
+            id: "entity-1",
+            kind: { id: 1, label: "場所" },
+            name: "東京駅",
+            tags: [{ id: 10, name: "散歩" }],
+            location: { latitude: 35.681236, longitude: 139.767125 }
+          }
+        ]
+      })
+    ).toEqual({
+      locations: [
+        {
+          id: "entity-1",
+          kind: { id: 1, label: "場所" },
+          name: "東京駅",
+          tags: [{ id: 10, name: "散歩" }],
+          location: { latitude: 35.681236, longitude: 139.767125 }
+        }
+      ]
+    });
   });
 
   it("不正レスポンスはApiError(INVALID_API_RESPONSE)をthrowする", () => {

@@ -2,6 +2,7 @@ import { encodePathSegment } from "@/shared/lib/url";
 
 export const routePaths = {
   home: "/",
+  map: "/map",
   login: "/login",
   newEntity: "/entities/new",
   notFound: "*",

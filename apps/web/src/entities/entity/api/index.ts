@@ -5,6 +5,7 @@ export {
   fetchEntities,
   fetchEntitiesPage,
   fetchEntityById,
+  fetchEntityLocations,
   fetchKinds,
   fetchTags
 } from "./entities.client";

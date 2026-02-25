@@ -1,5 +1,6 @@
-export type { Entity, EntityImage, Kind, Tag } from "./entity.types";
+export type { Entity, EntityImage, EntityLocationPin, Kind, Tag } from "./entity.types";
 export {
+  useEntityLocationsQuery,
   useEntitiesQuery,
   useEntityQuery,
   useEntityImagesQuery,
@@ -17,6 +18,7 @@ export {
   isEntityRelatedListKey,
   relatedEntitiesKey,
   ENTITIES_KEY,
+  ENTITY_LOCATIONS_KEY,
   KINDS_KEY,
   TAGS_KEY
 } from "./entity.swr-keys";

@@ -18,6 +18,10 @@ export function getEntityPath(entityId: string): string {
   return `${apiPaths.entities}/${encodePathSegment(entityId)}`;
 }
 
+export function getEntityLocationsPath(): string {
+  return `${apiPaths.entities}/locations`;
+}
+
 export function getEntityRelatedPath(entityId: string): string {
   return `${getEntityPath(entityId)}/related`;
 }

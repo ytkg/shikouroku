@@ -1,11 +1,13 @@
 import {
   apiPaths,
+  getEntityLocationsPath,
   getEntityImagesPath,
   getEntityPath,
   getEntityRelatedPath
 } from "@/shared/config/api-paths";
 
 export const ENTITIES_KEY = apiPaths.entities;
+export const ENTITY_LOCATIONS_KEY = getEntityLocationsPath();
 export const KINDS_KEY = apiPaths.kinds;
 export const TAGS_KEY = apiPaths.tags;
 

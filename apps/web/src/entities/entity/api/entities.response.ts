@@ -1,4 +1,4 @@
-import type { Entity, Kind, Tag } from "../model/entity.types";
+import type { Entity, EntityLocationPin, Kind, Tag } from "../model/entity.types";
 import { createInvalidApiResponseError } from "@/shared/api/api-error";
 import {
   expectArray,
@@ -22,6 +22,10 @@ export type EntityListPage = {
 export type EntitiesPageResponse = {
   entities: Entity[];
   page: EntityListPage;
+};
+
+export type EntityLocationsResponse = {
+  locations: EntityLocationPin[];
 };
 
 function expectWishlistFlag(value: unknown, path: string): boolean {
@@ -79,6 +83,19 @@ function parseLocation(value: unknown, path: string): { latitude: number; longit
   return {
     latitude: expectNumber(location.latitude, `${path}.latitude`),
     longitude: expectNumber(location.longitude, `${path}.longitude`)
+  };
+}
+
+function parseEntityLocationPin(value: unknown, path: string): EntityLocationPin {
+  const entity = expectObject(value, path);
+  return {
+    id: expectString(entity.id, `${path}.id`),
+    kind: parseKind(entity.kind, `${path}.kind`),
+    name: expectString(entity.name, `${path}.name`),
+    tags: expectArray(entity.tags, `${path}.tags`).map((tag, index) =>
+      parseTag(tag, `${path}.tags[${index}]`)
+    ),
+    location: parseLocation(entity.location, `${path}.location`)
   };
 }
 
@@ -149,6 +166,15 @@ export function parseEntitiesPageResponse(value: unknown): EntitiesPageResponse 
 
 export function parseEntitiesResponse(value: unknown): Entity[] {
   return parseEntitiesPageResponse(value).entities;
+}
+
+export function parseEntityLocationsResponse(value: unknown): EntityLocationsResponse {
+  const root = expectOkRoot(value, "entityLocationsResponse");
+  return {
+    locations: expectArray(root.locations, "entityLocationsResponse.locations").map((location, index) =>
+      parseEntityLocationPin(location, `entityLocationsResponse.locations[${index}]`)
+    )
+  };
 }
 
 export function parseEntityResponse(value: unknown): Entity {
