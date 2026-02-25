@@ -159,7 +159,7 @@ export function EntityMapPageContent() {
   }, [filteredLocationEntities]);
 
   return (
-    <main className="mx-auto grid h-[calc(100dvh-2rem)] w-full max-w-3xl grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-3 overflow-hidden px-4 -mb-4 pb-4 pt-16">
+    <main className="mx-auto grid h-[calc(100dvh-env(safe-area-inset-bottom)-3rem)] w-full max-w-3xl box-border grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-3 overflow-hidden px-4 pb-0 pt-16">
       {error && <p className="text-sm text-destructive">地図データの取得に失敗しました。</p>}
 
       <section className="space-y-2 rounded-lg border bg-card p-3">

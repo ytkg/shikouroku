@@ -31,7 +31,8 @@
   }
 
   body {
-    @apply min-h-screen bg-background font-sans text-foreground antialiased;
+    min-height: 100svh;
+    @apply bg-background font-sans text-foreground antialiased;
   }
 }
 

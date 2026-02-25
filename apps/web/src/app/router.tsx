@@ -21,9 +21,9 @@ export function AppRouter() {
   }, [location.pathname, location.search]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className={`flex flex-col bg-background ${isMapPage ? "h-[100dvh] overflow-hidden" : "min-h-screen"}`}>
       <AppHeader />
-      <div className="flex-1 pb-12">
+      <div className={`flex-1 ${isMapPage ? "overflow-hidden" : "pb-12"}`}>
         <Routes>
           <Route path={routePaths.login} element={<LoginPage />} />
           <Route path={routePaths.map} element={<MapPage />} />
