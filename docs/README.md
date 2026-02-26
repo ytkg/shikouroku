@@ -1,6 +1,6 @@
 # ドキュメント一覧
 
-- 更新日: 2026-02-23
+- 更新日: 2026-02-26
 - 対象: `docs/`（`docs/archive/` を除く）
 - 種別: 索引
 
@@ -39,3 +39,4 @@
 
 - [x] `docs/backend-architecture-review.md` に再開ガイドを統合し、単独運用に整理
 - [x] `docs/_template.md` を追加し、書式の起点を統一した
+- [x] `docs/product-growth-roadmap.md` を現行実装（地図/位置情報/検索）に合わせて更新した
