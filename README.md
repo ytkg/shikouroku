@@ -289,6 +289,6 @@ npm run deploy
 
 - `docs/README.md`（ドキュメント入口）
 - `docs/backend-architecture-review.md`
-- `docs/frontend-architecture-review.md`
+- `docs/archive/frontend-architecture-review.md`
 - `docs/image-attachment-feature-spec.md`
 - `docs/preference-feature-spec.md`
