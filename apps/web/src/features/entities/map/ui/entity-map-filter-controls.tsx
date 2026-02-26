@@ -1,5 +1,6 @@
 import { Input } from "@/shared/ui/input";
 import { Select } from "@/shared/ui/form-controls";
+import { Label } from "@/shared/ui/label";
 import type { MapTagOption } from "./entity-map-types";
 
 type EntityMapFilterControlsProps = {
@@ -20,9 +21,10 @@ export function EntityMapFilterControls({
   return (
     <section className="space-y-2 rounded-lg border bg-card p-3">
       <div className="grid grid-cols-2 gap-2">
-        <label className="space-y-1 text-sm">
-          <span className="text-muted-foreground">タグ</span>
+        <div className="space-y-1">
+          <Label htmlFor="entity-map-tag-filter">タグ</Label>
           <Select
+            id="entity-map-tag-filter"
             className="h-8 px-2 text-xs md:text-xs"
             value={selectedTagId}
             onChange={(event) => onTagChange(event.target.value)}
@@ -34,16 +36,17 @@ export function EntityMapFilterControls({
               </option>
             ))}
           </Select>
-        </label>
-        <label className="space-y-1 text-sm">
-          <span className="text-muted-foreground">名前検索</span>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="entity-map-name-filter">名前検索</Label>
           <Input
+            id="entity-map-name-filter"
             className="h-8 px-2 text-base md:text-sm"
             value={nameQuery}
             onChange={(event) => onNameQueryChange(event.target.value)}
             placeholder="キーワードを入力"
           />
-        </label>
+        </div>
       </div>
     </section>
   );
