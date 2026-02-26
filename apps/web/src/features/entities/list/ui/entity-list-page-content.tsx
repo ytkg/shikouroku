@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useEntityListPage } from "../model/use-entity-list-page";
 import { ENTITY_SEARCH_FIELDS } from "@/entities/entity";
+import { EntityCardSkeleton } from "../../shared/ui/entity-card-skeleton";
 import { getEntityDetailPath } from "@/shared/config/route-paths";
-import { Skeleton } from "@/shared/ui/skeleton";
 import { EntityListFilterPanel } from "./entity-list-filter-panel";
 import { EntityListLoadMore } from "./entity-list-load-more";
 import { EntityListResultCard } from "./entity-list-result-card";
@@ -59,23 +59,7 @@ export function EntityListPageContent() {
         {shouldShowInitialSkeleton ? (
           <div className="space-y-3" aria-hidden="true">
             {Array.from({ length: 3 }, (_, index) => (
-              <article key={`entity-list-skeleton-${index}`} className="rounded-xl border border-border/70 bg-card/95 p-4">
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1 space-y-2">
-                    <Skeleton className="h-5 w-44" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                  <Skeleton className="h-16 w-16 rounded-lg" />
-                </div>
-                <div className="mt-2 space-y-1.5">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-5/6" />
-                </div>
-                <div className="mt-2 flex gap-2">
-                  <Skeleton className="h-6 w-16 rounded-full" />
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </div>
-              </article>
+              <EntityCardSkeleton key={`entity-list-skeleton-${index}`} />
             ))}
           </div>
         ) : page.entities.length === 0 ? (

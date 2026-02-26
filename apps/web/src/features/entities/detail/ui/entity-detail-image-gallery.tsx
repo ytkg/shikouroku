@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { EntityImage } from "@/entities/entity";
+import { Skeleton } from "@/shared/ui/skeleton";
 
 type EntityDetailImageGalleryProps = {
   images: EntityImage[];
@@ -33,7 +34,12 @@ export function EntityDetailImageGallery({
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">画像</p>
       {imagesLoading ? (
-        <p className="text-sm">読み込み中...</p>
+        <div className="grid grid-flow-col auto-cols-[calc((100%-2rem)/4.5)] gap-2 overflow-x-auto pb-1" aria-hidden="true">
+          <Skeleton className="aspect-square w-full rounded-lg" />
+          <Skeleton className="aspect-square w-full rounded-lg" />
+          <Skeleton className="aspect-square w-full rounded-lg" />
+          <Skeleton className="aspect-square w-full rounded-lg" />
+        </div>
       ) : (
         <div className="relative">
           <div
