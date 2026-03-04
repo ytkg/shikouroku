@@ -59,7 +59,7 @@ export function EntityDetailImageGallery({
                 <img
                   src={image.url}
                   alt={image.fileName}
-                  className="aspect-square h-full w-full object-cover"
+                  className="aspect-square h-full w-full object-contain"
                   loading="lazy"
                 />
               </button>

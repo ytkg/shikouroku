@@ -60,7 +60,7 @@ function SortableImageCard({
       {...listeners}
     >
       <div className="flex items-start gap-3">
-        <img src={image.url} alt={image.fileName} className="h-20 w-20 rounded-md object-cover" loading="lazy" />
+        <img src={image.url} alt={image.fileName} className="h-20 w-20 rounded-md object-contain" loading="lazy" />
         <div className="min-w-0 flex-1 space-y-1">
           <p className="ui-body-text truncate font-medium">{image.fileName}</p>
           <p className="text-xs text-muted-foreground">
