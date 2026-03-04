@@ -11,10 +11,6 @@ export function EntityDetailSummarySection({ entity, onTagClick }: EntityDetailS
   return (
     <>
       <div className="space-y-1">
-        <p className="ui-meta-text">ID</p>
-        <p className="break-all text-xs text-foreground/80">{entity.id}</p>
-      </div>
-      <div className="space-y-1">
         <p className="ui-meta-text">種別</p>
         <p className="ui-body-text">{kindLabel}</p>
       </div>
