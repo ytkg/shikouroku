@@ -44,7 +44,7 @@ export function EntitySearchOptions({
   const selectedFieldSet = new Set(selectedFields);
 
   return (
-    <div id="entity-search-options" className="space-y-3">
+    <div className="space-y-3">
       <div className="flex items-end gap-2">
         <div className="flex-1 space-y-2">
           <Label htmlFor="entity-search-input">キーワード</Label>

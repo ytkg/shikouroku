@@ -39,14 +39,16 @@ export function EntityListFilterPanel({
   onSelectAllFields,
   onToggleField
 }: EntityListFilterPanelProps) {
+  const searchOptionsLabel = isSearchOptionsOpen ? "検索条件を閉じる" : "検索条件を開く";
+
   const searchOptionsToggleButton = (
     <Button
       type="button"
-      size="icon"
       variant="ghost"
+      className="h-6 w-full justify-center border-0 bg-transparent shadow-none hover:bg-transparent hover:text-foreground active:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
       aria-expanded={isSearchOptionsOpen}
       aria-controls="entity-search-options"
-      aria-label={isSearchOptionsOpen ? "検索条件を閉じる" : "検索条件を開く"}
+      aria-label={searchOptionsLabel}
       onClick={onToggleSearchOptions}
     >
       <ChevronDown
@@ -57,8 +59,8 @@ export function EntityListFilterPanel({
   );
 
   return (
-    <div className="relative rounded-lg border bg-card p-3">
-      <div className="space-y-3 pb-10">
+    <div className="rounded-lg border bg-card px-3 pb-1 pt-3">
+      <div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium">種別</p>
@@ -94,22 +96,30 @@ export function EntityListFilterPanel({
           </div>
         </div>
 
-        {isSearchOptionsOpen && (
-          <EntitySearchOptions
-            query={query}
-            match={match}
-            selectedFields={selectedFields}
-            isAllFieldsSelected={isAllFieldsSelected}
-            onQueryChange={onQueryChange}
-            onQueryCompositionStart={onQueryCompositionStart}
-            onQueryCompositionEnd={onQueryCompositionEnd}
-            onMatchChange={onMatchChange}
-            onSelectAllFields={onSelectAllFields}
-            onToggleField={onToggleField}
-          />
-        )}
+        <div
+          id="entity-search-options"
+          aria-hidden={!isSearchOptionsOpen}
+          className={`overflow-hidden transition-[max-height,opacity,margin] duration-200 ease-out ${
+            isSearchOptionsOpen ? "mt-3 max-h-96 opacity-100" : "mt-0 max-h-0 opacity-0"
+          }`}
+        >
+          <fieldset disabled={!isSearchOptionsOpen}>
+            <EntitySearchOptions
+              query={query}
+              match={match}
+              selectedFields={selectedFields}
+              isAllFieldsSelected={isAllFieldsSelected}
+              onQueryChange={onQueryChange}
+              onQueryCompositionStart={onQueryCompositionStart}
+              onQueryCompositionEnd={onQueryCompositionEnd}
+              onMatchChange={onMatchChange}
+              onSelectAllFields={onSelectAllFields}
+              onToggleField={onToggleField}
+            />
+          </fieldset>
+        </div>
       </div>
-      <div className="absolute bottom-2 right-2">{searchOptionsToggleButton}</div>
+      <div className="mt-1 flex justify-center">{searchOptionsToggleButton}</div>
     </div>
   );
 }
