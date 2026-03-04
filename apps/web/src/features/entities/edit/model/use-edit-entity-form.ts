@@ -176,6 +176,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   const [uploadingImages, setUploadingImages] = useState(false);
   const [reorderingImages, setReorderingImages] = useState(false);
   const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
+  const [pendingDeletedImageIds, setPendingDeletedImageIds] = useState<string[]>([]);
   const [failedImageFiles, setFailedImageFiles] = useState<File[]>([]);
   const [pendingImageOrderIds, setPendingImageOrderIds] = useState<string[] | null>(null);
   const initializedEntityIdRef = useRef<string | null>(null);
@@ -208,6 +209,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setSavedRelatedEntityIds([]);
     setFailedImageFiles([]);
     setDeletingImageIds([]);
+    setPendingDeletedImageIds([]);
     setPendingImageOrderIds(null);
   }, [entityId]);
 
@@ -266,6 +268,15 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     }
     return ordered;
   }, [images, pendingImageOrderIds]);
+
+  const visibleOrderedImages = useMemo(() => {
+    if (pendingDeletedImageIds.length === 0) {
+      return orderedImages;
+    }
+
+    const pendingDeletedSet = new Set(pendingDeletedImageIds);
+    return orderedImages.filter((image) => !pendingDeletedSet.has(image.id));
+  }, [orderedImages, pendingDeletedImageIds]);
 
   useEffect(() => {
     if (!entity || !entityId || relatedLoading) {
@@ -404,26 +415,8 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       return;
     }
 
-    setDeletingImageIds((current) => [...current, imageId]);
     setError(null);
-    try {
-      await deleteEntityImage(entityId, imageId);
-      notify({
-        type: "success",
-        messageKey: notificationMessageKeys.imageRemoveSuccess
-      });
-    } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
-        return;
-      }
-      setError(toErrorMessage(e));
-      notify({
-        type: "error",
-        messageKey: resolveOperationErrorMessageKey(e, "delete")
-      });
-    } finally {
-      setDeletingImageIds((current) => current.filter((id) => id !== imageId));
-    }
+    setPendingDeletedImageIds((current) => (current.includes(imageId) ? current : [...current, imageId]));
   };
 
   const applyPendingImageOrder = (orderedImageIds: string[]) => {
@@ -449,21 +442,21 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   };
 
   const reorderByDelta = (imageId: string, delta: -1 | 1): void => {
-    if (!entityId || orderedImages.length === 0) {
+    if (!entityId || visibleOrderedImages.length === 0) {
       return;
     }
 
-    const fromIndex = orderedImages.findIndex((image) => image.id === imageId);
+    const fromIndex = visibleOrderedImages.findIndex((image) => image.id === imageId);
     if (fromIndex < 0) {
       return;
     }
 
     const toIndex = fromIndex + delta;
-    if (toIndex < 0 || toIndex >= images.length) {
+    if (toIndex < 0 || toIndex >= visibleOrderedImages.length) {
       return;
     }
 
-    const reorderedIds = orderedImages.map((image) => image.id);
+    const reorderedIds = visibleOrderedImages.map((image) => image.id);
     const [moved] = reorderedIds.splice(fromIndex, 1);
     if (!moved) {
       return;
@@ -481,11 +474,11 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   };
 
   const reorderImages = (activeImageId: string, overImageId: string): void => {
-    if (!entityId || activeImageId === overImageId || orderedImages.length === 0) {
+    if (!entityId || activeImageId === overImageId || visibleOrderedImages.length === 0) {
       return;
     }
 
-    const currentOrder = orderedImages.map((image) => image.id);
+    const currentOrder = visibleOrderedImages.map((image) => image.id);
     const fromIndex = currentOrder.indexOf(activeImageId);
     const toIndex = currentOrder.indexOf(overImageId);
     if (fromIndex < 0 || toIndex < 0) {
@@ -566,18 +559,48 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
         }
       }
 
+      let deletedImageCount = 0;
+      if (pendingDeletedImageIds.length > 0) {
+        setDeletingImageIds(pendingDeletedImageIds);
+        try {
+          for (const pendingDeletedImageId of pendingDeletedImageIds) {
+            try {
+              await deleteEntityImage(entityId, pendingDeletedImageId);
+              deletedImageCount += 1;
+            } catch (e) {
+              if (
+                e instanceof ApiError &&
+                e.status === httpStatus.notFound
+              ) {
+                continue;
+              }
+              notify({
+                type: "error",
+                messageKey: resolveOperationErrorMessageKey(e, "delete")
+              });
+              throw e;
+            }
+          }
+        } finally {
+          setDeletingImageIds([]);
+        }
+      }
+
       if (pendingImageOrderIds) {
+        const pendingDeletedSet = new Set(pendingDeletedImageIds);
+        const orderedImageIds = pendingImageOrderIds.filter((imageId) => !pendingDeletedSet.has(imageId));
         setReorderingImages(true);
         try {
-          await reorderEntityImages(entityId, {
-            orderedImageIds: pendingImageOrderIds
-          });
+          if (orderedImageIds.length > 0) {
+            await reorderEntityImages(entityId, { orderedImageIds });
+          }
           setPendingImageOrderIds(null);
         } finally {
           setReorderingImages(false);
         }
       }
 
+      setPendingDeletedImageIds([]);
       setSavedRelatedEntityIds([...selectedRelatedEntityIds]);
       if (relationDiff.toAdd.length > 0) {
         notify({
@@ -589,6 +612,12 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
         notify({
           type: "success",
           messageKey: notificationMessageKeys.relationRemoveSuccess
+        });
+      }
+      if (deletedImageCount > 0) {
+        notify({
+          type: "success",
+          messageKey: notificationMessageKeys.imageRemoveSuccess
         });
       }
       notify({
@@ -625,7 +654,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     selectedTagIds,
     relatedCandidates,
     selectedRelatedEntityIds,
-    images: orderedImages,
+    images: visibleOrderedImages,
     failedImageFiles,
     tagDialogOpen,
     relatedDialogOpen,

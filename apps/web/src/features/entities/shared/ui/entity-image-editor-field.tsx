@@ -1,4 +1,5 @@
 import type { EntityImage } from "@/entities/entity";
+import type { PointerEvent as ReactPointerEvent } from "react";
 import { DndContext, type DragEndEvent, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -46,6 +47,9 @@ function SortableImageCard({
     id: image.id,
     disabled: reorderingImages
   });
+  const preventDragStartFromButton = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+  };
 
   return (
     <div
@@ -75,6 +79,7 @@ function SortableImageCard({
           size="sm"
           variant="outline"
           disabled={index === 0 || reorderingImages}
+          onPointerDown={preventDragStartFromButton}
           onClick={() => onMoveImageUp(image.id)}
         >
           上へ
@@ -84,6 +89,7 @@ function SortableImageCard({
           size="sm"
           variant="outline"
           disabled={index === total - 1 || reorderingImages}
+          onPointerDown={preventDragStartFromButton}
           onClick={() => onMoveImageDown(image.id)}
         >
           下へ
@@ -93,6 +99,7 @@ function SortableImageCard({
           size="sm"
           variant="outline"
           disabled={deletingImageIds.includes(image.id)}
+          onPointerDown={preventDragStartFromButton}
           onClick={() => void onDeleteImage(image.id)}
         >
           {deletingImageIds.includes(image.id) ? "削除中..." : "削除"}
@@ -116,7 +123,11 @@ export function EntityImageEditorField({
   onDeleteImage
 }: EntityImageEditorFieldProps) {
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8
+      }
+    }),
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 0,
