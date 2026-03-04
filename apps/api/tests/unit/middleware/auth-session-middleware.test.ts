@@ -37,6 +37,7 @@ function createApp() {
   app.get("/login", (c) => c.text("login page"));
   app.get("/entities/new", (c) => c.text("new entity page"));
   app.get("/entities/:id/edit", (c) => c.text("edit entity page"));
+  app.get("/registrations/check", (c) => c.text("registration check page"));
   app.get("/", (c) => c.text("home"));
   return app;
 }
@@ -143,6 +144,16 @@ describe("authSessionMiddleware", () => {
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe("/login?returnTo=%2Fentities%2Fentity-1%2Fedit");
+    expect(response.headers.get("set-cookie")).toContain("shikouroku_token=");
+  });
+
+  it("redirects unauthenticated registration check page to /login with returnTo", async () => {
+    const app = createApp();
+
+    const response = await app.request("http://localhost/registrations/check", { method: "GET" }, TEST_ENV);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("/login?returnTo=%2Fregistrations%2Fcheck");
     expect(response.headers.get("set-cookie")).toContain("shikouroku_token=");
   });
 

@@ -204,6 +204,18 @@ export function AppHeader() {
                   >
                     <Link to={routePaths.map}>地図</Link>
                   </Button>
+                  {isAuthenticated && (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="w-full justify-start overflow-hidden text-ellipsis"
+                      onClick={() => {
+                        setDrawerOpen(false);
+                      }}
+                    >
+                      <Link to={routePaths.registrationCheck}>登録漏れチェック</Link>
+                    </Button>
+                  )}
                 </nav>
                 {isAuthenticated ? (
                   <div className="mt-auto border-t pt-3">

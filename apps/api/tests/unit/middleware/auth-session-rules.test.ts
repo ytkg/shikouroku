@@ -18,6 +18,7 @@ describe("authSessionRules", () => {
   it("保護対象SPAパスを判定できる", () => {
     expect(isAuthRequiredSpaPath("/entities/new")).toBe(true);
     expect(isAuthRequiredSpaPath("/entities/id-1/edit")).toBe(true);
+    expect(isAuthRequiredSpaPath("/registrations/check")).toBe(true);
     expect(isAuthRequiredSpaPath("/entities/id-1")).toBe(false);
   });
 

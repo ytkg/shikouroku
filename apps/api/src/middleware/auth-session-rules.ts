@@ -10,6 +10,7 @@ const ANONYMOUS_READ_API_PATTERNS = [
 ];
 
 const NEW_ENTITY_PATH = "/entities/new";
+const REGISTRATION_CHECK_PATH = "/registrations/check";
 const EDIT_ENTITY_PATH_PATTERN = /^\/entities\/[^/]+\/edit$/;
 
 export function canAccessApiWithoutAuth(method: string, pathname: string): boolean {
@@ -26,6 +27,9 @@ export function canAccessApiWithoutAuth(method: string, pathname: string): boole
 
 export function isAuthRequiredSpaPath(pathname: string): boolean {
   if (pathname === NEW_ENTITY_PATH) {
+    return true;
+  }
+  if (pathname === REGISTRATION_CHECK_PATH) {
     return true;
   }
   return EDIT_ENTITY_PATH_PATTERN.test(pathname);

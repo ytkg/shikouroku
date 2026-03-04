@@ -6,7 +6,8 @@ import {
   HomePage,
   LoginPage,
   MapPage,
-  NewEntityPage
+  NewEntityPage,
+  RegistrationCheckPage
 } from "@/pages";
 import { routePaths } from "@/shared/config/route-paths";
 import { useSeo } from "@/shared/lib/seo";
@@ -17,6 +18,7 @@ export function AppRouter() {
   const location = useLocation();
   const isMapPage = location.pathname === routePaths.map;
   const isNewEntityPage = location.pathname === routePaths.newEntity;
+  const isRegistrationCheckPage = location.pathname === routePaths.registrationCheck;
   const isLoginPage = location.pathname === routePaths.login;
   const isEntityEditPage = Boolean(matchPath(routePaths.entityEditPattern, location.pathname));
   const isEntityDetailPage =
@@ -32,6 +34,13 @@ export function AppRouter() {
             title: "嗜好の新規登録",
             description: "新しい嗜好を登録し、タグや画像、位置情報を追加できます。",
             path: routePaths.newEntity,
+            noIndex: true
+          }
+      : isRegistrationCheckPage
+        ? {
+            title: "登録漏れチェック",
+            description: "場所の緯度経度漏れや、嗜好画像の未登録を確認できます。",
+            path: routePaths.registrationCheck,
             noIndex: true
           }
       : isLoginPage
@@ -73,6 +82,7 @@ export function AppRouter() {
           <Route path={routePaths.login} element={<LoginPage />} />
           <Route path={routePaths.map} element={<MapPage />} />
           <Route path={routePaths.newEntity} element={<NewEntityPage />} />
+          <Route path={routePaths.registrationCheck} element={<RegistrationCheckPage />} />
           <Route path={routePaths.entityDetailPattern} element={<EntityDetailPage />} />
           <Route path={routePaths.entityEditPattern} element={<EntityEditPage />} />
           <Route path={routePaths.home} element={<HomePage />} />

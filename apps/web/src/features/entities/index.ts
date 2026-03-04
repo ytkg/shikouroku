@@ -1,3 +1,4 @@
+export { RegistrationCheckPageContent } from "./check";
 export { CreateEntityPageContent } from "./create";
 export { EntityDetailPageContent } from "./detail";
 export { EditEntityPageContent } from "./edit";
