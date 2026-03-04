@@ -1,4 +1,5 @@
 import { type PointerEvent } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { EntityImage } from "@/entities/entity";
 import { ModalShell } from "@/shared/ui/modal-shell";
 
@@ -41,18 +42,24 @@ export function EntityImagePreviewModal({
         />
         {canMoveToPreviousImage && (
           <div
-            className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2 text-3xl text-white/50"
+            className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-0"
             aria-hidden="true"
           >
-            ←
+            <span className="relative block h-12 w-12 opacity-60">
+              <ChevronLeft className="absolute inset-0 h-12 w-12 text-black/85" strokeWidth={4.5} />
+              <ChevronLeft className="absolute inset-0 h-12 w-12 text-white" strokeWidth={3} />
+            </span>
           </div>
         )}
         {canMoveToNextImage && (
           <div
-            className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-3xl text-white/50"
+            className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-0"
             aria-hidden="true"
           >
-            →
+            <span className="relative block h-12 w-12 opacity-60">
+              <ChevronRight className="absolute inset-0 h-12 w-12 text-black/85" strokeWidth={4.5} />
+              <ChevronRight className="absolute inset-0 h-12 w-12 text-white" strokeWidth={3} />
+            </span>
           </div>
         )}
       </div>
