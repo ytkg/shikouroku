@@ -6,7 +6,15 @@ import { AppRouter } from "./app/router";
 import "./index.css";
 
 if (import.meta.env.PROD) {
-  registerSW({ immediate: true });
+  const registerServiceWorker = () => {
+    registerSW({ immediate: false });
+  };
+
+  if (document.readyState === "complete") {
+    registerServiceWorker();
+  } else {
+    window.addEventListener("load", registerServiceWorker, { once: true });
+  }
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
