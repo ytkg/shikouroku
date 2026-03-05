@@ -1,5 +1,5 @@
 import type { Tag } from "@/entities/entity";
-import type { MapLocationEntity } from "./entity-map-types";
+import type { MapLocationEntity } from "./entity-map.types";
 
 type EntityMapLocationListProps = {
   entities: MapLocationEntity[];

@@ -5,7 +5,7 @@ import markerIcon2xUrl from "leaflet/dist/images/marker-icon-2x.png";
 import markerIconUrl from "leaflet/dist/images/marker-icon.png";
 import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
 import { DEFAULT_CENTER, DEFAULT_ZOOM, EMPTY_MAP_ZOOM, SINGLE_MARKER_ZOOM } from "../ui/entity-map-constants";
-import type { MapLocationEntity } from "../ui/entity-map-types";
+import type { MapLocationEntity } from "../ui/entity-map.types";
 
 const PIN_ICON = L.icon({
   iconRetinaUrl: markerIcon2xUrl,

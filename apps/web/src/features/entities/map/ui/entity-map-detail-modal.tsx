@@ -2,7 +2,7 @@ import type { Entity, EntityImage, Tag } from "@/entities/entity";
 import { Button } from "@/shared/ui/button";
 import { ModalShell } from "@/shared/ui/modal-shell";
 import { Skeleton } from "@/shared/ui/skeleton";
-import type { EntityLocationMapData } from "./entity-map-types";
+import type { EntityLocationMapData } from "./entity-map.types";
 
 type EntityMapDetailModalProps = {
   selectedEntity: Entity | undefined;

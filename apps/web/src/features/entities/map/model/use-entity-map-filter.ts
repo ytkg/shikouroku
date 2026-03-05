@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { EntityLocationMapData, LocationTagLookup, MapLocationEntity, MapTagOption } from "../ui/entity-map-types";
+import type { EntityLocationMapData, LocationTagLookup, MapLocationEntity, MapTagOption } from "../ui/entity-map.types";
 
 function buildTagOptions(locations: EntityLocationMapData[]): MapTagOption[] {
   return Array.from(

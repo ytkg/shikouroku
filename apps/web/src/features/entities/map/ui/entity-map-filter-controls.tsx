@@ -1,7 +1,7 @@
 import { Input } from "@/shared/ui/input";
 import { Select } from "@/shared/ui/form-controls";
 import { Label } from "@/shared/ui/label";
-import type { MapTagOption } from "./entity-map-types";
+import type { MapTagOption } from "./entity-map.types";
 
 type EntityMapFilterControlsProps = {
   selectedTagId: string;
