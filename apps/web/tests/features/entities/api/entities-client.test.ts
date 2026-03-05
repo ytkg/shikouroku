@@ -52,6 +52,137 @@ describe("entities.client", () => {
     ]);
   });
 
+  it("fetchEntitiesは複数ページを連結して返す", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            page: {
+              limit: 100,
+              hasMore: true,
+              nextCursor: "cursor-1",
+              total: 2
+            },
+            entities: [
+              {
+                id: "entity-1",
+                kind: { id: 1, label: "book" },
+                name: "Clean Code",
+                description: null,
+                is_wishlist: 1,
+                first_image_url: null,
+                tags: []
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          }
+        )
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            page: {
+              limit: 100,
+              hasMore: false,
+              nextCursor: null,
+              total: 2
+            },
+            entities: [
+              {
+                id: "entity-2",
+                kind: { id: 2, label: "movie" },
+                name: "Blade Runner",
+                description: null,
+                is_wishlist: 0,
+                first_image_url: null,
+                tags: []
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          }
+        )
+      );
+
+    const result = await fetchEntities();
+    expect(result.map((entity) => entity.id)).toEqual(["entity-1", "entity-2"]);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    expect(fetchSpy.mock.calls[1]?.[0]).toBe("/api/entities?limit=100&cursor=cursor-1");
+  });
+
+  it("fetchEntitiesは循環cursorを検知したら停止する", async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            page: {
+              limit: 100,
+              hasMore: true,
+              nextCursor: "cursor-loop",
+              total: 2
+            },
+            entities: [
+              {
+                id: "entity-1",
+                kind: { id: 1, label: "book" },
+                name: "Clean Code",
+                description: null,
+                is_wishlist: 1,
+                first_image_url: null,
+                tags: []
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          }
+        )
+      )
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            ok: true,
+            page: {
+              limit: 100,
+              hasMore: true,
+              nextCursor: "cursor-loop",
+              total: 2
+            },
+            entities: [
+              {
+                id: "entity-2",
+                kind: { id: 2, label: "movie" },
+                name: "Blade Runner",
+                description: null,
+                is_wishlist: 0,
+                first_image_url: null,
+                tags: []
+              }
+            ]
+          }),
+          {
+            status: 200,
+            headers: { "content-type": "application/json" }
+          }
+        )
+      );
+
+    const result = await fetchEntities();
+    expect(result.map((entity) => entity.id)).toEqual(["entity-1", "entity-2"]);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
   it("fetchEntitiesPageは検索条件をクエリに変換する", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
       new Response(
