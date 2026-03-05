@@ -1,15 +1,10 @@
 import type { EntityImageRecord } from "../../../../shared/db/records";
 import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
-
-export type InsertEntityImageInput = {
-  id: string;
-  entityId: string;
-  objectKey: string;
-  fileName: string;
-  mimeType: string;
-  fileSize: number;
-  sortOrder: number;
-};
+import type {
+  DeleteEntityImageResult,
+  EntityImageRepository,
+  InsertEntityImageInput
+} from "../ports/entity-image-repository";
 
 type NextSortOrderRecord = {
   next_sort_order: number;
@@ -92,7 +87,7 @@ export async function deleteEntityImageAndCollapseSortOrderInD1(
   entityId: string,
   imageId: string,
   deletedSortOrder: number
-): Promise<"deleted" | "not_found" | "error"> {
+): Promise<DeleteEntityImageResult> {
   const results = await runD1UnitOfWork(db, [
     db.prepare("DELETE FROM entity_images WHERE entity_id = ? AND id = ?").bind(entityId, imageId),
     db
@@ -136,4 +131,16 @@ export async function reorderEntityImagesInD1(
   ];
   const results = await runD1UnitOfWork(db, statements);
   return results ? isSuccessfulD1UnitOfWork(results) : false;
+}
+
+export function createD1EntityImageRepository(db: D1Database): EntityImageRepository {
+  return {
+    listEntityImages: (entityId) => listEntityImagesFromD1(db, entityId),
+    findEntityImageById: (entityId, imageId) => findEntityImageByIdFromD1(db, entityId, imageId),
+    nextEntityImageSortOrder: (entityId) => nextEntityImageSortOrderFromD1(db, entityId),
+    insertEntityImage: (input) => insertEntityImageInD1(db, input),
+    deleteEntityImageAndCollapseSortOrder: (entityId, imageId, deletedSortOrder) =>
+      deleteEntityImageAndCollapseSortOrderInD1(db, entityId, imageId, deletedSortOrder),
+    reorderEntityImages: (entityId, orderedImageIds) => reorderEntityImagesInD1(db, entityId, orderedImageIds)
+  };
 }

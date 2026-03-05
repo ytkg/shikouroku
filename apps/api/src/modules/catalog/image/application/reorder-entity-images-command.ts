@@ -1,11 +1,11 @@
 import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
-import { listEntityImagesFromD1, reorderEntityImagesInD1 } from "../infra/image-repository-d1";
+import type { EntityImageRepository } from "../ports/entity-image-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import { hasSameIds } from "./image-shared";
 
 export async function reorderEntityImagesCommand(
-  db: D1Database,
   entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  entityImageRepository: Pick<EntityImageRepository, "listEntityImages" | "reorderEntityImages">,
   entityId: string,
   orderedImageIds: string[]
 ): Promise<UseCaseResult<Record<string, never>>> {
@@ -19,7 +19,7 @@ export async function reorderEntityImagesCommand(
     return fail(400, "orderedImageIds must be unique");
   }
 
-  const currentImages = await listEntityImagesFromD1(db, entityId);
+  const currentImages = await entityImageRepository.listEntityImages(entityId);
   const currentImageIds = currentImages.map((image) => image.id);
   if (currentImageIds.length !== orderedImageIds.length) {
     return fail(400, "orderedImageIds must include all entity images");
@@ -36,7 +36,7 @@ export async function reorderEntityImagesCommand(
     return success({});
   }
 
-  const reordered = await reorderEntityImagesInD1(db, entityId, orderedImageIds);
+  const reordered = await entityImageRepository.reorderEntityImages(entityId, orderedImageIds);
   if (!reordered) {
     return fail(500, "failed to reorder images");
   }

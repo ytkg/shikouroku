@@ -1,11 +1,11 @@
 import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
-import { listEntityImagesFromD1 } from "../infra/image-repository-d1";
+import type { EntityImageRepository } from "../ports/entity-image-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import { toEntityImageResponse, type EntityImageResponseDto } from "./image-shared";
 
 export async function listEntityImagesQuery(
-  db: D1Database,
   entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  entityImageRepository: Pick<EntityImageRepository, "listEntityImages">,
   entityId: string
 ): Promise<UseCaseResult<{ images: EntityImageResponseDto[] }>> {
   const entity = await entityReadRepository.findEntityById(entityId);
@@ -13,7 +13,7 @@ export async function listEntityImagesQuery(
     return fail(404, "entity not found");
   }
 
-  const images = await listEntityImagesFromD1(db, entityId);
+  const images = await entityImageRepository.listEntityImages(entityId);
   return success({
     images: images.map(toEntityImageResponse)
   });
