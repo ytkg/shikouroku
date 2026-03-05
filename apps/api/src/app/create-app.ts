@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { AppEnv } from "../app-env";
 import { authSessionMiddleware } from "../middleware/auth-session-middleware";
+import { securityHeadersMiddleware } from "../middleware/security-headers-middleware";
 import { createApiRouter } from "../routes/api-router";
 import { requestIdMiddleware } from "../shared/http/request-id";
 
@@ -18,6 +19,7 @@ export function createApp(): Hono<AppEnv> {
   const app = new Hono<AppEnv>();
 
   app.use("*", requestIdMiddleware);
+  app.use("*", securityHeadersMiddleware);
   app.use("*", authSessionMiddleware);
 
   app.route("/api", createApiRouter());

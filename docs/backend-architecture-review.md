@@ -97,6 +97,17 @@
 - timeout / network error / upstream 5xx(408/429含む) は gateway 層で吸収し、`login` / `refresh` は `null`、`verify` は `false` を返す。
 - 異常系は `console.error` に `[auth-gateway]` プレフィックスで `operation`, `reason`, `url/status` を出力し、運用時の原因追跡を可能にする。
 
+### 5.2 セキュリティヘッダ方針
+
+- `requestIdMiddleware` の直後、`authSessionMiddleware` の前に `securityHeadersMiddleware` を適用する。
+- 全レスポンスに以下を付与する:
+  - `X-Content-Type-Options: nosniff`
+  - `X-Frame-Options: DENY`
+  - `Referrer-Policy: strict-origin-when-cross-origin`
+  - `Permissions-Policy: geolocation=(), camera=(), microphone=()`
+- `Strict-Transport-Security` は HTTPS リクエスト時のみ付与する。
+- `Content-Security-Policy` は `text/html` 応答時のみ付与する（API JSON には付与しない）。
+
 ## 6. 品質ゲート
 
 - `npm --workspace @shikouroku/api run check`
