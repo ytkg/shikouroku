@@ -29,3 +29,6 @@ jobs:
 
       - name: Quality Gate
         run: npm run quality:web
+
+      - name: Web Coverage Gate
+        run: npm run test:coverage:web

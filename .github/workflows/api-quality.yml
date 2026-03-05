@@ -29,3 +29,6 @@ jobs:
 
       - name: API Quality Gate
         run: npm run quality:api
+
+      - name: API Coverage Gate
+        run: npm run test:coverage:api

@@ -8,6 +8,7 @@
     "dev:remote": "npm --workspace @shikouroku/web run build && wrangler dev --remote",
     "deploy": "wrangler deploy",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:architecture": "vitest run tests/architecture",
     "test:unit": "vitest run tests/unit",
     "test:contract": "vitest run tests/contract",
@@ -28,6 +29,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241127.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.6.3",
     "wrangler": "^4.66.0"
   }
