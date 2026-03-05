@@ -3,6 +3,7 @@ import {
   parseRelatedEntitiesResponse,
   parseRelatedMutationResponse
 } from "./related.response";
+import { requestEntityMutation } from "./entity-mutation-request";
 import { requestJson } from "@/shared/api/http.client";
 import {
   getEntityRelatedPath,
@@ -22,19 +23,25 @@ export async function createEntityRelation(
   entityId: string,
   input: CreateEntityRelationInput
 ): Promise<void> {
-  const json = await requestJson<unknown>(getEntityRelatedPath(entityId), {
-    method: "POST",
-    body: input
-  });
-  parseRelatedMutationResponse(json);
+  await requestEntityMutation(
+    getEntityRelatedPath(entityId),
+    {
+      method: "POST",
+      body: input
+    },
+    parseRelatedMutationResponse
+  );
 }
 
 export async function deleteEntityRelation(
   entityId: string,
   relatedEntityId: string
 ): Promise<void> {
-  const json = await requestJson<unknown>(getEntityRelationPath(entityId, relatedEntityId), {
-    method: "DELETE"
-  });
-  parseRelatedMutationResponse(json);
+  await requestEntityMutation(
+    getEntityRelationPath(entityId, relatedEntityId),
+    {
+      method: "DELETE"
+    },
+    parseRelatedMutationResponse
+  );
 }

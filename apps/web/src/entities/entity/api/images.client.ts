@@ -4,6 +4,7 @@ import {
   parseEntityImageResponse,
   parseEntityImagesResponse
 } from "./images.response";
+import { requestEntityMutation } from "./entity-mutation-request";
 import { requestFormData, requestJson } from "@/shared/api/http.client";
 import {
   getEntityImageOrderPath,
@@ -32,19 +33,25 @@ export async function uploadEntityImage(entityId: string, file: File): Promise<E
 }
 
 export async function deleteEntityImage(entityId: string, imageId: string): Promise<void> {
-  const json = await requestJson<unknown>(getEntityImagePath(entityId, imageId), {
-    method: "DELETE"
-  });
-  parseEntityImageMutationResponse(json);
+  await requestEntityMutation(
+    getEntityImagePath(entityId, imageId),
+    {
+      method: "DELETE"
+    },
+    parseEntityImageMutationResponse
+  );
 }
 
 export async function reorderEntityImages(
   entityId: string,
   input: ReorderEntityImagesInput
 ): Promise<void> {
-  const json = await requestJson<unknown>(getEntityImageOrderPath(entityId), {
-    method: "PATCH",
-    body: input
-  });
-  parseEntityImageMutationResponse(json);
+  await requestEntityMutation(
+    getEntityImageOrderPath(entityId),
+    {
+      method: "PATCH",
+      body: input
+    },
+    parseEntityImageMutationResponse
+  );
 }
