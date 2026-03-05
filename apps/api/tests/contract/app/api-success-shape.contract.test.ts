@@ -76,4 +76,39 @@ describe("api success response contract", () => {
       requestId: "req-tags-success"
     });
   });
+
+  it("returns standard success envelope for /api/auth/me with valid token", async () => {
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+      const url = typeof input === "string" ? input : input.url;
+      if (url.endsWith("/verify")) {
+        return new Response(null, { status: 200 });
+      }
+
+      return new Response(null, { status: 404 });
+    });
+
+    const env = {
+      ...TEST_ENV_BASE,
+      DB: createInMemoryTagDb([])
+    };
+
+    const response = await app.request(
+      "http://localhost/api/auth/me",
+      {
+        method: "GET",
+        headers: {
+          [REQUEST_ID_HEADER]: "req-auth-me-success",
+          Cookie: "shikouroku_token=token-123"
+        }
+      },
+      env as any
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      ok: true,
+      authenticated: true,
+      requestId: "req-auth-me-success"
+    });
+  });
 });
