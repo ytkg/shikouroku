@@ -14,6 +14,7 @@
 | `docs/preference-feature-spec.md` | 関連嗜好（entity relation）機能の実装仕様 | 関連嗜好の UI/API/業務ルールを変更したとき |
 | `docs/image-attachment-feature-spec.md` | 画像添付機能の実装仕様 | 画像 UI/API/業務ルールを変更したとき |
 | `docs/product-growth-roadmap.md` | 次フェーズの機能拡張計画 | 優先度や実装順序を見直したとき |
+| `docs/web-data-fetching-guidelines.md` | Webデータ取得（SWR key / 再検証 / 配置）の運用ガイド | Webの取得設計・API client構成を変更したとき |
 
 ## 2. 運用ルール
 
@@ -41,3 +42,4 @@
 - [x] `docs/_template.md` を追加し、書式の起点を統一した
 - [x] `docs/product-growth-roadmap.md` を現行実装（地図/位置情報/検索）に合わせて更新した
 - [x] `docs/preference-feature-spec.md` を v1.1 に更新し、関連編集ダイアログ仕様・差分同期ルールを反映した
+- [x] `docs/web-data-fetching-guidelines.md` を追加し、SWR運用方針を明文化した
