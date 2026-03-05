@@ -4,5 +4,7 @@ node_modules
 *.log
 apps/web/dist
 apps/api/.wrangler
+apps/web/coverage
+apps/api/coverage
 
 *.tsbuildinfo
