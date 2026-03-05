@@ -1,10 +1,10 @@
 import { toApiError } from "@/shared/api/api-error";
 
-type JsonRequestInit = Omit<RequestInit, "body"> & {
+export type JsonRequestInit = Omit<RequestInit, "body"> & {
   body?: unknown;
 };
 
-type FormDataRequestInit = Omit<RequestInit, "body"> & {
+export type FormDataRequestInit = Omit<RequestInit, "body"> & {
   body: FormData;
 };
 

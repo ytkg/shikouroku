@@ -9,7 +9,7 @@ import {
   type EntitiesPageResponse
 } from "./entities.response";
 import type { Entity, EntityLocationPin, Kind, Tag } from "../model/entity.types";
-import { requestJson } from "@/shared/api/http.client";
+import { requestJson, type JsonRequestInit } from "@/shared/api/http.client";
 import { apiPaths, getEntityLocationsPath, getEntityPath, getTagPath } from "@/shared/config/api-paths";
 import {
   buildEntitiesListPath,
@@ -56,29 +56,41 @@ export type UpdateEntityInput = {
   longitude?: number;
 };
 
+async function requestAndParse<T>(
+  path: string,
+  parser: (json: unknown) => T,
+  init?: JsonRequestInit
+): Promise<T> {
+  const json = await requestJson<unknown>(path, init);
+  return parser(json);
+}
+
+async function requestAndParseEntity(
+  path: string,
+  init?: JsonRequestInit
+): Promise<Entity> {
+  return requestAndParse(path, parseEntityResponse, init);
+}
+
 export async function fetchKinds(): Promise<Kind[]> {
-  const json = await requestJson<unknown>(apiPaths.kinds);
-  return parseKindsResponse(json);
+  return requestAndParse(apiPaths.kinds, parseKindsResponse);
 }
 
 export async function fetchTags(): Promise<Tag[]> {
-  const json = await requestJson<unknown>(apiPaths.tags);
-  return parseTagsResponse(json);
+  return requestAndParse(apiPaths.tags, parseTagsResponse);
 }
 
 export async function createTag(input: CreateTagInput): Promise<Tag> {
-  const json = await requestJson<unknown>(apiPaths.tags, {
+  return requestAndParse(apiPaths.tags, parseTagResponse, {
     method: "POST",
     body: input
   });
-  return parseTagResponse(json);
 }
 
 export async function deleteTag(tagId: number): Promise<void> {
-  const json = await requestJson<unknown>(getTagPath(tagId), {
+  await requestAndParse(getTagPath(tagId), parseOkResponse, {
     method: "DELETE"
   });
-  parseOkResponse(json);
 }
 
 export async function fetchEntitiesPage(
@@ -100,30 +112,26 @@ export async function fetchEntities(): Promise<Entity[]> {
 }
 
 export async function fetchEntityLocations(): Promise<EntityLocationPin[]> {
-  const json = await requestJson<unknown>(getEntityLocationsPath());
-  return parseEntityLocationsResponse(json).locations;
+  return requestAndParse(getEntityLocationsPath(), (json) => parseEntityLocationsResponse(json).locations);
 }
 
 export async function fetchEntityById(entityId: string): Promise<Entity> {
-  const json = await requestJson<unknown>(getEntityPath(entityId));
-  return parseEntityResponse(json);
+  return requestAndParseEntity(getEntityPath(entityId));
 }
 
 export async function createEntity(input: CreateEntityInput): Promise<Entity> {
-  const json = await requestJson<unknown>(apiPaths.entities, {
+  return requestAndParseEntity(apiPaths.entities, {
     method: "POST",
     body: input
   });
-  return parseEntityResponse(json);
 }
 
 export async function updateEntity(
   entityId: string,
   input: UpdateEntityInput
 ): Promise<Entity> {
-  const json = await requestJson<unknown>(getEntityPath(entityId), {
+  return requestAndParseEntity(getEntityPath(entityId), {
     method: "PATCH",
     body: input
   });
-  return parseEntityResponse(json);
 }
