@@ -113,4 +113,58 @@ describe("api error response contract", () => {
       requestId: "req-tag-invalid-id"
     });
   });
+
+  it("returns INVALID_ENTITY_LIMIT payload for /api/entities with invalid limit", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 200 }));
+
+    const response = await app.request(
+      "http://localhost/api/entities?limit=0",
+      {
+        method: "GET",
+        headers: {
+          [REQUEST_ID_HEADER]: "req-entity-invalid-limit",
+          Cookie: "shikouroku_token=token-123"
+        }
+      },
+      TEST_ENV
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: {
+        code: "INVALID_ENTITY_LIMIT",
+        message: "limit must be an integer between 1 and 100"
+      },
+      requestId: "req-entity-invalid-limit"
+    });
+  });
+
+  it("returns INVALID_MULTIPART_BODY payload for /api/entities/:id/images on invalid multipart", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 200 }));
+
+    const response = await app.request(
+      "http://localhost/api/entities/entity-1/images",
+      {
+        method: "POST",
+        headers: {
+          [REQUEST_ID_HEADER]: "req-image-invalid-multipart",
+          Cookie: "shikouroku_token=token-123",
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({ invalid: true })
+      },
+      TEST_ENV
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: {
+        code: "INVALID_MULTIPART_BODY",
+        message: "invalid multipart body"
+      },
+      requestId: "req-image-invalid-multipart"
+    });
+  });
 });
