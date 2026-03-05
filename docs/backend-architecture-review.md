@@ -91,6 +91,12 @@
 
 設定元: `apps/api/wrangler.toml`
 
+### 5.1 外部認証 API 呼び出しポリシー
+
+- `auth-gateway-http` は `AUTH_GATEWAY_TIMEOUT_MS=3000` を共通適用する。
+- timeout / network error / upstream 5xx(408/429含む) は gateway 層で吸収し、`login` / `refresh` は `null`、`verify` は `false` を返す。
+- 異常系は `console.error` に `[auth-gateway]` プレフィックスで `operation`, `reason`, `url/status` を出力し、運用時の原因追跡を可能にする。
+
 ## 6. 品質ゲート
 
 - `npm --workspace @shikouroku/api run check`

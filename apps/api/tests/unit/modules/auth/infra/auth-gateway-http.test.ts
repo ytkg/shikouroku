@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  AUTH_GATEWAY_TIMEOUT_MS,
   loginWithAuthGateway,
   refreshWithAuthGateway,
   verifyTokenWithAuthGateway
@@ -23,7 +24,8 @@ describe("auth-gateway-http", () => {
     expect(fetchSpy).toHaveBeenCalledWith(
       "https://auth.example.test/login",
       expect.objectContaining({
-        method: "POST"
+        method: "POST",
+        signal: expect.any(AbortSignal)
       })
     );
     expect(result).toEqual({
@@ -39,22 +41,72 @@ describe("auth-gateway-http", () => {
         headers: { "content-type": "application/json" }
       })
     );
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const result = await refreshWithAuthGateway("https://auth.example.test", "refresh-token");
 
     expect(result).toBeNull();
+    expect(errorSpy).toHaveBeenCalledWith(
+      "[auth-gateway]",
+      expect.objectContaining({ operation: "refresh", reason: "invalid_response_shape" })
+    );
   });
 
   it("sets bearer token on verify request", async () => {
-    const fetchSpy = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValue(new Response(null, { status: 200 }));
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 200 }));
 
     const verified = await verifyTokenWithAuthGateway("https://auth.example.test", "token-123");
 
     expect(verified).toBe(true);
-    expect(fetchSpy).toHaveBeenCalledWith("https://auth.example.test/verify", {
-      headers: { Authorization: "Bearer token-123" }
-    });
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://auth.example.test/verify",
+      expect.objectContaining({
+        headers: { Authorization: "Bearer token-123" },
+        signal: expect.any(AbortSignal)
+      })
+    );
+  });
+
+  it("returns null and logs network error when login request fails", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network down"));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const result = await loginWithAuthGateway("https://auth.example.test", "alice", "secret");
+
+    expect(result).toBeNull();
+    expect(errorSpy).toHaveBeenCalledWith(
+      "[auth-gateway]",
+      expect.objectContaining({ operation: "login", reason: "network_error" })
+    );
+  });
+
+  it("returns null and logs upstream error on refresh 503", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 503 }));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const result = await refreshWithAuthGateway("https://auth.example.test", "refresh-token");
+
+    expect(result).toBeNull();
+    expect(errorSpy).toHaveBeenCalledWith(
+      "[auth-gateway]",
+      expect.objectContaining({ operation: "refresh", reason: "upstream_error", status: 503 })
+    );
+  });
+
+  it("returns false and logs timeout on verify abort", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new DOMException("aborted", "AbortError"));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+    const verified = await verifyTokenWithAuthGateway("https://auth.example.test", "token-123");
+
+    expect(verified).toBe(false);
+    expect(errorSpy).toHaveBeenCalledWith(
+      "[auth-gateway]",
+      expect.objectContaining({
+        operation: "verify",
+        reason: "timeout",
+        timeoutMs: AUTH_GATEWAY_TIMEOUT_MS
+      })
+    );
   });
 });
