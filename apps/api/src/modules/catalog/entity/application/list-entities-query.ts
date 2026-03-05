@@ -1,8 +1,4 @@
-import {
-  countEntitiesWithKindsFromD1,
-  fetchTagsByEntityIdsFromD1,
-  listEntitiesWithKindsFromD1
-} from "../infra/entity-repository-d1";
+import type { EntityApplicationRepository } from "../ports/entity-application-repository";
 import { success, type UseCaseResult } from "../../../../shared/application/result";
 import { toEntityWithFirstImageResponse, type EntityResponseDto } from "./entity-shared";
 
@@ -42,7 +38,10 @@ function toCursorToken(createdAt: string, id: string): string {
 }
 
 export async function listEntitiesQuery(
-  db: D1Database,
+  entityRepository: Pick<
+    EntityApplicationRepository,
+    "listEntitiesWithKinds" | "countEntitiesWithKinds" | "fetchTagsByEntityIds"
+  >,
   input: ListEntitiesQueryInput
 ): Promise<UseCaseResult<{ entities: EntityResponseDto[]; page: EntityListPageDto }>> {
   const normalizedQuery = input.q.trim();
@@ -54,13 +53,13 @@ export async function listEntitiesQuery(
     fields: input.fields
   };
   const [entities, total] = await Promise.all([
-    listEntitiesWithKindsFromD1(db, {
+    entityRepository.listEntitiesWithKinds({
       limit: input.limit + 1,
       cursorCreatedAt: input.cursor?.createdAt ?? null,
       cursorId: input.cursor?.id ?? null,
       ...searchInput
     }),
-    countEntitiesWithKindsFromD1(db, searchInput)
+    entityRepository.countEntitiesWithKinds(searchInput)
   ]);
 
   const hasMore = entities.length > input.limit;
@@ -68,10 +67,7 @@ export async function listEntitiesQuery(
   const lastEntity = visibleEntities.at(-1);
   const nextCursor = hasMore && lastEntity ? toCursorToken(lastEntity.created_at, lastEntity.id) : null;
 
-  const tagsByEntity = await fetchTagsByEntityIdsFromD1(
-    db,
-    visibleEntities.map((entity) => entity.id)
-  );
+  const tagsByEntity = await entityRepository.fetchTagsByEntityIds(visibleEntities.map((entity) => entity.id));
   const entitiesWithKinds: EntityResponseDto[] = [];
 
   for (const entity of visibleEntities) {

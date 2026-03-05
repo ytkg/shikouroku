@@ -13,7 +13,10 @@ import {
 } from "../../modules/catalog/entity/application/list-entities-query";
 import { listEntityLocationsQuery } from "../../modules/catalog/entity/application/list-entity-locations-query";
 import { updateEntityCommand } from "../../modules/catalog/entity/application/update-entity-command";
-import { createD1EntityReadRepository } from "../../modules/catalog/entity/infra/entity-repository-d1";
+import {
+  createD1EntityApplicationRepository,
+  createD1EntityReadRepository
+} from "../../modules/catalog/entity/infra/entity-repository-d1";
 import { createD1KindRepository } from "../../modules/catalog/kind/infra/kind-repository-d1";
 import { createD1TagRepository } from "../../modules/catalog/tag/infra/tag-repository-d1";
 import { deleteEntityImageCommand } from "../../modules/catalog/image/application/delete-entity-image-command";
@@ -37,6 +40,7 @@ import { useCaseError } from "./shared";
 
 function createEntityWriteDependencies(db: D1Database) {
   return {
+    entityRepository: createD1EntityApplicationRepository(db),
     kindRepository: createD1KindRepository(db),
     tagRepository: createD1TagRepository(db)
   };
@@ -66,7 +70,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return resolvedQuery.response;
     }
 
-    const result = await listEntitiesQuery(c.env.DB, resolvedQuery.data);
+    const entityRepository = createD1EntityApplicationRepository(c.env.DB);
+    const result = await listEntitiesQuery(entityRepository, resolvedQuery.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -75,7 +80,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
   });
 
   entities.get("/entities/locations", async (c) => {
-    const result = await listEntityLocationsQuery(c.env.DB);
+    const entityRepository = createD1EntityApplicationRepository(c.env.DB);
+    const result = await listEntityLocationsQuery(entityRepository);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -85,7 +91,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id", async (c) => {
     const id = c.req.param("id");
-    const result = await getEntityQuery(c.env.DB, id);
+    const entityRepository = createD1EntityApplicationRepository(c.env.DB);
+    const result = await getEntityQuery(entityRepository, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -99,8 +106,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const { kindRepository, tagRepository } = createEntityWriteDependencies(c.env.DB);
-    const result = await createEntityCommand(c.env.DB, kindRepository, tagRepository, parsedBody.data);
+    const { entityRepository, kindRepository, tagRepository } = createEntityWriteDependencies(c.env.DB);
+    const result = await createEntityCommand(entityRepository, kindRepository, tagRepository, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
@@ -119,8 +126,8 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const { kindRepository, tagRepository } = createEntityWriteDependencies(c.env.DB);
-    const result = await updateEntityCommand(c.env.DB, kindRepository, tagRepository, id, parsedBody.data);
+    const { entityRepository, kindRepository, tagRepository } = createEntityWriteDependencies(c.env.DB);
+    const result = await updateEntityCommand(entityRepository, kindRepository, tagRepository, id, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }

@@ -1,22 +1,21 @@
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
-import {
-  findEntityLocationByEntityIdFromD1,
-  fetchTagsByEntityIdsFromD1,
-  findEntityWithKindByIdFromD1
-} from "../infra/entity-repository-d1";
+import type { EntityApplicationRepository } from "../ports/entity-application-repository";
 import { toEntityResponse, toEntityWithTagsRecord, type EntityResponseDto } from "./entity-shared";
 
 export async function getEntityQuery(
-  db: D1Database,
+  entityRepository: Pick<
+    EntityApplicationRepository,
+    "findEntityWithKindById" | "fetchTagsByEntityIds" | "findEntityLocationByEntityId"
+  >,
   id: string
 ): Promise<UseCaseResult<{ entity: EntityResponseDto }>> {
-  const entity = await findEntityWithKindByIdFromD1(db, id);
+  const entity = await entityRepository.findEntityWithKindById(id);
   if (!entity) {
     return fail(404, "entity not found");
   }
 
-  const tagsByEntity = await fetchTagsByEntityIdsFromD1(db, [id]);
-  const location = await findEntityLocationByEntityIdFromD1(db, id);
+  const tagsByEntity = await entityRepository.fetchTagsByEntityIds([id]);
+  const location = await entityRepository.findEntityLocationByEntityId(id);
 
   return success({
     entity: toEntityResponse(

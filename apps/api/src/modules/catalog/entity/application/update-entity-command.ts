@@ -1,9 +1,5 @@
 import type { KindRepository } from "../../kind/ports/kind-repository";
-import {
-  fetchEntityWithTagsFromD1,
-  findEntityIdByKindAndNameFromD1,
-  updateEntityWithTagsInD1
-} from "../infra/entity-repository-d1";
+import type { EntityApplicationRepository } from "../ports/entity-application-repository";
 import type { TagRepository } from "../../tag/ports/tag-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
@@ -19,7 +15,10 @@ import {
 const LOCATION_KIND_LABEL = "場所";
 
 export async function updateEntityCommand(
-  db: D1Database,
+  entityRepository: Pick<
+    EntityApplicationRepository,
+    "findEntityIdByKindAndName" | "updateEntityWithTags" | "fetchEntityWithTags"
+  >,
   kindRepository: Pick<KindRepository, "findKindById">,
   tagRepository: Pick<TagRepository, "countExistingTagsByIds">,
   id: string,
@@ -35,7 +34,7 @@ export async function updateEntityCommand(
     return fail(400, "latitude and longitude are allowed only for location kind");
   }
 
-  const duplicated = await findEntityIdByKindAndNameFromD1(db, body.kindId, body.name);
+  const duplicated = await entityRepository.findEntityIdByKindAndName(body.kindId, body.name);
   if (duplicated && duplicated.id !== id) {
     return fail(409, "entity already exists");
   }
@@ -46,8 +45,7 @@ export async function updateEntityCommand(
     return fail(400, "tag not found");
   }
 
-  const updateResult = await updateEntityWithTagsInD1(
-    db,
+  const updateResult = await entityRepository.updateEntityWithTags(
     {
       id,
       kindId: body.kindId,
@@ -66,7 +64,7 @@ export async function updateEntityCommand(
     return fail(500, "failed to update entity");
   }
 
-  const entity = await fetchEntityWithTagsFromD1(db, id);
+  const entity = await entityRepository.fetchEntityWithTags(id);
   if (!entity) {
     return fail(404, "entity not found");
   }

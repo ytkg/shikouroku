@@ -1,18 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../../../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
-  listEntityLocationsWithKindsFromD1: vi.fn(),
-  fetchTagsByEntityIdsFromD1: vi.fn()
-}));
-
 import { listEntityLocationsQuery } from "../../../../../../src/modules/catalog/entity/application/list-entity-locations-query";
-import {
-  fetchTagsByEntityIdsFromD1,
-  listEntityLocationsWithKindsFromD1
-} from "../../../../../../src/modules/catalog/entity/infra/entity-repository-d1";
+import type { EntityApplicationRepository } from "../../../../../../src/modules/catalog/entity/ports/entity-application-repository";
 
-const listEntityLocationsWithKindsFromD1Mock = vi.mocked(listEntityLocationsWithKindsFromD1);
-const fetchTagsByEntityIdsFromD1Mock = vi.mocked(fetchTagsByEntityIdsFromD1);
+const listEntityLocationsWithKindsMock = vi.fn();
+const fetchTagsByEntityIdsMock = vi.fn();
+const entityRepository: Pick<
+  EntityApplicationRepository,
+  "listEntityLocationsWithKinds" | "fetchTagsByEntityIds"
+> = {
+  listEntityLocationsWithKinds: listEntityLocationsWithKindsMock,
+  fetchTagsByEntityIds: fetchTagsByEntityIdsMock
+};
 
 describe("listEntityLocationsQuery", () => {
   beforeEach(() => {
@@ -20,7 +19,7 @@ describe("listEntityLocationsQuery", () => {
   });
 
   it("maps rows to location DTO", async () => {
-    listEntityLocationsWithKindsFromD1Mock.mockResolvedValue([
+    listEntityLocationsWithKindsMock.mockResolvedValue([
       {
         id: "entity-1",
         kind_id: 1,
@@ -30,11 +29,9 @@ describe("listEntityLocationsQuery", () => {
         longitude: 139.767125
       }
     ] as any);
-    fetchTagsByEntityIdsFromD1Mock.mockResolvedValue(
-      new Map([["entity-1", [{ id: 10, name: "散歩" }]]])
-    );
+    fetchTagsByEntityIdsMock.mockResolvedValue(new Map([["entity-1", [{ id: 10, name: "散歩" }]]]));
 
-    const result = await listEntityLocationsQuery({} as D1Database);
+    const result = await listEntityLocationsQuery(entityRepository);
 
     expect(result).toEqual({
       ok: true,

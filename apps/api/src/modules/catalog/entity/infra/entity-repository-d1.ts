@@ -9,48 +9,16 @@ import type {
   TagRecord
 } from "../../../../shared/db/records";
 import { isSuccessfulD1UnitOfWork, runD1UnitOfWork } from "../../../../shared/db/unit-of-work";
+import type {
+  EntityApplicationRepository,
+  EntitySearchMatch,
+  EntityUpsertInput,
+  ListEntitiesInput,
+  ListEntitiesSearchInput
+} from "../ports/entity-application-repository";
 import type { EntityReadRepository } from "../ports/entity-read-repository";
 
-export type InsertEntityInput = {
-  id: string;
-  kindId: number;
-  name: string;
-  description: string | null;
-  isWishlistFlag: number;
-  latitude?: number;
-  longitude?: number;
-};
-
-export type UpdateEntityInput = {
-  id: string;
-  kindId: number;
-  name: string;
-  description: string | null;
-  isWishlistFlag: number;
-  latitude?: number;
-  longitude?: number;
-};
-
-type EntitySearchMatch = "partial" | "prefix" | "exact";
-type EntitySearchField = "title" | "body" | "tags";
-
-export type ListEntitiesWithKindsInput = {
-  limit: number;
-  cursorCreatedAt: string | null;
-  cursorId: string | null;
-  kindId: number | null;
-  wishlist: "include" | "exclude" | "only";
-  q: string | null;
-  match: EntitySearchMatch;
-  fields: EntitySearchField[];
-};
-
-type ListEntitiesSearchInput = Pick<
-  ListEntitiesWithKindsInput,
-  "kindId" | "wishlist" | "q" | "match" | "fields"
->;
-
-type ListEntitiesCursorInput = Pick<ListEntitiesWithKindsInput, "cursorCreatedAt" | "cursorId">;
+type ListEntitiesCursorInput = Pick<ListEntitiesInput, "cursorCreatedAt" | "cursorId">;
 
 function toCaseInsensitiveSearchCondition(column: string, match: EntitySearchMatch): string {
   if (match === "exact") {
@@ -132,7 +100,7 @@ function buildEntitySearchWhereClause(
 
 export async function listEntitiesWithKindsFromD1(
   db: D1Database,
-  input: ListEntitiesWithKindsInput
+  input: ListEntitiesInput
 ): Promise<EntityWithKindAndFirstImageRecord[]> {
   const { whereClause, bindings } = buildEntitySearchWhereClause(input, {
     cursorCreatedAt: input.cursorCreatedAt,
@@ -303,7 +271,7 @@ export async function fetchEntitiesWithKindsByIdsFromD1(
   return result.results ?? [];
 }
 
-export async function insertEntityInD1(db: D1Database, input: InsertEntityInput): Promise<boolean> {
+export async function insertEntityInD1(db: D1Database, input: EntityUpsertInput): Promise<boolean> {
   const inserted = await db
     .prepare("INSERT INTO entities (id, kind_id, name, description, is_wishlist) VALUES (?, ?, ?, ?, ?)")
     .bind(input.id, input.kindId, input.name, input.description, input.isWishlistFlag)
@@ -314,7 +282,7 @@ export async function insertEntityInD1(db: D1Database, input: InsertEntityInput)
 
 export async function insertEntityWithTagsInD1(
   db: D1Database,
-  input: InsertEntityInput,
+  input: EntityUpsertInput,
   tagIds: number[]
 ): Promise<boolean> {
   const statements = [
@@ -348,7 +316,7 @@ export async function insertEntityWithTagsInD1(
 
 export async function updateEntityInD1(
   db: D1Database,
-  input: UpdateEntityInput
+  input: EntityUpsertInput
 ): Promise<"updated" | "not_found" | "error"> {
   const updated = await db
     .prepare(
@@ -366,7 +334,7 @@ export async function updateEntityInD1(
 
 export async function updateEntityWithTagsInD1(
   db: D1Database,
-  input: UpdateEntityInput,
+  input: EntityUpsertInput,
   tagIds: number[]
 ): Promise<"updated" | "not_found" | "error"> {
   const existing = await findEntityByIdFromD1(db, input.id);
@@ -471,6 +439,21 @@ export async function fetchEntityWithTagsFromD1(
   return {
     ...entity,
     tags: tagsByEntity.get(entityId) ?? []
+  };
+}
+
+export function createD1EntityApplicationRepository(db: D1Database): EntityApplicationRepository {
+  return {
+    findEntityIdByKindAndName: (kindId, name) => findEntityIdByKindAndNameFromD1(db, kindId, name),
+    insertEntityWithTags: (input, tagIds) => insertEntityWithTagsInD1(db, input, tagIds),
+    updateEntityWithTags: (input, tagIds) => updateEntityWithTagsInD1(db, input, tagIds),
+    fetchEntityWithTags: (entityId) => fetchEntityWithTagsFromD1(db, entityId),
+    findEntityWithKindById: (id) => findEntityWithKindByIdFromD1(db, id),
+    findEntityLocationByEntityId: (entityId) => findEntityLocationByEntityIdFromD1(db, entityId),
+    fetchTagsByEntityIds: (entityIds) => fetchTagsByEntityIdsFromD1(db, entityIds),
+    listEntitiesWithKinds: (input) => listEntitiesWithKindsFromD1(db, input),
+    countEntitiesWithKinds: (input) => countEntitiesWithKindsFromD1(db, input),
+    listEntityLocationsWithKinds: () => listEntityLocationsWithKindsFromD1(db)
   };
 }
 

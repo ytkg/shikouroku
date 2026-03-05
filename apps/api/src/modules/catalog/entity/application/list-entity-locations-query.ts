@@ -1,8 +1,5 @@
 import { success, type UseCaseResult } from "../../../../shared/application/result";
-import {
-  fetchTagsByEntityIdsFromD1,
-  listEntityLocationsWithKindsFromD1
-} from "../infra/entity-repository-d1";
+import type { EntityApplicationRepository } from "../ports/entity-application-repository";
 
 type EntityLocationDto = {
   id: string;
@@ -22,13 +19,10 @@ type EntityLocationDto = {
 };
 
 export async function listEntityLocationsQuery(
-  db: D1Database
+  entityRepository: Pick<EntityApplicationRepository, "listEntityLocationsWithKinds" | "fetchTagsByEntityIds">
 ): Promise<UseCaseResult<{ locations: EntityLocationDto[] }>> {
-  const rows = await listEntityLocationsWithKindsFromD1(db);
-  const tagsByEntity = await fetchTagsByEntityIdsFromD1(
-    db,
-    rows.map((row) => row.id)
-  );
+  const rows = await entityRepository.listEntityLocationsWithKinds();
+  const tagsByEntity = await entityRepository.fetchTagsByEntityIds(rows.map((row) => row.id));
   return success({
     locations: rows.map((row) => ({
       id: row.id,

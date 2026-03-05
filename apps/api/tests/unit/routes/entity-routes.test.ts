@@ -17,6 +17,7 @@ vi.mock("../../../src/modules/catalog/image/application/upload-entity-image-comm
 }));
 
 vi.mock("../../../src/modules/catalog/entity/infra/entity-repository-d1", () => ({
+  createD1EntityApplicationRepository: vi.fn(() => ({ mocked: true })),
   createD1EntityReadRepository: vi.fn(() => ({ mocked: true }))
 }));
 
@@ -103,7 +104,10 @@ describe("entity routes", () => {
       entities: [{ id: "entity-1", name: "Clean Code" }],
       page: { total: 1 }
     });
-    expect(listEntitiesQueryMock).toHaveBeenCalledWith(TEST_ENV.DB, expect.objectContaining({ limit: 20 }));
+    expect(listEntitiesQueryMock).toHaveBeenCalledWith(
+      expect.objectContaining({ mocked: true }),
+      expect.objectContaining({ limit: 20 })
+    );
   });
 
   it("returns 400 when image upload request is not multipart", async () => {

@@ -1,9 +1,5 @@
 import type { KindRepository } from "../../kind/ports/kind-repository";
-import {
-  fetchEntityWithTagsFromD1,
-  findEntityIdByKindAndNameFromD1,
-  insertEntityWithTagsInD1
-} from "../infra/entity-repository-d1";
+import type { EntityApplicationRepository } from "../ports/entity-application-repository";
 import type { TagRepository } from "../../tag/ports/tag-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
@@ -19,7 +15,10 @@ import {
 const LOCATION_KIND_LABEL = "場所";
 
 export async function createEntityCommand(
-  db: D1Database,
+  entityRepository: Pick<
+    EntityApplicationRepository,
+    "findEntityIdByKindAndName" | "insertEntityWithTags" | "fetchEntityWithTags"
+  >,
   kindRepository: Pick<KindRepository, "findKindById">,
   tagRepository: Pick<TagRepository, "countExistingTagsByIds">,
   body: UpsertEntityCommand
@@ -36,7 +35,7 @@ export async function createEntityCommand(
     return fail(400, "latitude and longitude are allowed only for location kind");
   }
 
-  const duplicated = await findEntityIdByKindAndNameFromD1(db, body.kindId, body.name);
+  const duplicated = await entityRepository.findEntityIdByKindAndName(body.kindId, body.name);
   if (duplicated) {
     return fail(409, "entity already exists");
   }
@@ -47,8 +46,7 @@ export async function createEntityCommand(
   }
 
   const id = crypto.randomUUID();
-  const inserted = await insertEntityWithTagsInD1(
-    db,
+  const inserted = await entityRepository.insertEntityWithTags(
     {
       id,
       kindId: body.kindId,
@@ -64,7 +62,7 @@ export async function createEntityCommand(
     return fail(500, "failed to insert entity with tags");
   }
 
-  const entity = await fetchEntityWithTagsFromD1(db, id);
+  const entity = await entityRepository.fetchEntityWithTags(id);
   if (!entity) {
     return fail(404, "entity not found");
   }
