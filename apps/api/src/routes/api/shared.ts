@@ -25,3 +25,27 @@ export function clearAuthCookies(response: Response, secure: boolean): void {
 export function useCaseError(c: AppContext, status: number, message: string): Response {
   return jsonError(c, status, errorCodeFromStatus(status), message);
 }
+
+type PositiveIntegerParamResult =
+  | { ok: true; value: number }
+  | { ok: false; response: Response };
+
+export function parsePositiveIntegerParam(
+  c: AppContext,
+  rawValue: string,
+  errorCode: string,
+  parameterName: string
+): PositiveIntegerParamResult {
+  const value = Number(rawValue);
+  if (!Number.isInteger(value) || value <= 0) {
+    return {
+      ok: false,
+      response: jsonError(c, 400, errorCode, `${parameterName} is invalid`)
+    };
+  }
+
+  return {
+    ok: true,
+    value
+  };
+}

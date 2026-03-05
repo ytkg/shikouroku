@@ -12,7 +12,6 @@ import {
   listEntitiesQuery
 } from "../../modules/catalog/entity/application/list-entities-query";
 import { listEntityLocationsQuery } from "../../modules/catalog/entity/application/list-entity-locations-query";
-import { resolveEntityListQueryParams } from "../../modules/catalog/entity/application/entity-list-query-params";
 import { updateEntityCommand } from "../../modules/catalog/entity/application/update-entity-command";
 import { createD1EntityReadRepository } from "../../modules/catalog/entity/infra/entity-repository-d1";
 import { createD1KindRepository } from "../../modules/catalog/kind/infra/kind-repository-d1";
@@ -28,23 +27,20 @@ import { listRelatedEntitiesQuery } from "../../modules/catalog/relation/applica
 import { createD1RelationRepository } from "../../modules/catalog/relation/infra/relation-repository-d1";
 import { createD1ImageCleanupTaskRepository } from "../../modules/maintenance/image-cleanup/infra/image-cleanup-task-repository-d1";
 import { jsonError, jsonOk } from "../../shared/http/api-response";
+import {
+  buildEntityImageFileResponse,
+  parseMultipartFileFromRequest,
+  resolveEntityListQueryFromRequest
+} from "./entity-route-helpers";
 import { useCaseError } from "./shared";
 
 export function createEntityRoutes(): Hono<AppEnv> {
   const entities = new Hono<AppEnv>();
 
   entities.get("/entities", async (c) => {
-    const resolvedQuery = resolveEntityListQueryParams({
-      limit: c.req.query("limit"),
-      cursor: c.req.query("cursor"),
-      match: c.req.query("match"),
-      fields: c.req.query("fields"),
-      kindId: c.req.query("kindId"),
-      wishlist: c.req.query("wishlist"),
-      q: c.req.query("q")
-    });
+    const resolvedQuery = resolveEntityListQueryFromRequest(c);
     if (!resolvedQuery.ok) {
-      return jsonError(c, 400, resolvedQuery.error.code, resolvedQuery.error.message);
+      return resolvedQuery.response;
     }
 
     const result = await listEntitiesQuery(c.env.DB, resolvedQuery.data);
@@ -171,17 +167,9 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.post("/entities/:id/images", async (c) => {
     const id = c.req.param("id");
-
-    let formData: FormData;
-    try {
-      formData = await c.req.raw.formData();
-    } catch {
-      return jsonError(c, 400, "INVALID_MULTIPART_BODY", "invalid multipart body");
-    }
-
-    const file = formData.get("file");
-    if (!file || typeof file === "string") {
-      return jsonError(c, 400, "IMAGE_FILE_REQUIRED", "file is required");
+    const parsedMultipart = await parseMultipartFileFromRequest(c, "file");
+    if (!parsedMultipart.ok) {
+      return parsedMultipart.response;
     }
 
     const entityReadRepository = createD1EntityReadRepository(c.env.DB);
@@ -192,7 +180,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       entityReadRepository,
       imageCleanupTaskRepository,
       id,
-      file
+      parsedMultipart.file
     );
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
@@ -246,11 +234,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return useCaseError(c, result.status, result.message);
     }
 
-    const response = new Response(result.data.file.body);
-    response.headers.set("Content-Type", result.data.image.mime_type);
-    response.headers.set("Content-Length", String(result.data.image.file_size));
-    response.headers.set("Cache-Control", "private, max-age=300");
-    return response;
+    return buildEntityImageFileResponse(result.data.file.body, result.data.image.mime_type, result.data.image.file_size);
   });
 
   return entities;

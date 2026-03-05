@@ -6,8 +6,8 @@ import { createTagCommand } from "../../modules/catalog/tag/application/create-t
 import { deleteTagCommand } from "../../modules/catalog/tag/application/delete-tag-command";
 import { listTagsQuery } from "../../modules/catalog/tag/application/list-tags-query";
 import { createD1TagRepository } from "../../modules/catalog/tag/infra/tag-repository-d1";
-import { jsonError, jsonOk } from "../../shared/http/api-response";
-import { useCaseError } from "./shared";
+import { jsonOk } from "../../shared/http/api-response";
+import { parsePositiveIntegerParam, useCaseError } from "./shared";
 
 export function createTagRoutes(): Hono<AppEnv> {
   const tags = new Hono<AppEnv>();
@@ -38,14 +38,13 @@ export function createTagRoutes(): Hono<AppEnv> {
   });
 
   tags.delete("/tags/:id", async (c) => {
-    const idRaw = c.req.param("id");
-    const id = Number(idRaw);
-    if (!Number.isInteger(id) || id <= 0) {
-      return jsonError(c, 400, "INVALID_TAG_ID", "tag id is invalid");
+    const parsedId = parsePositiveIntegerParam(c, c.req.param("id"), "INVALID_TAG_ID", "tag id");
+    if (!parsedId.ok) {
+      return parsedId.response;
     }
 
     const tagRepository = createD1TagRepository(c.env.DB);
-    const result = await deleteTagCommand(tagRepository, id);
+    const result = await deleteTagCommand(tagRepository, parsedId.value);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
     }
