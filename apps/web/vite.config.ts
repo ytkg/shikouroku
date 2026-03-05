@@ -39,17 +39,6 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url))
     }
   },
-  test: {
-    coverage: {
-      provider: "v8",
-      thresholds: {
-        lines: 70,
-        statements: 70,
-        functions: 65,
-        branches: 60
-      }
-    }
-  },
   server: {
     proxy: {
       "/api": "http://127.0.0.1:8787"

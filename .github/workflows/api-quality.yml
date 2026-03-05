@@ -2,11 +2,6 @@ name: api-quality
 
 on:
   pull_request:
-    paths:
-      - "apps/api/**"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/api-quality.yml"
   push:
     branches:
       - main
