@@ -1,8 +1,5 @@
 import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
-import {
-  insertEntityImageInD1,
-  nextEntityImageSortOrderFromD1
-} from "../infra/image-repository-d1";
+import type { EntityImageRepository } from "../ports/entity-image-repository";
 import type { ImageCleanupTaskRepository } from "../../../maintenance/image-cleanup/ports/image-cleanup-task-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import {
@@ -17,9 +14,9 @@ import {
 } from "./image-shared";
 
 export async function uploadEntityImageCommand(
-  db: D1Database,
   imageBucket: R2Bucket,
   entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  entityImageRepository: Pick<EntityImageRepository, "nextEntityImageSortOrder" | "insertEntityImage">,
   imageCleanupTaskRepository: Pick<ImageCleanupTaskRepository, "enqueueTask">,
   entityId: string,
   file: UploadImageFile
@@ -46,7 +43,7 @@ export async function uploadEntityImageCommand(
 
   const imageId = crypto.randomUUID();
   const objectKey = `entities/${entityId}/${imageId}.${extension}`;
-  const sortOrder = await nextEntityImageSortOrderFromD1(db, entityId);
+  const sortOrder = await entityImageRepository.nextEntityImageSortOrder(entityId);
   const fileName = normalizeFileName(file.name, `image.${extension}`);
 
   let imageBinary: ArrayBuffer;
@@ -66,7 +63,7 @@ export async function uploadEntityImageCommand(
     return fail(500, "failed to upload image");
   }
 
-  const inserted = await insertEntityImageInD1(db, {
+  const inserted = await entityImageRepository.insertEntityImage({
     id: imageId,
     entityId,
     objectKey,

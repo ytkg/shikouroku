@@ -1,16 +1,16 @@
 import type { EntityReadRepository } from "../../entity/ports/entity-read-repository";
-import {
-  deleteEntityImageAndCollapseSortOrderInD1,
-  findEntityImageByIdFromD1
-} from "../infra/image-repository-d1";
+import type { EntityImageRepository } from "../ports/entity-image-repository";
 import type { ImageCleanupTaskRepository } from "../../../maintenance/image-cleanup/ports/image-cleanup-task-repository";
 import { fail, success, type UseCaseResult } from "../../../../shared/application/result";
 import { toErrorMessage } from "./image-shared";
 
 export async function deleteEntityImageCommand(
-  db: D1Database,
   imageBucket: R2Bucket,
   entityReadRepository: Pick<EntityReadRepository, "findEntityById">,
+  entityImageRepository: Pick<
+    EntityImageRepository,
+    "findEntityImageById" | "deleteEntityImageAndCollapseSortOrder"
+  >,
   imageCleanupTaskRepository: Pick<ImageCleanupTaskRepository, "enqueueTask">,
   entityId: string,
   imageId: string
@@ -20,12 +20,12 @@ export async function deleteEntityImageCommand(
     return fail(404, "entity not found");
   }
 
-  const image = await findEntityImageByIdFromD1(db, entityId, imageId);
+  const image = await entityImageRepository.findEntityImageById(entityId, imageId);
   if (!image) {
     return fail(404, "image not found");
   }
 
-  const deleted = await deleteEntityImageAndCollapseSortOrderInD1(db, entityId, imageId, image.sort_order);
+  const deleted = await entityImageRepository.deleteEntityImageAndCollapseSortOrder(entityId, imageId, image.sort_order);
   if (deleted === "not_found") {
     return fail(404, "image not found");
   }

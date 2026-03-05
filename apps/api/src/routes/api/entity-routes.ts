@@ -190,11 +190,13 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedMultipart.response;
     }
 
-    const { entityReadRepository, imageCleanupTaskRepository } = createImageDependencies(c.env.DB);
+    const { entityReadRepository, entityImageRepository, imageCleanupTaskRepository } = createImageDependencies(
+      c.env.DB
+    );
     const result = await uploadEntityImageCommand(
-      c.env.DB,
       c.env.ENTITY_IMAGES,
       entityReadRepository,
+      entityImageRepository,
       imageCleanupTaskRepository,
       id,
       parsedMultipart.file
@@ -230,11 +232,13 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.delete("/entities/:id/images/:imageId", async (c) => {
     const id = c.req.param("id");
     const imageId = c.req.param("imageId");
-    const { entityReadRepository, imageCleanupTaskRepository } = createImageDependencies(c.env.DB);
+    const { entityReadRepository, entityImageRepository, imageCleanupTaskRepository } = createImageDependencies(
+      c.env.DB
+    );
     const result = await deleteEntityImageCommand(
-      c.env.DB,
       c.env.ENTITY_IMAGES,
       entityReadRepository,
+      entityImageRepository,
       imageCleanupTaskRepository,
       id,
       imageId

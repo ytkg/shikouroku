@@ -1,34 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-vi.mock("../../../../../../src/modules/catalog/image/infra/image-repository-d1", () => ({
-  deleteEntityImageAndCollapseSortOrderInD1: vi.fn(),
-  findEntityImageByIdFromD1: vi.fn(),
-  insertEntityImageInD1: vi.fn(),
-  listEntityImagesFromD1: vi.fn(),
-  nextEntityImageSortOrderFromD1: vi.fn(),
-  reorderEntityImagesInD1: vi.fn()
-}));
-
-import {
-  deleteEntityImageAndCollapseSortOrderInD1,
-  findEntityImageByIdFromD1,
-  insertEntityImageInD1,
-  nextEntityImageSortOrderFromD1
-} from "../../../../../../src/modules/catalog/image/infra/image-repository-d1";
 import { deleteEntityImageCommand } from "../../../../../../src/modules/catalog/image/application/delete-entity-image-command";
 import { uploadEntityImageCommand } from "../../../../../../src/modules/catalog/image/application/upload-entity-image-command";
 import type { EntityReadRepository } from "../../../../../../src/modules/catalog/entity/ports/entity-read-repository";
+import type { EntityImageRepository } from "../../../../../../src/modules/catalog/image/ports/entity-image-repository";
 import type { ImageCleanupTaskRepository } from "../../../../../../src/modules/maintenance/image-cleanup/ports/image-cleanup-task-repository";
 
-const findEntityImageByIdFromD1Mock = vi.mocked(findEntityImageByIdFromD1);
-const deleteEntityImageAndCollapseSortOrderInD1Mock = vi.mocked(deleteEntityImageAndCollapseSortOrderInD1);
-const nextEntityImageSortOrderFromD1Mock = vi.mocked(nextEntityImageSortOrderFromD1);
-const insertEntityImageInD1Mock = vi.mocked(insertEntityImageInD1);
 const findEntityByIdMock = vi.fn();
+const findEntityImageByIdMock = vi.fn();
+const deleteEntityImageAndCollapseSortOrderMock = vi.fn();
+const nextEntityImageSortOrderMock = vi.fn();
+const insertEntityImageMock = vi.fn();
 const enqueueTaskMock = vi.fn();
+
 const entityReadRepository: Pick<EntityReadRepository, "findEntityById"> = {
   findEntityById: findEntityByIdMock
 };
+
+const entityImageRepository: Pick<
+  EntityImageRepository,
+  "findEntityImageById" | "deleteEntityImageAndCollapseSortOrder" | "nextEntityImageSortOrder" | "insertEntityImage"
+> = {
+  findEntityImageById: findEntityImageByIdMock,
+  deleteEntityImageAndCollapseSortOrder: deleteEntityImageAndCollapseSortOrderMock,
+  nextEntityImageSortOrder: nextEntityImageSortOrderMock,
+  insertEntityImage: insertEntityImageMock
+};
+
 const imageCleanupTaskRepository: Pick<ImageCleanupTaskRepository, "enqueueTask"> = {
   enqueueTask: enqueueTaskMock
 };
@@ -47,7 +44,6 @@ describe("image module application", () => {
   });
 
   it("schedules cleanup and returns success when image deletion on R2 fails", async () => {
-    const db = {} as D1Database;
     const imageBucket = createMockImageBucket();
     const deleteMock = vi.fn(async () => {
       throw new Error("r2 unavailable");
@@ -57,7 +53,7 @@ describe("image module application", () => {
     findEntityByIdMock.mockResolvedValue({
       id: "entity-1"
     } as any);
-    findEntityImageByIdFromD1Mock.mockResolvedValue({
+    findEntityImageByIdMock.mockResolvedValue({
       id: "img-1",
       entity_id: "entity-1",
       object_key: "entities/entity-1/img-1.png",
@@ -67,13 +63,13 @@ describe("image module application", () => {
       sort_order: 1,
       created_at: "2026-01-01T00:00:00.000Z"
     });
-    deleteEntityImageAndCollapseSortOrderInD1Mock.mockResolvedValue("deleted");
+    deleteEntityImageAndCollapseSortOrderMock.mockResolvedValue("deleted");
     enqueueTaskMock.mockResolvedValue("enqueued");
 
     const result = await deleteEntityImageCommand(
-      db,
       imageBucket,
       entityReadRepository,
+      entityImageRepository,
       imageCleanupTaskRepository,
       "entity-1",
       "img-1"
@@ -88,7 +84,6 @@ describe("image module application", () => {
   });
 
   it("returns failure when R2 deletion fails and cleanup enqueue also fails", async () => {
-    const db = {} as D1Database;
     const imageBucket = createMockImageBucket();
     const deleteMock = vi.fn(async () => {
       throw new Error("r2 unavailable");
@@ -96,7 +91,7 @@ describe("image module application", () => {
     (imageBucket.delete as unknown as typeof deleteMock) = deleteMock;
 
     findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
-    findEntityImageByIdFromD1Mock.mockResolvedValue({
+    findEntityImageByIdMock.mockResolvedValue({
       id: "img-1",
       entity_id: "entity-1",
       object_key: "entities/entity-1/img-1.png",
@@ -106,13 +101,13 @@ describe("image module application", () => {
       sort_order: 1,
       created_at: "2026-01-01T00:00:00.000Z"
     });
-    deleteEntityImageAndCollapseSortOrderInD1Mock.mockResolvedValue("deleted");
+    deleteEntityImageAndCollapseSortOrderMock.mockResolvedValue("deleted");
     enqueueTaskMock.mockResolvedValue("error");
 
     const result = await deleteEntityImageCommand(
-      db,
       imageBucket,
       entityReadRepository,
+      entityImageRepository,
       imageCleanupTaskRepository,
       "entity-1",
       "img-1"
@@ -126,7 +121,6 @@ describe("image module application", () => {
   });
 
   it("schedules cleanup when metadata insert fails and rollback delete fails", async () => {
-    const db = {} as D1Database;
     const imageBucket = createMockImageBucket();
     const rollbackDeleteMock = vi.fn(async () => {
       throw new Error("r2 delete failed");
@@ -134,8 +128,8 @@ describe("image module application", () => {
     (imageBucket.delete as unknown as typeof rollbackDeleteMock) = rollbackDeleteMock;
 
     findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
-    nextEntityImageSortOrderFromD1Mock.mockResolvedValue(1);
-    insertEntityImageInD1Mock.mockResolvedValue(false);
+    nextEntityImageSortOrderMock.mockResolvedValue(1);
+    insertEntityImageMock.mockResolvedValue(false);
     enqueueTaskMock.mockResolvedValue("enqueued");
 
     const file = {
@@ -146,9 +140,9 @@ describe("image module application", () => {
     };
 
     const result = await uploadEntityImageCommand(
-      db,
       imageBucket,
       entityReadRepository,
+      entityImageRepository,
       imageCleanupTaskRepository,
       "entity-1",
       file
@@ -167,7 +161,6 @@ describe("image module application", () => {
   });
 
   it("returns metadata failure when cleanup enqueue returns error after rollback delete fails", async () => {
-    const db = {} as D1Database;
     const imageBucket = createMockImageBucket();
     const rollbackDeleteMock = vi.fn(async () => {
       throw new Error("r2 delete failed");
@@ -175,8 +168,8 @@ describe("image module application", () => {
     (imageBucket.delete as unknown as typeof rollbackDeleteMock) = rollbackDeleteMock;
 
     findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
-    nextEntityImageSortOrderFromD1Mock.mockResolvedValue(1);
-    insertEntityImageInD1Mock.mockResolvedValue(false);
+    nextEntityImageSortOrderMock.mockResolvedValue(1);
+    insertEntityImageMock.mockResolvedValue(false);
     enqueueTaskMock.mockResolvedValue("error");
 
     const file = {
@@ -187,9 +180,9 @@ describe("image module application", () => {
     };
 
     const result = await uploadEntityImageCommand(
-      db,
       imageBucket,
       entityReadRepository,
+      entityImageRepository,
       imageCleanupTaskRepository,
       "entity-1",
       file
