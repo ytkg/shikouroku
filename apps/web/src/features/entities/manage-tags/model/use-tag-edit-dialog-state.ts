@@ -1,12 +1,12 @@
 import { type FormEvent, useEffect, useState } from "react";
 import type { Tag } from "@/entities/entity";
 import { useTagMutations } from "@/entities/entity";
-import { ApiError } from "@/shared/api/api-error";
 import { errorMessages } from "@/shared/config/error-messages";
 import { toErrorMessage } from "@/shared/lib/error-message";
 import { notificationMessageKeys } from "@/shared/config/notification-messages";
 import { notify } from "@/shared/lib/notify";
 import { resolveOperationErrorMessageKey } from "@/shared/lib/notification-error";
+import { shouldKeepCurrentError } from "@/shared/lib/query-error";
 
 type UseTagEditDialogStateInput = {
   open: boolean;
@@ -80,7 +80,7 @@ export function useTagEditDialogState({
         messageKey: notificationMessageKeys.tagAddSuccess
       });
     } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+      if (shouldKeepCurrentError(e, ensureAuthorized)) {
         return;
       }
       setError(toErrorMessage(e));
@@ -108,7 +108,7 @@ export function useTagEditDialogState({
         messageKey: notificationMessageKeys.tagRemoveSuccess
       });
     } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+      if (shouldKeepCurrentError(e, ensureAuthorized)) {
         return;
       }
       setError(toErrorMessage(e));

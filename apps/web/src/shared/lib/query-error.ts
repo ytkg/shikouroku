@@ -4,11 +4,18 @@ import { toErrorMessage } from "@/shared/lib/error-message";
 
 export const KEEP_CURRENT_ERROR = Symbol("KEEP_CURRENT_ERROR");
 
-type ResolveQueryErrorInput = {
+export type ResolveQueryErrorInput = {
   queryError: unknown;
   ensureAuthorized: (status: number) => boolean;
   notFoundMessage?: string;
 };
+
+export function shouldKeepCurrentError(
+  queryError: unknown,
+  ensureAuthorized: (status: number) => boolean
+): boolean {
+  return queryError instanceof ApiError && !ensureAuthorized(queryError.status);
+}
 
 export function resolveQueryError({
   queryError,
@@ -19,7 +26,7 @@ export function resolveQueryError({
     return null;
   }
 
-  if (queryError instanceof ApiError && !ensureAuthorized(queryError.status)) {
+  if (shouldKeepCurrentError(queryError, ensureAuthorized)) {
     return KEEP_CURRENT_ERROR;
   }
 
@@ -28,4 +35,14 @@ export function resolveQueryError({
   }
 
   return toErrorMessage(queryError);
+}
+
+export function applyResolvedQueryError(
+  setError: (nextError: string | null) => void,
+  input: ResolveQueryErrorInput
+): void {
+  const nextError = resolveQueryError(input);
+  if (nextError !== KEEP_CURRENT_ERROR) {
+    setError(nextError);
+  }
 }

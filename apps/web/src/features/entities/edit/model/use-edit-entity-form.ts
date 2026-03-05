@@ -23,7 +23,7 @@ import { errorMessages } from "@/shared/config/error-messages";
 import { httpStatus } from "@/shared/config/http-status";
 import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
-import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
+import { applyResolvedQueryError, shouldKeepCurrentError } from "@/shared/lib/query-error";
 import { notificationMessageKeys } from "@/shared/config/notification-messages";
 import { notify } from "@/shared/lib/notify";
 import { resolveOperationErrorMessageKey } from "@/shared/lib/notification-error";
@@ -306,14 +306,11 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       return;
     }
 
-    const nextError = resolveQueryError({
+    applyResolvedQueryError(setError, {
       queryError: entityError ?? kindsError ?? tagsError ?? entitiesError ?? relatedError ?? imagesError,
       ensureAuthorized,
       notFoundMessage: errorMessages.entityNotFound
     });
-    if (nextError !== KEEP_CURRENT_ERROR) {
-      setError(nextError);
-    }
   }, [entityId, entityError, kindsError, tagsError, entitiesError, relatedError, imagesError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
@@ -341,7 +338,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       try {
         await uploadEntityImage(targetEntityId, file);
       } catch (e) {
-        if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+        if (shouldKeepCurrentError(e, ensureAuthorized)) {
           failed.push(...files.slice(index));
           break;
         }
@@ -626,7 +623,7 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       });
       return true;
     } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+      if (shouldKeepCurrentError(e, ensureAuthorized)) {
         return false;
       }
       setError(toErrorMessage(e));

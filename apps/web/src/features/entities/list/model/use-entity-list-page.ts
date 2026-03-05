@@ -22,7 +22,7 @@ import {
   type EntityKindTab
 } from "./entity-list";
 import { buildEntityListFetchInput } from "./entity-list-page-controller";
-import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
+import { applyResolvedQueryError } from "@/shared/lib/query-error";
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -148,13 +148,10 @@ export function useEntityListPage(): EntityListPageResult {
         }
 
         asyncGuard.current.runIfCurrent(currentCriteriaKey, () => {
-          const nextError = resolveQueryError({
+          applyResolvedQueryError(setError, {
             queryError,
             ensureAuthorized
           });
-          if (nextError !== KEEP_CURRENT_ERROR) {
-            setError(nextError);
-          }
           setEntities([]);
           setHasMore(false);
           setNextCursor(null);
@@ -234,13 +231,10 @@ export function useEntityListPage(): EntityListPageResult {
       });
     } catch (queryError) {
       asyncGuard.current.runIfCurrent(currentCriteriaKey, () => {
-        const nextError = resolveQueryError({
+        applyResolvedQueryError(setError, {
           queryError,
           ensureAuthorized
         });
-        if (nextError !== KEEP_CURRENT_ERROR) {
-          setError(nextError);
-        }
       });
     } finally {
       if (asyncGuard.current.isCurrent(currentCriteriaKey)) {

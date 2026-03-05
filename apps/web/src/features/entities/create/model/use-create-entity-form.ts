@@ -14,9 +14,8 @@ import {
 } from "../../shared/model/tag-selection";
 import { toggleRelatedEntityId } from "../../shared/model/related-selection";
 import { errorMessages } from "@/shared/config/error-messages";
-import { ApiError } from "@/shared/api/api-error";
 import { toErrorMessage } from "@/shared/lib/error-message";
-import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
+import { applyResolvedQueryError, shouldKeepCurrentError } from "@/shared/lib/query-error";
 import {
   notificationMessageKeys
 } from "@/shared/config/notification-messages";
@@ -156,13 +155,10 @@ export function useCreateEntityForm(): CreateEntityResult {
   }, [kinds, kindId]);
 
   useEffect(() => {
-    const nextError = resolveQueryError({
+    applyResolvedQueryError(setError, {
       queryError: kindsError ?? tagsError ?? entitiesError,
       ensureAuthorized
     });
-    if (nextError !== KEEP_CURRENT_ERROR) {
-      setError(nextError);
-    }
   }, [kindsError, tagsError, entitiesError, ensureAuthorized]);
 
   const onToggleTag = (tagId: number, checked: boolean) => {
@@ -200,7 +196,7 @@ export function useCreateEntityForm(): CreateEntityResult {
       try {
         await uploadEntityImage(entityId, file);
       } catch (e) {
-        if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+        if (shouldKeepCurrentError(e, ensureAuthorized)) {
           failed.push(...files.slice(index));
           break;
         }
@@ -283,7 +279,7 @@ export function useCreateEntityForm(): CreateEntityResult {
       });
       return entity.id;
     } catch (e) {
-      if (e instanceof ApiError && !ensureAuthorized(e.status)) {
+      if (shouldKeepCurrentError(e, ensureAuthorized)) {
         return null;
       }
       setError(toErrorMessage(e));

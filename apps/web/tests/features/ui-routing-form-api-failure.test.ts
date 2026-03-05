@@ -50,7 +50,7 @@ describe("ui integration: routing + form + api failure", () => {
     expect(pageSource).toContain("navigate(getEntityDetailPath(createdEntityId));");
     expect(pageSource).toContain("{form.error && <p className=\"text-sm text-destructive\">{form.error}</p>}");
 
-    expect(formSource).toContain("if (e instanceof ApiError && !ensureAuthorized(e.status)) {");
+    expect(formSource).toContain("if (shouldKeepCurrentError(e, ensureAuthorized)) {");
     expect(formSource).toContain("return null;");
     expect(formSource).toContain("setError(toErrorMessage(e));");
     expect(formSource).toContain("messageKey: resolveOperationErrorMessageKey(e, \"save\")");
@@ -71,7 +71,7 @@ describe("ui integration: routing + form + api failure", () => {
     expect(pageSource).toContain("<Button onClick={() => void onSave()} disabled={form.saving}>");
     expect(pageSource).toContain("{form.error && <p className=\"text-sm text-destructive\">{form.error}</p>}");
 
-    expect(formSource).toContain("if (e instanceof ApiError && !ensureAuthorized(e.status)) {");
+    expect(formSource).toContain("if (shouldKeepCurrentError(e, ensureAuthorized)) {");
     expect(formSource).toContain("return false;");
     expect(formSource).toContain("setError(toErrorMessage(e));");
     expect(formSource).toContain("messageKey: resolveOperationErrorMessageKey(e, \"save\")");

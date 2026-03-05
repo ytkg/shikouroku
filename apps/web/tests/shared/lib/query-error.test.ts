@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/shared/api/api-error";
-import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
+import {
+  applyResolvedQueryError,
+  KEEP_CURRENT_ERROR,
+  resolveQueryError,
+  shouldKeepCurrentError
+} from "@/shared/lib/query-error";
 
 describe("resolveQueryError", () => {
   it("queryErrorがない場合はnullを返す", () => {
@@ -55,5 +60,33 @@ describe("resolveQueryError", () => {
         ensureAuthorized
       })
     ).toBe("unknown error");
+  });
+
+  it("shouldKeepCurrentErrorは認証ガード判定を共通化する", () => {
+    const ensureAuthorized = vi.fn().mockReturnValue(false);
+    expect(shouldKeepCurrentError(new ApiError(401, "unauthorized"), ensureAuthorized)).toBe(true);
+    expect(ensureAuthorized).toHaveBeenCalledWith(401);
+  });
+
+  it("applyResolvedQueryErrorはKEEP_CURRENT_ERROR以外をsetErrorへ適用する", () => {
+    const setError = vi.fn();
+    const ensureAuthorized = vi.fn().mockReturnValue(true);
+
+    applyResolvedQueryError(setError, {
+      queryError: new Error("failure"),
+      ensureAuthorized
+    });
+    expect(setError).toHaveBeenCalledWith("failure");
+  });
+
+  it("applyResolvedQueryErrorはKEEP_CURRENT_ERROR時にsetErrorしない", () => {
+    const setError = vi.fn();
+    const ensureAuthorized = vi.fn().mockReturnValue(false);
+
+    applyResolvedQueryError(setError, {
+      queryError: new ApiError(401, "unauthorized"),
+      ensureAuthorized
+    });
+    expect(setError).not.toHaveBeenCalled();
   });
 });

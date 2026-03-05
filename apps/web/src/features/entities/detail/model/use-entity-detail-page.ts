@@ -7,7 +7,7 @@ import {
 import type { Entity, EntityImage } from "@/entities/entity";
 import { useAuthGuard } from "@/features/auth";
 import { errorMessages } from "@/shared/config/error-messages";
-import { KEEP_CURRENT_ERROR, resolveQueryError } from "@/shared/lib/query-error";
+import { applyResolvedQueryError } from "@/shared/lib/query-error";
 
 type EntityDetailPageResult = {
   entity: ReturnType<typeof useEntityQuery>["data"];
@@ -40,14 +40,11 @@ export function useEntityDetailPage(entityId: string | undefined): EntityDetailP
       return;
     }
 
-    const nextError = resolveQueryError({
+    applyResolvedQueryError(setError, {
       queryError: entityQueryError ?? relatedQueryError ?? imageQueryError,
       ensureAuthorized,
       notFoundMessage: errorMessages.entityNotFound
     });
-    if (nextError !== KEEP_CURRENT_ERROR) {
-      setError(nextError);
-    }
   }, [entityId, entityQueryError, relatedQueryError, imageQueryError, ensureAuthorized]);
 
   return {
