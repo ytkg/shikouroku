@@ -16,6 +16,7 @@
 | `docs/product-growth-roadmap.md` | 次フェーズの機能拡張計画 | 優先度や実装順序を見直したとき |
 | `docs/web-data-fetching-guidelines.md` | Webデータ取得（SWR key / 再検証 / 配置）の運用ガイド | Webの取得設計・API client構成を変更したとき |
 | `docs/release-quality-checklist.md` | リリース前の品質確認チェックリスト | 品質ゲート/運用手順を変更したとき |
+| `docs/api-contract-guidelines.md` | API成功/失敗契約と breaking change 判定の運用ガイド | API契約・エラー運用を変更したとき |
 
 ## 2. 運用ルール
 
@@ -45,3 +46,4 @@
 - [x] `docs/preference-feature-spec.md` を v1.1 に更新し、関連編集ダイアログ仕様・差分同期ルールを反映した
 - [x] `docs/web-data-fetching-guidelines.md` を追加し、SWR運用方針を明文化した
 - [x] `docs/release-quality-checklist.md` を追加し、リリース前確認項目を明文化した
+- [x] `docs/api-contract-guidelines.md` を追加し、契約運用と breaking change 判定を明文化した
