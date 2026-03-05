@@ -1,10 +1,7 @@
-import { requestJson, type JsonRequestInit } from "@/shared/api/http.client";
-
 export async function requestEntityMutation(
-  path: string,
-  init: JsonRequestInit,
+  requestJsonAction: () => Promise<unknown>,
   parseMutationResponse: (json: unknown) => void
 ): Promise<void> {
-  const json = await requestJson<unknown>(path, init);
+  const json = await requestJsonAction();
   parseMutationResponse(json);
 }

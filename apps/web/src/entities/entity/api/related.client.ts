@@ -24,11 +24,11 @@ export async function createEntityRelation(
   input: CreateEntityRelationInput
 ): Promise<void> {
   await requestEntityMutation(
-    getEntityRelatedPath(entityId),
-    {
-      method: "POST",
-      body: input
-    },
+    () =>
+      requestJson<unknown>(getEntityRelatedPath(entityId), {
+        method: "POST",
+        body: input
+      }),
     parseRelatedMutationResponse
   );
 }
@@ -38,10 +38,10 @@ export async function deleteEntityRelation(
   relatedEntityId: string
 ): Promise<void> {
   await requestEntityMutation(
-    getEntityRelationPath(entityId, relatedEntityId),
-    {
-      method: "DELETE"
-    },
+    () =>
+      requestJson<unknown>(getEntityRelationPath(entityId, relatedEntityId), {
+        method: "DELETE"
+      }),
     parseRelatedMutationResponse
   );
 }

@@ -34,10 +34,10 @@ export async function uploadEntityImage(entityId: string, file: File): Promise<E
 
 export async function deleteEntityImage(entityId: string, imageId: string): Promise<void> {
   await requestEntityMutation(
-    getEntityImagePath(entityId, imageId),
-    {
-      method: "DELETE"
-    },
+    () =>
+      requestJson<unknown>(getEntityImagePath(entityId, imageId), {
+        method: "DELETE"
+      }),
     parseEntityImageMutationResponse
   );
 }
@@ -47,11 +47,11 @@ export async function reorderEntityImages(
   input: ReorderEntityImagesInput
 ): Promise<void> {
   await requestEntityMutation(
-    getEntityImageOrderPath(entityId),
-    {
-      method: "PATCH",
-      body: input
-    },
+    () =>
+      requestJson<unknown>(getEntityImageOrderPath(entityId), {
+        method: "PATCH",
+        body: input
+      }),
     parseEntityImageMutationResponse
   );
 }
