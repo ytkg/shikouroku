@@ -1,5 +1,5 @@
 import type { EntityImage } from "@/entities/entity";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { DndContext, type DragEndEvent, PointerSensor, TouchSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -47,7 +47,7 @@ function SortableImageCard({
     id: image.id,
     disabled: reorderingImages
   });
-  const preventDragStartFromButton = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const preventDragStartFromButton = (event: SyntheticEvent<HTMLButtonElement>) => {
     event.stopPropagation();
   };
 
@@ -80,6 +80,8 @@ function SortableImageCard({
           variant="outline"
           disabled={index === 0 || reorderingImages}
           onPointerDown={preventDragStartFromButton}
+          onMouseDown={preventDragStartFromButton}
+          onTouchStart={preventDragStartFromButton}
           onClick={() => onMoveImageUp(image.id)}
         >
           上へ
@@ -90,6 +92,8 @@ function SortableImageCard({
           variant="outline"
           disabled={index === total - 1 || reorderingImages}
           onPointerDown={preventDragStartFromButton}
+          onMouseDown={preventDragStartFromButton}
+          onTouchStart={preventDragStartFromButton}
           onClick={() => onMoveImageDown(image.id)}
         >
           下へ
@@ -100,6 +104,8 @@ function SortableImageCard({
           variant="outline"
           disabled={deletingImageIds.includes(image.id)}
           onPointerDown={preventDragStartFromButton}
+          onMouseDown={preventDragStartFromButton}
+          onTouchStart={preventDragStartFromButton}
           onClick={() => void onDeleteImage(image.id)}
         >
           {deletingImageIds.includes(image.id) ? "削除中..." : "削除"}
@@ -130,7 +136,7 @@ export function EntityImageEditorField({
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 0,
+        delay: 180,
         tolerance: 8
       }
     })
