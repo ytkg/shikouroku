@@ -1,11 +1,16 @@
-import type { ImageCleanupTaskRecord, ImageCleanupTaskRepository } from "../ports/image-cleanup-task-repository";
+import type {
+  ImageCleanupTaskEnqueueResult,
+  ImageCleanupTaskMutationResult,
+  ImageCleanupTaskRecord,
+  ImageCleanupTaskRepository
+} from "../ports/image-cleanup-task-repository";
 
 export async function enqueueImageCleanupTaskToD1(
   db: D1Database,
   objectKey: string,
   reason: string,
   lastError: string | null
-): Promise<boolean> {
+): Promise<ImageCleanupTaskEnqueueResult> {
   const result = await db
     .prepare(
       `INSERT INTO image_cleanup_tasks (object_key, reason, last_error)
@@ -19,7 +24,11 @@ export async function enqueueImageCleanupTaskToD1(
     .bind(objectKey, reason, lastError)
     .run();
 
-  return result.success;
+  if (!result.success) {
+    return "error";
+  }
+
+  return "enqueued";
 }
 
 export async function listImageCleanupTasksFromD1(
@@ -39,16 +48,23 @@ export async function listImageCleanupTasksFromD1(
   return result.results ?? [];
 }
 
-export async function deleteImageCleanupTaskFromD1(db: D1Database, id: number): Promise<boolean> {
+export async function deleteImageCleanupTaskFromD1(
+  db: D1Database,
+  id: number
+): Promise<ImageCleanupTaskMutationResult> {
   const result = await db.prepare("DELETE FROM image_cleanup_tasks WHERE id = ?").bind(id).run();
-  return result.success;
+  if (!result.success) {
+    return "error";
+  }
+
+  return Number(result.meta.changes ?? 0) > 0 ? "updated" : "not_found";
 }
 
 export async function markImageCleanupTaskFailedInD1(
   db: D1Database,
   id: number,
   lastError: string | null
-): Promise<boolean> {
+): Promise<ImageCleanupTaskMutationResult> {
   const result = await db
     .prepare(
       `UPDATE image_cleanup_tasks
@@ -58,7 +74,11 @@ export async function markImageCleanupTaskFailedInD1(
     .bind(lastError, id)
     .run();
 
-  return result.success;
+  if (!result.success) {
+    return "error";
+  }
+
+  return Number(result.meta.changes ?? 0) > 0 ? "updated" : "not_found";
 }
 
 export async function countImageCleanupTasksInD1(db: D1Database): Promise<number> {

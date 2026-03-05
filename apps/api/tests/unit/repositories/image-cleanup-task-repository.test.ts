@@ -14,9 +14,14 @@ describe("image-cleanup-task repository d1", () => {
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await enqueueImageCleanupTaskToD1(db, "entities/e1/i1.png", "delete_failed", "r2 timeout");
+    const result = await enqueueImageCleanupTaskToD1(
+      db,
+      "entities/e1/i1.png",
+      "delete_failed",
+      "r2 timeout"
+    );
 
-    expect(ok).toBe(true);
+    expect(result).toBe("enqueued");
     expect(prepare).toHaveBeenCalledTimes(1);
     expect(bind).toHaveBeenCalledWith("entities/e1/i1.png", "delete_failed", "r2 timeout");
 
@@ -25,15 +30,15 @@ describe("image-cleanup-task repository d1", () => {
     expect(sql).toContain("retry_count = image_cleanup_tasks.retry_count + 1");
   });
 
-  it("returns false when query execution fails", async () => {
+  it("returns error when enqueue query execution fails", async () => {
     const run = vi.fn(async () => ({ success: false }));
     const bind = vi.fn(() => ({ run }));
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await enqueueImageCleanupTaskToD1(db, "k", "reason", null);
+    const result = await enqueueImageCleanupTaskToD1(db, "k", "reason", null);
 
-    expect(ok).toBe(false);
+    expect(result).toBe("error");
   });
 
   it("lists cleanup tasks ordered by creation time", async () => {
@@ -61,27 +66,49 @@ describe("image-cleanup-task repository d1", () => {
   });
 
   it("marks cleanup task as failed with retry increment", async () => {
-    const run = vi.fn(async () => ({ success: true }));
+    const run = vi.fn(async () => ({ success: true, meta: { changes: 1 } }));
     const bind = vi.fn(() => ({ run }));
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await markImageCleanupTaskFailedInD1(db, 99, "delete failed");
+    const result = await markImageCleanupTaskFailedInD1(db, 99, "delete failed");
 
-    expect(ok).toBe(true);
+    expect(result).toBe("updated");
     expect(bind).toHaveBeenCalledWith("delete failed", 99);
   });
 
-  it("deletes cleanup task row", async () => {
-    const run = vi.fn(async () => ({ success: true }));
+  it("returns not_found when mark target does not exist", async () => {
+    const run = vi.fn(async () => ({ success: true, meta: { changes: 0 } }));
     const bind = vi.fn(() => ({ run }));
     const prepare = vi.fn(() => ({ bind }));
     const db = { prepare } as unknown as D1Database;
 
-    const ok = await deleteImageCleanupTaskFromD1(db, 7);
+    const result = await markImageCleanupTaskFailedInD1(db, 99, "delete failed");
 
-    expect(ok).toBe(true);
+    expect(result).toBe("not_found");
+  });
+
+  it("deletes cleanup task row", async () => {
+    const run = vi.fn(async () => ({ success: true, meta: { changes: 1 } }));
+    const bind = vi.fn(() => ({ run }));
+    const prepare = vi.fn(() => ({ bind }));
+    const db = { prepare } as unknown as D1Database;
+
+    const result = await deleteImageCleanupTaskFromD1(db, 7);
+
+    expect(result).toBe("updated");
     expect(bind).toHaveBeenCalledWith(7);
+  });
+
+  it("returns not_found when delete target does not exist", async () => {
+    const run = vi.fn(async () => ({ success: true, meta: { changes: 0 } }));
+    const bind = vi.fn(() => ({ run }));
+    const prepare = vi.fn(() => ({ bind }));
+    const db = { prepare } as unknown as D1Database;
+
+    const result = await deleteImageCleanupTaskFromD1(db, 7);
+
+    expect(result).toBe("not_found");
   });
 
   it("returns current cleanup queue size", async () => {

@@ -68,7 +68,7 @@ describe("image module application", () => {
       created_at: "2026-01-01T00:00:00.000Z"
     });
     deleteEntityImageAndCollapseSortOrderInD1Mock.mockResolvedValue("deleted");
-    enqueueTaskMock.mockResolvedValue(true);
+    enqueueTaskMock.mockResolvedValue("enqueued");
 
     const result = await deleteEntityImageCommand(
       db,
@@ -107,7 +107,7 @@ describe("image module application", () => {
       created_at: "2026-01-01T00:00:00.000Z"
     });
     deleteEntityImageAndCollapseSortOrderInD1Mock.mockResolvedValue("deleted");
-    enqueueTaskMock.mockResolvedValue(false);
+    enqueueTaskMock.mockResolvedValue("error");
 
     const result = await deleteEntityImageCommand(
       db,
@@ -136,7 +136,48 @@ describe("image module application", () => {
     findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
     nextEntityImageSortOrderFromD1Mock.mockResolvedValue(1);
     insertEntityImageInD1Mock.mockResolvedValue(false);
-    enqueueTaskMock.mockResolvedValue(true);
+    enqueueTaskMock.mockResolvedValue("enqueued");
+
+    const file = {
+      name: "sample.png",
+      type: "image/png",
+      size: 123,
+      arrayBuffer: async () => new ArrayBuffer(8)
+    };
+
+    const result = await uploadEntityImageCommand(
+      db,
+      imageBucket,
+      entityReadRepository,
+      imageCleanupTaskRepository,
+      "entity-1",
+      file
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      status: 500,
+      message: "failed to save image metadata"
+    });
+    expect(enqueueTaskMock).toHaveBeenCalledWith(
+      expect.stringContaining("entities/entity-1/"),
+      "metadata_insert_failed",
+      "r2 delete failed"
+    );
+  });
+
+  it("returns metadata failure when cleanup enqueue returns error after rollback delete fails", async () => {
+    const db = {} as D1Database;
+    const imageBucket = createMockImageBucket();
+    const rollbackDeleteMock = vi.fn(async () => {
+      throw new Error("r2 delete failed");
+    });
+    (imageBucket.delete as unknown as typeof rollbackDeleteMock) = rollbackDeleteMock;
+
+    findEntityByIdMock.mockResolvedValue({ id: "entity-1" } as any);
+    nextEntityImageSortOrderFromD1Mock.mockResolvedValue(1);
+    insertEntityImageInD1Mock.mockResolvedValue(false);
+    enqueueTaskMock.mockResolvedValue("error");
 
     const file = {
       name: "sample.png",

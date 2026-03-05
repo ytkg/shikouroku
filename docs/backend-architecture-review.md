@@ -1,6 +1,6 @@
 # バックエンド構成ガイド
 
-- 更新日: 2026-02-23
+- 更新日: 2026-03-05
 - 対象: `apps/api/src`
 - 種別: 構成ガイド
 
@@ -76,6 +76,11 @@
 - 補償処理
   - 手動実行: `POST /api/maintenance/image-cleanup/run`
   - 定期実行: cron `*/30 * * * *`（`scheduled.ts`）
+
+### 4.3 maintenance cleanup port の返却型
+
+- `ImageCleanupTaskRepository` の mutation 系 port（`enqueueTask` / `deleteTask` / `markTaskFailed`）は、boolean ではなく明示的 union の返却型を使う（`deleteTask` と `markTaskFailed` は同一返却型で扱う）。
+- application 層は boolean 成否判定に依存せず、返却 union の判別子で分岐してエラー処理を行う。
 
 ## 5. 実行環境とバインディング
 

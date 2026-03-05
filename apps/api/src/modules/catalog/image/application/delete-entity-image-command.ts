@@ -41,7 +41,7 @@ export async function deleteEntityImageCommand(
       "entity_image_delete_failed",
       toErrorMessage(error)
     );
-    if (!queued) {
+    if (queued !== "enqueued") {
       return fail(500, "failed to delete image file and schedule cleanup");
     }
   }

@@ -79,7 +79,14 @@ export async function uploadEntityImageCommand(
     try {
       await imageBucket.delete(objectKey);
     } catch (error) {
-      await imageCleanupTaskRepository.enqueueTask(objectKey, "metadata_insert_failed", toErrorMessage(error));
+      const queued = await imageCleanupTaskRepository.enqueueTask(
+        objectKey,
+        "metadata_insert_failed",
+        toErrorMessage(error)
+      );
+      if (queued === "error") {
+        return fail(500, "failed to save image metadata");
+      }
     }
     return fail(500, "failed to save image metadata");
   }

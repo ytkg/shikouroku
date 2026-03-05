@@ -40,7 +40,7 @@ describe("maintenance image cleanup module", () => {
         updated_at: "2026-01-01"
       }
     ]);
-    deleteTaskMock.mockResolvedValue(true);
+    deleteTaskMock.mockResolvedValue("updated");
     countTasksMock.mockResolvedValue(0);
 
     const result = await runImageCleanupCommand(imageCleanupTaskRepository, imageBucket as unknown as R2Bucket, 10);
@@ -55,6 +55,36 @@ describe("maintenance image cleanup module", () => {
       }
     });
     expect(deleteTaskMock).toHaveBeenCalledWith(1);
+  });
+
+  it("runImageCleanupCommand keeps aggregate counts when deleteTask returns not_found", async () => {
+    const imageBucket = createMockImageBucket() as unknown as { delete: ReturnType<typeof vi.fn> };
+
+    listTasksMock.mockResolvedValue([
+      {
+        id: 11,
+        object_key: "entities/e1/i11.png",
+        reason: "delete_failed",
+        last_error: null,
+        retry_count: 0,
+        created_at: "2026-01-01",
+        updated_at: "2026-01-01"
+      }
+    ]);
+    deleteTaskMock.mockResolvedValue("not_found");
+    countTasksMock.mockResolvedValue(0);
+
+    const result = await runImageCleanupCommand(imageCleanupTaskRepository, imageBucket as unknown as R2Bucket, 10);
+
+    expect(result).toEqual({
+      ok: true,
+      data: {
+        processed: 1,
+        deleted: 1,
+        failed: 0,
+        remaining: 0
+      }
+    });
   });
 
   it("runImageCleanupCommand marks task failed when delete throws", async () => {
@@ -72,7 +102,7 @@ describe("maintenance image cleanup module", () => {
         updated_at: "2026-01-01"
       }
     ]);
-    markTaskFailedMock.mockResolvedValue(true);
+    markTaskFailedMock.mockResolvedValue("updated");
     countTasksMock.mockResolvedValue(1);
 
     const result = await runImageCleanupCommand(imageCleanupTaskRepository, imageBucket as unknown as R2Bucket, 10);
@@ -87,6 +117,32 @@ describe("maintenance image cleanup module", () => {
       }
     });
     expect(markTaskFailedMock).toHaveBeenCalledWith(2, "r2 timeout");
+  });
+
+  it("runImageCleanupCommand returns failure when markTaskFailed returns error", async () => {
+    const imageBucket = createMockImageBucket() as unknown as { delete: ReturnType<typeof vi.fn> };
+    imageBucket.delete.mockRejectedValue(new Error("r2 timeout"));
+
+    listTasksMock.mockResolvedValue([
+      {
+        id: 3,
+        object_key: "entities/e1/i3.png",
+        reason: "delete_failed",
+        last_error: null,
+        retry_count: 0,
+        created_at: "2026-01-01",
+        updated_at: "2026-01-01"
+      }
+    ]);
+    markTaskFailedMock.mockResolvedValue("error");
+
+    const result = await runImageCleanupCommand(imageCleanupTaskRepository, imageBucket as unknown as R2Bucket, 10);
+
+    expect(result).toEqual({
+      ok: false,
+      status: 500,
+      message: "failed to update image cleanup task"
+    });
   });
 
   it("listImageCleanupTasksQuery returns tasks and total", async () => {

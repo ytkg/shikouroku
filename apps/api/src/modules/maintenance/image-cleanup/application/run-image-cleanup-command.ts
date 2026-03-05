@@ -32,13 +32,13 @@ export async function runImageCleanupCommand(
     try {
       await imageBucket.delete(task.object_key);
       const removed = await imageCleanupTaskRepository.deleteTask(task.id);
-      if (!removed) {
+      if (removed === "error") {
         return fail(500, "failed to finalize cleanup task");
       }
       deleted += 1;
     } catch (error) {
       const marked = await imageCleanupTaskRepository.markTaskFailed(task.id, toErrorMessage(error));
-      if (!marked) {
+      if (marked === "error") {
         return fail(500, "failed to update image cleanup task");
       }
       failed += 1;
