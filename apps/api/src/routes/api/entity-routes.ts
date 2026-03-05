@@ -34,6 +34,27 @@ import {
 } from "./entity-route-helpers";
 import { useCaseError } from "./shared";
 
+function createEntityWriteDependencies(db: D1Database) {
+  return {
+    kindRepository: createD1KindRepository(db),
+    tagRepository: createD1TagRepository(db)
+  };
+}
+
+function createRelationDependencies(db: D1Database) {
+  return {
+    entityReadRepository: createD1EntityReadRepository(db),
+    relationRepository: createD1RelationRepository(db)
+  };
+}
+
+function createImageDependencies(db: D1Database) {
+  return {
+    entityReadRepository: createD1EntityReadRepository(db),
+    imageCleanupTaskRepository: createD1ImageCleanupTaskRepository(db)
+  };
+}
+
 export function createEntityRoutes(): Hono<AppEnv> {
   const entities = new Hono<AppEnv>();
 
@@ -76,8 +97,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const kindRepository = createD1KindRepository(c.env.DB);
-    const tagRepository = createD1TagRepository(c.env.DB);
+    const { kindRepository, tagRepository } = createEntityWriteDependencies(c.env.DB);
     const result = await createEntityCommand(c.env.DB, kindRepository, tagRepository, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
@@ -97,8 +117,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const kindRepository = createD1KindRepository(c.env.DB);
-    const tagRepository = createD1TagRepository(c.env.DB);
+    const { kindRepository, tagRepository } = createEntityWriteDependencies(c.env.DB);
     const result = await updateEntityCommand(c.env.DB, kindRepository, tagRepository, id, parsedBody.data);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
@@ -109,8 +128,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id/related", async (c) => {
     const id = c.req.param("id");
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
-    const relationRepository = createD1RelationRepository(c.env.DB);
+    const { entityReadRepository, relationRepository } = createRelationDependencies(c.env.DB);
     const result = await listRelatedEntitiesQuery(entityReadRepository, relationRepository, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
@@ -126,8 +144,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
-    const relationRepository = createD1RelationRepository(c.env.DB);
+    const { entityReadRepository, relationRepository } = createRelationDependencies(c.env.DB);
     const result = await createEntityRelationCommand(
       entityReadRepository,
       relationRepository,
@@ -144,8 +161,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.delete("/entities/:id/related/:relatedEntityId", async (c) => {
     const id = c.req.param("id");
     const relatedEntityId = c.req.param("relatedEntityId");
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
-    const relationRepository = createD1RelationRepository(c.env.DB);
+    const { entityReadRepository, relationRepository } = createRelationDependencies(c.env.DB);
     const result = await deleteEntityRelationCommand(entityReadRepository, relationRepository, id, relatedEntityId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
@@ -156,7 +172,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
 
   entities.get("/entities/:id/images", async (c) => {
     const id = c.req.param("id");
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const { entityReadRepository } = createImageDependencies(c.env.DB);
     const result = await listEntityImagesQuery(c.env.DB, entityReadRepository, id);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
@@ -172,8 +188,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedMultipart.response;
     }
 
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
-    const imageCleanupTaskRepository = createD1ImageCleanupTaskRepository(c.env.DB);
+    const { entityReadRepository, imageCleanupTaskRepository } = createImageDependencies(c.env.DB);
     const result = await uploadEntityImageCommand(
       c.env.DB,
       c.env.ENTITY_IMAGES,
@@ -196,7 +211,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
       return parsedBody.response;
     }
 
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const { entityReadRepository } = createImageDependencies(c.env.DB);
     const result = await reorderEntityImagesCommand(c.env.DB, entityReadRepository, id, parsedBody.data.orderedImageIds);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
@@ -208,8 +223,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.delete("/entities/:id/images/:imageId", async (c) => {
     const id = c.req.param("id");
     const imageId = c.req.param("imageId");
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
-    const imageCleanupTaskRepository = createD1ImageCleanupTaskRepository(c.env.DB);
+    const { entityReadRepository, imageCleanupTaskRepository } = createImageDependencies(c.env.DB);
     const result = await deleteEntityImageCommand(
       c.env.DB,
       c.env.ENTITY_IMAGES,
@@ -228,7 +242,7 @@ export function createEntityRoutes(): Hono<AppEnv> {
   entities.get("/entities/:id/images/:imageId/file", async (c) => {
     const id = c.req.param("id");
     const imageId = c.req.param("imageId");
-    const entityReadRepository = createD1EntityReadRepository(c.env.DB);
+    const { entityReadRepository } = createImageDependencies(c.env.DB);
     const result = await getEntityImageFileQuery(c.env.DB, c.env.ENTITY_IMAGES, entityReadRepository, id, imageId);
     if (!result.ok) {
       return useCaseError(c, result.status, result.message);
