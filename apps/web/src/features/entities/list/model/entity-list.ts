@@ -194,6 +194,24 @@ export function setEntityTagFilterParams(searchParams: URLSearchParams, tagName:
   setEntitySearchMatchParam(searchParams, "exact");
 }
 
+export function resetEntityListSearchParams(searchParams: URLSearchParams): void {
+  searchParams.delete(entitySearchQueryKey);
+  searchParams.delete(entitySearchMatchQueryKey);
+  searchParams.delete(entitySearchFieldsQueryKey);
+  searchParams.delete(entityKindFilterQueryKey);
+  searchParams.delete(entityWishlistFilterQueryKey);
+}
+
+export function isEntityListDefaultCriteria(criteria: EntityListSearchCriteria): boolean {
+  return (
+    criteria.rawQuery.length === 0 &&
+    criteria.kindId === null &&
+    criteria.wishlistFilter === defaultEntityWishlistFilter &&
+    criteria.match === defaultEntitySearchMatch &&
+    criteria.isAllFieldsSelected
+  );
+}
+
 export function parseEntityKindFilter(value: string | null | undefined): number | null {
   if (!value) {
     return null;

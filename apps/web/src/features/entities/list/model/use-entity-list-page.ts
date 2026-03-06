@@ -11,7 +11,9 @@ import {
 import { useAuthGuard } from "@/features/auth";
 import { createEntityListAsyncGuard } from "./entity-list-async-guard";
 import {
+  isEntityListDefaultCriteria,
   parseEntityListSearchCriteria,
+  resetEntityListSearchParams,
   setEntityKindTabParams,
   setEntitySearchFieldsParam,
   setEntitySearchMatchParam,
@@ -39,6 +41,7 @@ type EntityListPageResult = {
   match: EntitySearchMatch;
   selectedFields: EntitySearchField[];
   isAllFieldsSelected: boolean;
+  isDefaultCriteria: boolean;
   totalCount: number;
   hasMore: boolean;
   setQuery: (query: string) => void;
@@ -49,6 +52,7 @@ type EntityListPageResult = {
   setSelectedFields: (fields: EntitySearchField[]) => void;
   toggleField: (field: EntitySearchField) => void;
   applyTagFilter: (tagName: string) => void;
+  resetFilters: () => void;
   loadMore: () => Promise<void>;
 };
 
@@ -64,6 +68,7 @@ export function useEntityListPage(): EntityListPageResult {
 
   const criteria = useMemo(() => parseEntityListSearchCriteria(searchParams), [searchParams]);
   const { rawQuery, selectedKindTab, match, selectedFields, isAllFieldsSelected } = criteria;
+  const isDefaultCriteria = useMemo(() => isEntityListDefaultCriteria(criteria), [criteria]);
   const criteriaKey = useMemo(() => toEntityListCriteriaKey(criteria), [criteria]);
 
   const [queryInput, setQueryInput] = useState(rawQuery);
@@ -212,6 +217,12 @@ export function useEntityListPage(): EntityListPageResult {
     [updateSearchParams]
   );
 
+  const resetFilters = useCallback(() => {
+    updateSearchParams((nextSearchParams) => {
+      resetEntityListSearchParams(nextSearchParams);
+    });
+  }, [updateSearchParams]);
+
   const loadMore = useCallback(async () => {
     if (!hasMore || !nextCursor || isLoadingMore) {
       return;
@@ -254,6 +265,7 @@ export function useEntityListPage(): EntityListPageResult {
     match,
     selectedFields,
     isAllFieldsSelected,
+    isDefaultCriteria,
     totalCount,
     hasMore,
     setQuery: setQueryInput,
@@ -264,6 +276,7 @@ export function useEntityListPage(): EntityListPageResult {
     setSelectedFields,
     toggleField,
     applyTagFilter,
+    resetFilters,
     loadMore
   };
 }

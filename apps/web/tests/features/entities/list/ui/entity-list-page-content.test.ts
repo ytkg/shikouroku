@@ -44,7 +44,12 @@ describe("entity list page content infinite scroll", () => {
     const source = fs.readFileSync(path.resolve(uiDirPath, "entity-list-page-content.tsx"), "utf-8");
 
     expect(source).not.toContain("if (page.isLoading && page.entities.length === 0)");
-    expect(source).toContain('{page.isLoading ? "読み込み中..." : "表示できる登録がありません。"}');
+    expect(source).toContain('{page.isLoading');
+    expect(source).toContain('"まだ登録がありません。"');
+    expect(source).toContain('"条件に一致する登録がありません。"');
+    expect(source).toContain("新規登録");
+    expect(source).toContain("絞り込みをリセット");
+    expect(source).toContain("onClick={page.resetFilters}");
   });
 
   it("一覧カードはカード全体クリックで遷移し、タグクリックは独立してタグ検索を適用する", () => {

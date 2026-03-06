@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const pagePath = path.resolve(currentDir, "../../../../../src/features/entities/map/ui/entity-map-page-content.tsx");
+const emptyStatePath = path.resolve(currentDir, "../../../../../src/features/entities/map/ui/entity-map-empty-state.tsx");
 const filterModelPath = path.resolve(currentDir, "../../../../../src/features/entities/map/model/use-entity-map-filter.ts");
 const mapModelPath = path.resolve(currentDir, "../../../../../src/features/entities/map/model/use-leaflet-entity-map.ts");
 const modalPath = path.resolve(currentDir, "../../../../../src/features/entities/map/ui/entity-map-detail-modal.tsx");
@@ -39,5 +40,23 @@ describe("map page integration", () => {
     expect(source).toContain("setSelectedTagId(String(tagId));");
     expect(source).toContain("setNameQuery(\"\");");
     expect(source).toContain("setSelectedEntityId(null);");
+  });
+
+  it("読み込み中は空状態より先にスケルトンを表示し、空状態A/Bでは次アクションを出す", () => {
+    const pageSource = fs.readFileSync(pagePath, "utf-8");
+    const emptyStateSource = fs.readFileSync(emptyStatePath, "utf-8");
+
+    expect(emptyStateSource).toContain("if (isLoading)");
+    expect(emptyStateSource).toContain("import { EntityMapLocationListSkeleton } from \"./entity-map-location-list-skeleton\";");
+    expect(emptyStateSource).toContain("aria-label=\"地図一覧を読み込み中\"");
+    expect(emptyStateSource).toContain("<EntityMapLocationListSkeleton />");
+    expect(emptyStateSource).toContain("位置情報付きの嗜好がまだありません。");
+    expect(emptyStateSource).toContain("新規登録");
+    expect(emptyStateSource).toContain("条件に一致する嗜好がありません。");
+    expect(emptyStateSource).toContain("絞り込みをリセット");
+    expect(pageSource).toContain("isLoading={isLoading}");
+    expect(pageSource).toContain("setSelectedTagId(\"all\");");
+    expect(pageSource).toContain("setNameQuery(\"\");");
+    expect(pageSource).toContain("onResetFilters={resetFilters}");
   });
 });

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import type { Entity } from "@/entities/entity";
+import { routePaths } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/form-controls";
 import { Select } from "@/shared/ui/form-controls/select";
@@ -54,6 +56,11 @@ export function RelatedEntityEditDialog({
     });
   }, [candidates, searchQuery, selectedKindId]);
 
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedKindId("");
+  };
+
   if (!open) {
     return null;
   }
@@ -91,9 +98,19 @@ export function RelatedEntityEditDialog({
           ))}
         </Select>
         {candidates.length === 0 ? (
-          <p className="text-sm text-muted-foreground">追加できる候補がありません。</p>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>追加できる候補がありません。</p>
+            <Button asChild size="sm">
+              <Link to={routePaths.newEntity}>新規登録へ</Link>
+            </Button>
+          </div>
         ) : visibleCandidates.length === 0 ? (
-          <p className="text-sm text-muted-foreground">候補がありません。</p>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>候補がありません。</p>
+            <Button type="button" size="sm" variant="outline" onClick={resetFilters}>
+              絞り込みをリセット
+            </Button>
+          </div>
         ) : (
           <div className="max-h-56 space-y-2 overflow-auto rounded-md border p-2">
             {visibleCandidates.map((candidate) => {

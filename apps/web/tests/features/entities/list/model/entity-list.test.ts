@@ -10,11 +10,13 @@ import {
   parseEntityWishlistFilter,
   parseEntitySearchFields,
   parseEntitySearchMatch,
+  resetEntityListSearchParams,
   setEntityKindTabParams,
   setEntitySearchFieldsParam,
   setEntitySearchMatchParam,
   setEntitySearchQueryParam,
   setEntityTagFilterParams,
+  isEntityListDefaultCriteria,
   toggleEntitySearchFieldSelection,
   toEntityListCriteriaKey,
   toKindTab,
@@ -181,5 +183,28 @@ describe("entity-list model", () => {
     expect(searchParams.get("q")).toBe("design");
     expect(searchParams.get("fields")).toBe("tags");
     expect(searchParams.get("match")).toBe("exact");
+  });
+
+  it("resetEntityListSearchParams は一覧絞り込みクエリを削除する", () => {
+    const searchParams = new URLSearchParams("q=code&match=exact&fields=tags&kindId=2&wishlist=only&x=1");
+    resetEntityListSearchParams(searchParams);
+    expect(searchParams.toString()).toBe("x=1");
+  });
+
+  it("isEntityListDefaultCriteria は一覧空状態A判定に使える", () => {
+    expect(isEntityListDefaultCriteria(parseEntityListSearchCriteria(new URLSearchParams()))).toBe(true);
+    expect(isEntityListDefaultCriteria(parseEntityListSearchCriteria(new URLSearchParams("q=code")))).toBe(false);
+    expect(isEntityListDefaultCriteria(parseEntityListSearchCriteria(new URLSearchParams("match=exact")))).toBe(
+      false
+    );
+    expect(
+      isEntityListDefaultCriteria(parseEntityListSearchCriteria(new URLSearchParams("fields=title")))
+    ).toBe(false);
+    expect(isEntityListDefaultCriteria(parseEntityListSearchCriteria(new URLSearchParams("kindId=2")))).toBe(
+      false
+    );
+    expect(isEntityListDefaultCriteria(parseEntityListSearchCriteria(new URLSearchParams("wishlist=only")))).toBe(
+      false
+    );
   });
 });

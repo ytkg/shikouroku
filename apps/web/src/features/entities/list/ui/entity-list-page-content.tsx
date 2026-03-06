@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEntityListPage } from "../model/use-entity-list-page";
 import { ENTITY_SEARCH_FIELDS } from "@/entities/entity";
 import { EntityCardSkeleton } from "../../shared/ui/entity-card-skeleton";
-import { getEntityDetailPath } from "@/shared/config/route-paths";
+import { getEntityDetailPath, routePaths } from "@/shared/config/route-paths";
+import { Button } from "@/shared/ui/button";
 import { EntityListFilterPanel } from "./entity-list-filter-panel";
 import { EntityListLoadMore } from "./entity-list-load-more";
 import { EntityListResultCard } from "./entity-list-result-card";
@@ -63,8 +64,25 @@ export function EntityListPageContent() {
             ))}
           </div>
         ) : page.entities.length === 0 ? (
-          <div className="rounded-md border bg-muted p-4 text-sm text-muted-foreground">
-            {page.isLoading ? "読み込み中..." : "表示できる登録がありません。"}
+          <div className="space-y-3 rounded-md border bg-muted p-4 text-sm text-muted-foreground">
+            <p>
+              {page.isLoading
+                ? "読み込み中..."
+                : page.isDefaultCriteria
+                  ? "まだ登録がありません。"
+                  : "条件に一致する登録がありません。"}
+            </p>
+            {!page.isLoading && (
+              page.isDefaultCriteria ? (
+                <Button asChild size="sm">
+                  <Link to={routePaths.newEntity}>新規登録</Link>
+                </Button>
+              ) : (
+                <Button type="button" size="sm" variant="outline" onClick={page.resetFilters}>
+                  絞り込みをリセット
+                </Button>
+              )
+            )}
           </div>
         ) : (
           page.entities.map((entity) => (

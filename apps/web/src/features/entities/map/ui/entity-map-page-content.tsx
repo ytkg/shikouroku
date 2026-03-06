@@ -40,6 +40,11 @@ export function EntityMapPageContent() {
     setSelectedEntityId(null);
   }, []);
 
+  const resetFilters = useCallback(() => {
+    setSelectedTagId("all");
+    setNameQuery("");
+  }, []);
+
   return (
     <main className="mx-auto grid h-[calc(100dvh-env(safe-area-inset-bottom)-3rem)] w-full max-w-3xl box-border grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-3 overflow-hidden px-4 pb-0 pt-16">
       {error && <p className="text-sm text-destructive">地図データの取得に失敗しました。</p>}
@@ -67,7 +72,11 @@ export function EntityMapPageContent() {
           onSelect={focusEntityOnMap}
         />
       ) : (
-        <EntityMapEmptyState hasAnyLocation={locationEntities.length > 0} />
+        <EntityMapEmptyState
+          hasAnyLocation={locationEntities.length > 0}
+          isLoading={isLoading}
+          onResetFilters={resetFilters}
+        />
       )}
 
       <EntityMapDetailModal

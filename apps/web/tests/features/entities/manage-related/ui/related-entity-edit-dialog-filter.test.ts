@@ -32,7 +32,13 @@ describe("related entity edit dialog filter", () => {
   it("フィルタ結果0件時に空状態メッセージを表示する", () => {
     const source = fs.readFileSync(dialogPath, "utf-8");
 
+    expect(source).toContain("candidates.length === 0");
+    expect(source).toContain("追加できる候補がありません。");
+    expect(source).toContain("新規登録へ");
     expect(source).toContain("visibleCandidates.length === 0");
     expect(source).toContain("候補がありません。");
+    expect(source).toContain("絞り込みをリセット");
+    expect(source).toContain("setSearchQuery(\"\");");
+    expect(source).toContain("setSelectedKindId(\"\");");
   });
 });
