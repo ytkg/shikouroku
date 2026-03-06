@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EntityLocationPin } from "@/entities/entity";
 import { useEntityImagesQuery, useEntityLocationsQuery, useEntityQuery } from "@/entities/entity";
 import { useEntityMapFilter } from "../model/use-entity-map-filter";
@@ -33,12 +33,35 @@ export function EntityMapPageContent() {
     filteredLocationEntities,
     onMarkerClick: setSelectedEntityId
   });
+  const handleLocationListFocus = useCallback(
+    (entityId: string) => {
+      focusEntityOnMap(entityId);
+    },
+    [focusEntityOnMap]
+  );
+  const handleLocationListOpenDetail = useCallback(
+    (entityId: string) => {
+      setSelectedEntityId(entityId);
+      focusEntityOnMap(entityId);
+    },
+    [focusEntityOnMap]
+  );
 
   const handleTagClickInModal = useCallback((tagId: number) => {
     setSelectedTagId(String(tagId));
     setNameQuery("");
     setSelectedEntityId(null);
   }, []);
+
+  useEffect(() => {
+    if (!selectedEntityId) {
+      return;
+    }
+
+    if (!filteredLocationEntities.some((location) => location.id === selectedEntityId)) {
+      setSelectedEntityId(null);
+    }
+  }, [filteredLocationEntities, selectedEntityId]);
 
   const resetFilters = useCallback(() => {
     setSelectedTagId("all");
@@ -61,6 +84,7 @@ export function EntityMapPageContent() {
         totalCount={locationEntities.length}
         visibleCount={filteredLocationEntities.length}
         isLoading={isLoading}
+        selectedEntityName={selectedEntity?.name ?? selectedLocation?.name ?? null}
       />
 
       <EntityMapCanvas isLoading={isLoading} mapContainerRef={mapContainerRef} />
@@ -69,7 +93,9 @@ export function EntityMapPageContent() {
         <EntityMapLocationList
           entities={filteredLocationEntities}
           tagsByEntityId={tagsByEntityId}
-          onSelect={focusEntityOnMap}
+          selectedEntityId={selectedEntityId}
+          onFocus={handleLocationListFocus}
+          onOpenDetail={handleLocationListOpenDetail}
         />
       ) : (
         <EntityMapEmptyState

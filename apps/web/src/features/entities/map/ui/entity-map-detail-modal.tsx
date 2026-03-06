@@ -1,4 +1,7 @@
+import { Link } from "react-router-dom";
+import { useAuthStatus } from "@/features/auth";
 import type { Entity, EntityImage, Tag } from "@/entities/entity";
+import { getEntityDetailPath, getEntityEditPath } from "@/shared/config/route-paths";
 import { Button } from "@/shared/ui/button";
 import { ModalShell } from "@/shared/ui/modal-shell";
 import { Skeleton } from "@/shared/ui/skeleton";
@@ -25,6 +28,7 @@ export function EntityMapDetailModal({
   onClose,
   onTagClick
 }: EntityMapDetailModalProps) {
+  const { data: isAuthenticated } = useAuthStatus();
   const displayName = selectedEntity?.name ?? selectedLocation?.name ?? "";
   const displayKindLabel = selectedEntity?.kind.label ?? selectedLocation?.kind.label ?? "";
   const displayDescription = selectedEntity?.description ?? null;
@@ -127,6 +131,19 @@ export function EntityMapDetailModal({
                 <p>なし</p>
               )}
             </div>
+          </div>
+        )}
+
+        {selectedEntityId && (
+          <div className="flex items-center justify-end gap-2 border-t pt-3">
+            <Button asChild variant="outline">
+              <Link to={getEntityDetailPath(selectedEntityId)}>詳細へ</Link>
+            </Button>
+            {isAuthenticated && (
+              <Button asChild>
+                <Link to={getEntityEditPath(selectedEntityId)}>編集へ</Link>
+              </Button>
+            )}
           </div>
         )}
       </div>
