@@ -32,8 +32,8 @@
     "quality:all": "npm run quality:web && npm run quality:api"
   },
   "devDependencies": {
-    "npm-run-all": "^1.1.3",
-    "wrangler": "^4.66.0"
+    "npm-run-all": "^1.8.0",
+    "wrangler": "^4.71.0"
   },
   "dependencies": {
     "vite": "7.3.1"
