@@ -165,6 +165,7 @@ export function EntityImageEditorField({
         type="file"
         accept="image/jpeg,image/png,image/webp"
         multiple
+        disabled={uploadingImages || retryingFailedImages}
         onChange={(event) => {
           void onSelectImageFiles(event.target.files);
           event.target.value = "";
