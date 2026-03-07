@@ -27,12 +27,10 @@ describe("entity operation notification coverage", () => {
 
     expect(createSource).toContain("notificationMessageKeys.entryCreateSuccess");
     expect(createSource).toContain("notificationMessageKeys.relationAddSuccess");
-    expect(createSource).toContain("notificationMessageKeys.imageAddSuccess");
     expect(createSource).toContain("resolveOperationErrorMessageKey(e, \"save\")");
     expect(editSource).toContain("notificationMessageKeys.entryUpdateSuccess");
     expect(editSource).toContain("notificationMessageKeys.relationAddSuccess");
     expect(editSource).toContain("notificationMessageKeys.relationRemoveSuccess");
-    expect(editSource).toContain("notificationMessageKeys.imageAddSuccess");
     expect(editSource).toContain("notificationMessageKeys.imageRemoveSuccess");
     expect(editSource).toContain("resolveOperationErrorMessageKey(e, \"delete\")");
     expect(tagSource).toContain("notificationMessageKeys.tagAddSuccess");

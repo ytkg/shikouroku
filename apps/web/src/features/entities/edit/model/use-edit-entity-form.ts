@@ -27,6 +27,15 @@ import { applyResolvedQueryError, shouldKeepCurrentError } from "@/shared/lib/qu
 import { notificationMessageKeys } from "@/shared/config/notification-messages";
 import { notify } from "@/shared/lib/notify";
 import { resolveOperationErrorMessageKey } from "@/shared/lib/notification-error";
+import {
+  classifyImageFailureReason,
+  createProcessingImageOperationStatus,
+  finalizeImageOperationStatus,
+  idleImageOperationStatus,
+  type ImageFailureReason,
+  type ImageOperationStatus,
+  updateProcessingImageOperationStatus
+} from "../../shared/model/image-operation-status";
 
 type EditEntityResult = {
   ensureAuthorized: (status: number) => boolean;
@@ -48,6 +57,8 @@ type EditEntityResult = {
   relatedDialogOpen: boolean;
   saving: boolean;
   uploadingImages: boolean;
+  retryingFailedImages: boolean;
+  imageOperationStatus: ImageOperationStatus;
   reorderingImages: boolean;
   deletingImageIds: string[];
   loading: boolean;
@@ -174,6 +185,8 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
   const [relatedDialogOpen, setRelatedDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [retryingFailedImages, setRetryingFailedImages] = useState(false);
+  const [imageOperationStatus, setImageOperationStatus] = useState<ImageOperationStatus>(idleImageOperationStatus);
   const [reorderingImages, setReorderingImages] = useState(false);
   const [deletingImageIds, setDeletingImageIds] = useState<string[]>([]);
   const [pendingDeletedImageIds, setPendingDeletedImageIds] = useState<string[]>([]);
@@ -331,22 +344,62 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     );
   };
 
-  const uploadImages = async (targetEntityId: string, files: File[]): Promise<File[]> => {
+  const uploadImages = async (
+    targetEntityId: string,
+    files: File[],
+    operation: "upload" | "retry"
+  ): Promise<{ failedFiles: File[]; failureReasons: ImageFailureReason[] }> => {
     const failed: File[] = [];
+    const failureReasons: ImageFailureReason[] = [];
+    let successCount = 0;
 
     for (const [index, file] of files.entries()) {
       try {
         await uploadEntityImage(targetEntityId, file);
+        successCount += 1;
+        setImageOperationStatus(
+          updateProcessingImageOperationStatus({
+            lastOperation: operation,
+            successCount,
+            failedCount: failed.length,
+            totalCount: files.length
+          })
+        );
       } catch (e) {
+        const reason = classifyImageFailureReason(e);
         if (shouldKeepCurrentError(e, ensureAuthorized)) {
-          failed.push(...files.slice(index));
+          const pending = files.slice(index);
+          failed.push(...pending);
+          for (let i = 0; i < pending.length; i += 1) {
+            failureReasons.push(reason);
+          }
+          setImageOperationStatus(
+            updateProcessingImageOperationStatus({
+              lastOperation: operation,
+              successCount,
+              failedCount: failed.length,
+              totalCount: files.length
+            })
+          );
           break;
         }
         failed.push(file);
+        failureReasons.push(reason);
+        setImageOperationStatus(
+          updateProcessingImageOperationStatus({
+            lastOperation: operation,
+            successCount,
+            failedCount: failed.length,
+            totalCount: files.length
+          })
+        );
       }
     }
 
-    return failed;
+    return {
+      failedFiles: failed,
+      failureReasons
+    };
   };
 
   const onSelectImageFiles = async (files: FileList | null): Promise<void> => {
@@ -357,21 +410,21 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     setUploadingImages(true);
     setError(null);
     try {
-      const failedUploads = await uploadImages(entityId, Array.from(files));
+      setImageOperationStatus(createProcessingImageOperationStatus("upload", files.length));
+      const { failedFiles: failedUploads, failureReasons } = await uploadImages(entityId, Array.from(files), "upload");
       const uploadedCount = files.length - failedUploads.length;
-      if (uploadedCount > 0) {
-        notify({
-          type: "success",
-          messageKey: notificationMessageKeys.imageAddSuccess
-        });
-      }
+      setImageOperationStatus(
+        finalizeImageOperationStatus({
+          lastOperation: "upload",
+          successCount: uploadedCount,
+          failedCount: failedUploads.length,
+          totalCount: files.length,
+          failureReasons
+        })
+      );
       setFailedImageFiles((current) => [...current, ...failedUploads]);
       if (failedUploads.length > 0) {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
-        notify({
-          type: "error",
-          messageKey: notificationMessageKeys.commonSaveError
-        });
       }
     } finally {
       setUploadingImages(false);
@@ -383,27 +436,27 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
       return;
     }
 
-    setUploadingImages(true);
+    setRetryingFailedImages(true);
     try {
-      const failedUploads = await uploadImages(entityId, failedImageFiles);
+      setImageOperationStatus(createProcessingImageOperationStatus("retry", failedImageFiles.length));
+      const { failedFiles: failedUploads, failureReasons } = await uploadImages(entityId, failedImageFiles, "retry");
       setFailedImageFiles(failedUploads);
+      setImageOperationStatus(
+        finalizeImageOperationStatus({
+          lastOperation: "retry",
+          successCount: failedImageFiles.length - failedUploads.length,
+          failedCount: failedUploads.length,
+          totalCount: failedImageFiles.length,
+          failureReasons
+        })
+      );
       if (failedUploads.length === 0) {
         setError(null);
       } else {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
-        notify({
-          type: "error",
-          messageKey: notificationMessageKeys.commonSaveError
-        });
-      }
-      if (failedImageFiles.length - failedUploads.length > 0) {
-        notify({
-          type: "success",
-          messageKey: notificationMessageKeys.imageAddSuccess
-        });
       }
     } finally {
-      setUploadingImages(false);
+      setRetryingFailedImages(false);
     }
   };
 
@@ -558,13 +611,40 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
 
       let deletedImageCount = 0;
       if (pendingDeletedImageIds.length > 0) {
+        setImageOperationStatus(createProcessingImageOperationStatus("delete", pendingDeletedImageIds.length));
         setDeletingImageIds(pendingDeletedImageIds);
         try {
           for (const pendingDeletedImageId of pendingDeletedImageIds) {
             try {
               await deleteEntityImage(entityId, pendingDeletedImageId);
               deletedImageCount += 1;
+              setImageOperationStatus(
+                updateProcessingImageOperationStatus({
+                  lastOperation: "delete",
+                  successCount: deletedImageCount,
+                  failedCount: 0,
+                  totalCount: pendingDeletedImageIds.length
+                })
+              );
             } catch (e) {
+              const failedCount = pendingDeletedImageIds.length - deletedImageCount;
+              setImageOperationStatus(
+                updateProcessingImageOperationStatus({
+                  lastOperation: "delete",
+                  successCount: deletedImageCount,
+                  failedCount,
+                  totalCount: pendingDeletedImageIds.length
+                })
+              );
+              setImageOperationStatus(
+                finalizeImageOperationStatus({
+                  lastOperation: "delete",
+                  successCount: deletedImageCount,
+                  failedCount,
+                  totalCount: pendingDeletedImageIds.length,
+                  failureReasons: [classifyImageFailureReason(e)]
+                })
+              );
               if (
                 e instanceof ApiError &&
                 e.status === httpStatus.notFound
@@ -581,17 +661,47 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
         } finally {
           setDeletingImageIds([]);
         }
+        setImageOperationStatus(
+          finalizeImageOperationStatus({
+            lastOperation: "delete",
+            successCount: deletedImageCount,
+            failedCount: 0,
+            totalCount: pendingDeletedImageIds.length,
+            failureReasons: []
+          })
+        );
       }
 
       if (pendingImageOrderIds) {
         const pendingDeletedSet = new Set(pendingDeletedImageIds);
         const orderedImageIds = pendingImageOrderIds.filter((imageId) => !pendingDeletedSet.has(imageId));
+        setImageOperationStatus(createProcessingImageOperationStatus("reorder", 1));
         setReorderingImages(true);
         try {
           if (orderedImageIds.length > 0) {
             await reorderEntityImages(entityId, { orderedImageIds });
           }
           setPendingImageOrderIds(null);
+          setImageOperationStatus(
+            finalizeImageOperationStatus({
+              lastOperation: "reorder",
+              successCount: 1,
+              failedCount: 0,
+              totalCount: 1,
+              failureReasons: []
+            })
+          );
+        } catch (e) {
+          setImageOperationStatus(
+            finalizeImageOperationStatus({
+              lastOperation: "reorder",
+              successCount: 0,
+              failedCount: 1,
+              totalCount: 1,
+              failureReasons: [classifyImageFailureReason(e)]
+            })
+          );
+          throw e;
         } finally {
           setReorderingImages(false);
         }
@@ -657,6 +767,8 @@ export function useEditEntityForm(entityId: string | undefined): EditEntityResul
     relatedDialogOpen,
     saving,
     uploadingImages,
+    retryingFailedImages,
+    imageOperationStatus,
     reorderingImages,
     deletingImageIds,
     loading:

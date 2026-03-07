@@ -68,6 +68,7 @@ export function CreateEntityPageContent() {
                   selectedImageFiles={form.selectedImageFiles}
                   failedImageFilesCount={form.failedImageFiles.length}
                   retryingFailedImages={form.retryingFailedImages}
+                  operationStatus={form.imageOperationStatus}
                   onSelectImageFiles={form.onSelectImageFiles}
                   onRemoveSelectedImage={form.onRemoveSelectedImage}
                   onRetryFailedImageUploads={form.retryFailedImageUploads}

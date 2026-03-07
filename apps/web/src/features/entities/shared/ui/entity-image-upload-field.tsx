@@ -2,11 +2,14 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { toFileSizeLabel } from "@/shared/lib/to-file-size-label";
+import type { ImageOperationStatus } from "../model/image-operation-status";
+import { EntityImageOperationStatusCard } from "./entity-image-operation-status-card";
 
 type EntityImageUploadFieldProps = {
   selectedImageFiles: File[];
   failedImageFilesCount: number;
   retryingFailedImages: boolean;
+  operationStatus: ImageOperationStatus;
   onSelectImageFiles: (files: File[]) => void;
   onRemoveSelectedImage: (index: number) => void;
   onRetryFailedImageUploads: () => Promise<void>;
@@ -16,6 +19,7 @@ export function EntityImageUploadField({
   selectedImageFiles,
   failedImageFilesCount,
   retryingFailedImages,
+  operationStatus,
   onSelectImageFiles,
   onRemoveSelectedImage,
   onRetryFailedImageUploads
@@ -50,9 +54,10 @@ export function EntityImageUploadField({
       ) : (
         <p className="text-sm text-muted-foreground">画像はまだ選択されていません。</p>
       )}
+      <EntityImageOperationStatusCard operationStatus={operationStatus} />
       {failedImageFilesCount > 0 && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
-          <p className="text-destructive">{failedImageFilesCount}件の画像アップロードに失敗しました。</p>
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm" aria-live="polite">
+          <p className="text-destructive">{failedImageFilesCount}件の画像アップロードに失敗しました。再試行できます。</p>
           <div className="mt-2">
             <Button
               type="button"

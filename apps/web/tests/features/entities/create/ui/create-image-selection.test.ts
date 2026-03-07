@@ -16,6 +16,14 @@ const createFormPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/create/model/use-create-entity-form.ts"
 );
+const imageOperationModelPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/shared/model/image-operation-status.ts"
+);
+const imageOperationCardPath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/shared/ui/entity-image-operation-status-card.tsx"
+);
 
 describe("create entity image selection", () => {
   it("入力クリア前に FileList を配列化してフォームへ渡す", () => {
@@ -31,6 +39,7 @@ describe("create entity image selection", () => {
     expect(selectCallIndex).toBeGreaterThan(-1);
     expect(clearCallIndex).toBeGreaterThan(-1);
     expect(selectCallIndex).toBeLessThan(clearCallIndex);
+    expect(source).toContain("<EntityImageOperationStatusCard operationStatus={operationStatus} />");
   });
 
   it("フォームは File[] を受け取り、遅延評価の Array.from(files) を使わない", () => {
@@ -59,8 +68,30 @@ describe("create entity image selection", () => {
     const source = fs.readFileSync(createPagePath, "utf-8");
 
     expect(source).toContain("<EntityImageUploadField");
+    expect(source).toContain("operationStatus={form.imageOperationStatus}");
     expect(source).toContain("const createdEntityId = await form.submit();");
     expect(source).toContain("if (createdEntityId) {");
     expect(source).toContain("navigate(getEntityDetailPath(createdEntityId));");
+  });
+
+  it("createフォームは画像操作ステータスを直近操作単位で更新する", () => {
+    const source = fs.readFileSync(createFormPath, "utf-8");
+    const cardSource = fs.readFileSync(imageOperationCardPath, "utf-8");
+    const modelSource = fs.readFileSync(imageOperationModelPath, "utf-8");
+
+    expect(source).toContain("const [imageOperationStatus, setImageOperationStatus] = useState<ImageOperationStatus>");
+    expect(source).toContain("setImageOperationStatus(createProcessingImageOperationStatus(\"upload\", selectedImageFiles.length));");
+    expect(source).toContain("setImageOperationStatus(createProcessingImageOperationStatus(\"retry\", failedImageFiles.length));");
+    expect(source).toContain("updateProcessingImageOperationStatus({");
+    expect(source).toContain("finalizeImageOperationStatus({");
+    expect(cardSource).toContain("操作ステータス");
+    expect(cardSource).toContain("を処理中...");
+    expect(cardSource).toContain("進捗:");
+    expect(cardSource).toContain("アップロード");
+    expect(cardSource).toContain("削除");
+    expect(cardSource).toContain("完了: 成功");
+    expect(cardSource).toContain("失敗理由");
+    expect(cardSource).toContain("その他");
+    expect(modelSource).toContain("return \"other\";");
   });
 });

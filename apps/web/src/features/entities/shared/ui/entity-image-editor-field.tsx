@@ -7,13 +7,17 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { toFileSizeLabel } from "@/shared/lib/to-file-size-label";
+import type { ImageOperationStatus } from "../model/image-operation-status";
+import { EntityImageOperationStatusCard } from "./entity-image-operation-status-card";
 
 type EntityImageEditorFieldProps = {
   images: EntityImage[];
   failedImageFilesCount: number;
   uploadingImages: boolean;
+  retryingFailedImages: boolean;
   reorderingImages: boolean;
   deletingImageIds: string[];
+  operationStatus: ImageOperationStatus;
   onSelectImageFiles: (files: FileList | null) => Promise<void>;
   onRetryFailedImageUploads: () => Promise<void>;
   onMoveImageUp: (imageId: string) => void;
@@ -119,8 +123,10 @@ export function EntityImageEditorField({
   images,
   failedImageFilesCount,
   uploadingImages,
+  retryingFailedImages,
   reorderingImages,
   deletingImageIds,
+  operationStatus,
   onSelectImageFiles,
   onRetryFailedImageUploads,
   onMoveImageUp,
@@ -164,19 +170,19 @@ export function EntityImageEditorField({
           event.target.value = "";
         }}
       />
-      {uploadingImages && <p className="text-sm text-muted-foreground">画像をアップロード中...</p>}
+      <EntityImageOperationStatusCard operationStatus={operationStatus} />
       {failedImageFilesCount > 0 && (
-        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
-          <p className="text-destructive">{failedImageFilesCount}件の画像アップロードに失敗しました。</p>
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm" aria-live="polite">
+          <p className="text-destructive">{failedImageFilesCount}件の画像アップロードに失敗しました。再試行できます。</p>
           <div className="mt-2">
             <Button
               type="button"
               size="sm"
               variant="outline"
               onClick={() => void onRetryFailedImageUploads()}
-              disabled={uploadingImages}
+              disabled={retryingFailedImages}
             >
-              {uploadingImages ? "再試行中..." : "失敗分を再試行"}
+              {retryingFailedImages ? "再試行中..." : "失敗分を再試行"}
             </Button>
           </div>
         </div>

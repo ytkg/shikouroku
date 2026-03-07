@@ -71,8 +71,10 @@ export function EditEntityPageContent() {
                     images={form.images}
                     failedImageFilesCount={form.failedImageFiles.length}
                     uploadingImages={form.uploadingImages}
+                    retryingFailedImages={form.retryingFailedImages}
                     reorderingImages={form.reorderingImages}
                     deletingImageIds={form.deletingImageIds}
+                    operationStatus={form.imageOperationStatus}
                     onSelectImageFiles={form.onSelectImageFiles}
                     onRetryFailedImageUploads={form.retryFailedImageUploads}
                     onMoveImageUp={form.moveImageUp}

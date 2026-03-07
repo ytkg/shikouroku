@@ -12,6 +12,10 @@ const imageEditorFieldPath = path.resolve(
   currentDir,
   "../../../../../src/features/entities/shared/ui/entity-image-editor-field.tsx"
 );
+const editPagePath = path.resolve(
+  currentDir,
+  "../../../../../src/features/entities/edit/ui/edit-entity-page-content.tsx"
+);
 
 describe("edit entity image reorder", () => {
   it("画像順序は未保存状態を保持し、保存時のみ順序APIを呼び出す", () => {
@@ -29,14 +33,18 @@ describe("edit entity image reorder", () => {
 
   it("画像編集UIはカード全体ドラッグの D&D と上下ボタンを併用する", () => {
     const source = fs.readFileSync(imageEditorFieldPath, "utf-8");
+    const editPageSource = fs.readFileSync(editPagePath, "utf-8");
 
     expect(source).toContain("@dnd-kit/core");
     expect(source).toContain("@dnd-kit/sortable");
     expect(source).toContain("useSortable({");
     expect(source).toContain("<DndContext");
     expect(source).toContain("<SortableContext");
+    expect(source).toContain("<EntityImageOperationStatusCard operationStatus={operationStatus} />");
+    expect(source).toContain("retryingFailedImages");
     expect(source).toContain("onReorderImages(String(active.id), String(over.id));");
     expect(source).toContain("上へ");
     expect(source).toContain("下へ");
+    expect(editPageSource).toContain("operationStatus={form.imageOperationStatus}");
   });
 });

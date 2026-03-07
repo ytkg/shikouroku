@@ -21,6 +21,15 @@ import {
 } from "@/shared/config/notification-messages";
 import { notify } from "@/shared/lib/notify";
 import { resolveOperationErrorMessageKey } from "@/shared/lib/notification-error";
+import {
+  classifyImageFailureReason,
+  createProcessingImageOperationStatus,
+  finalizeImageOperationStatus,
+  idleImageOperationStatus,
+  type ImageFailureReason,
+  type ImageOperationStatus,
+  updateProcessingImageOperationStatus
+} from "../../shared/model/image-operation-status";
 
 type CreateEntityResult = {
   ensureAuthorized: (status: number) => boolean;
@@ -41,6 +50,7 @@ type CreateEntityResult = {
   relatedDialogOpen: boolean;
   submitLoading: boolean;
   retryingFailedImages: boolean;
+  imageOperationStatus: ImageOperationStatus;
   loading: boolean;
   error: string | null;
   setKindId: (value: string) => void;
@@ -137,6 +147,7 @@ export function useCreateEntityForm(): CreateEntityResult {
   const [relatedDialogOpen, setRelatedDialogOpen] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   const [retryingFailedImages, setRetryingFailedImages] = useState(false);
+  const [imageOperationStatus, setImageOperationStatus] = useState<ImageOperationStatus>(idleImageOperationStatus);
   const [error, setError] = useState<string | null>(null);
   const { data: kinds = [], error: kindsError, isLoading: kindsLoading } = useKindsQuery();
   const { data: tags = [], error: tagsError, isLoading: tagsLoading } = useTagsQuery();
@@ -189,22 +200,62 @@ export function useCreateEntityForm(): CreateEntityResult {
     setFailedImageFiles((current) => current.filter((_, currentIndex) => currentIndex !== index));
   };
 
-  const uploadImages = async (entityId: string, files: File[]): Promise<File[]> => {
+  const uploadImages = async (
+    entityId: string,
+    files: File[],
+    operation: "upload" | "retry"
+  ): Promise<{ failedFiles: File[]; failureReasons: ImageFailureReason[] }> => {
     const failed: File[] = [];
+    const failureReasons: ImageFailureReason[] = [];
+    let successCount = 0;
 
     for (const [index, file] of files.entries()) {
       try {
         await uploadEntityImage(entityId, file);
+        successCount += 1;
+        setImageOperationStatus(
+          updateProcessingImageOperationStatus({
+            lastOperation: operation,
+            successCount,
+            failedCount: failed.length,
+            totalCount: files.length
+          })
+        );
       } catch (e) {
+        const reason = classifyImageFailureReason(e);
         if (shouldKeepCurrentError(e, ensureAuthorized)) {
-          failed.push(...files.slice(index));
+          const pending = files.slice(index);
+          failed.push(...pending);
+          for (let i = 0; i < pending.length; i += 1) {
+            failureReasons.push(reason);
+          }
+          setImageOperationStatus(
+            updateProcessingImageOperationStatus({
+              lastOperation: operation,
+              successCount,
+              failedCount: failed.length,
+              totalCount: files.length
+            })
+          );
           break;
         }
         failed.push(file);
+        failureReasons.push(reason);
+        setImageOperationStatus(
+          updateProcessingImageOperationStatus({
+            lastOperation: operation,
+            successCount,
+            failedCount: failed.length,
+            totalCount: files.length
+          })
+        );
       }
     }
 
-    return failed;
+    return {
+      failedFiles: failed,
+      failureReasons
+    };
   };
 
   const submit = async (): Promise<string | null> => {
@@ -247,23 +298,28 @@ export function useCreateEntityForm(): CreateEntityResult {
         });
       }
 
-      const failedUploads = await uploadImages(entity.id, selectedImageFiles);
-      const uploadedCount = selectedImageFiles.length - failedUploads.length;
-      if (uploadedCount > 0) {
-        notify({
-          type: "success",
-          messageKey: notificationMessageKeys.imageAddSuccess
-        });
+      let failedUploads: File[] = [];
+      let uploadedCount = 0;
+      if (selectedImageFiles.length > 0) {
+        setImageOperationStatus(createProcessingImageOperationStatus("upload", selectedImageFiles.length));
+        const uploadResult = await uploadImages(entity.id, selectedImageFiles, "upload");
+        failedUploads = uploadResult.failedFiles;
+        uploadedCount = selectedImageFiles.length - failedUploads.length;
+        setImageOperationStatus(
+          finalizeImageOperationStatus({
+            lastOperation: "upload",
+            successCount: uploadedCount,
+            failedCount: failedUploads.length,
+            totalCount: selectedImageFiles.length,
+            failureReasons: uploadResult.failureReasons
+          })
+        );
       }
       setImageRetryEntityId(entity.id);
       setFailedImageFiles(failedUploads);
       setSelectedImageFiles(failedUploads);
       if (failedUploads.length > 0) {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
-        notify({
-          type: "error",
-          messageKey: notificationMessageKeys.commonSaveError
-        });
       }
 
       setName("");
@@ -300,24 +356,28 @@ export function useCreateEntityForm(): CreateEntityResult {
 
     setRetryingFailedImages(true);
     try {
-      const failedUploads = await uploadImages(imageRetryEntityId, failedImageFiles);
+      setImageOperationStatus(createProcessingImageOperationStatus("retry", failedImageFiles.length));
+      const { failedFiles: failedUploads, failureReasons } = await uploadImages(
+        imageRetryEntityId,
+        failedImageFiles,
+        "retry"
+      );
       setFailedImageFiles(failedUploads);
       setSelectedImageFiles(failedUploads);
+      setImageOperationStatus(
+        finalizeImageOperationStatus({
+          lastOperation: "retry",
+          successCount: failedImageFiles.length - failedUploads.length,
+          failedCount: failedUploads.length,
+          totalCount: failedImageFiles.length,
+          failureReasons
+        })
+      );
 
       if (failedUploads.length === 0) {
         setError(null);
       } else {
         setError(`${failedUploads.length}件の画像アップロードに失敗しました。再試行してください。`);
-        notify({
-          type: "error",
-          messageKey: notificationMessageKeys.commonSaveError
-        });
-      }
-      if (failedImageFiles.length - failedUploads.length > 0) {
-        notify({
-          type: "success",
-          messageKey: notificationMessageKeys.imageAddSuccess
-        });
       }
     } finally {
       setRetryingFailedImages(false);
@@ -343,6 +403,7 @@ export function useCreateEntityForm(): CreateEntityResult {
     relatedDialogOpen,
     submitLoading,
     retryingFailedImages,
+    imageOperationStatus,
     loading: kindsLoading || tagsLoading || entitiesLoading,
     error,
     setKindId,
